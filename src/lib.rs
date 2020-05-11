@@ -1,7 +1,11 @@
-#[cfg(test)]
-mod tests {
-    #[test]
-    fn it_works() {
-        assert_eq!(2 + 2, 4);
-    }
-}
+pub mod error;
+mod value;
+
+mod keyword;
+mod template;
+mod template_env;
+mod template_parser;
+mod token;
+
+pub use template::Template;
+pub use template_env::TemplateEnv;
