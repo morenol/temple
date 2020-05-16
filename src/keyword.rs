@@ -1,8 +1,12 @@
+use enumn::N;
 use std::fmt;
 
 macro_rules! define_enum_regex {
     ($Name:ident { $($Variant:ident => $Regex:expr),+ $(,)*}, $Const_name:ident) => {
-        #[derive(Debug)]
+
+
+        #[derive(Debug, N)]
+        #[repr(usize)]
         pub enum $Name {
             $($Variant),*,
         }
@@ -22,7 +26,7 @@ macro_rules! define_enum_regex {
             }
         }
 
-        pub const $Const_name: &'static [&str] = &[$($Regex),*];
+        pub const $Const_name: &'static str = concat!($("(", $Regex, ")|"),*);
     }
 }
 

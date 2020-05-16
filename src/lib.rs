@@ -2,6 +2,7 @@ pub mod error;
 mod value;
 
 mod keyword;
+mod renderer;
 mod template;
 mod template_env;
 mod template_parser;

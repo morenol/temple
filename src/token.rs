@@ -111,7 +111,7 @@ impl fmt::Display for Token {
             Token::IntegerNum(num) => write!(f, "{}", num),
             Token::FloatNum(num) => write!(f, "{}", num),
             Token::String(s) => write!(f, "{}", s),
-            Token::Identifier => write!(f, "{}", "{}"),
+            Token::Identifier => write!(f, "{}", "{{}}"),
             Token::Equal => write!(f, "=="),
             Token::NotEqual => write!(f, "!="),
             Token::LessEqual => write!(f, "<="),

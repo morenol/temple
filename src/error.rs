@@ -82,14 +82,17 @@ impl ErrorKind {
 
 #[derive(Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
 pub struct SourceLocation {
-    /// Name of the file
-    file_name: String,
     /// Line number (1-based)
-    line: u64,
+    line: usize,
     /// Column number (1-based)
-    col: u64,
+    col: usize,
 }
 
+impl SourceLocation {
+    pub fn new(line: usize, col: usize) -> Self {
+        Self { line, col }
+    }
+}
 impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
