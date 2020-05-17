@@ -46,9 +46,8 @@ impl<'a, 'b> TemplateParser<'a, 'b> {
                         continue;
                     }
                     let text = self.template_body.read().unwrap();
-                    let new_renderer = RawTextRenderer::new(
-                        &text[orig_block.range.start..orig_block.range.size()],
-                    );
+                    let new_renderer =
+                        RawTextRenderer::new(&text[orig_block.range.start..orig_block.range.end]);
                     statements_stack
                         .last()
                         .unwrap()
@@ -90,6 +89,7 @@ impl<'a, 'b> TemplateParser<'a, 'b> {
             // This does not seem idiomatic to rust
             let mut match_start = 0;
             let mut n_regex = 0;
+
             for i in 1..9 {
                 if let Some(m) = capture.get(i) {
                     n_regex = i - 1;
@@ -122,33 +122,38 @@ impl<'a, 'b> TemplateParser<'a, 'b> {
                         }
                     }
                 }
-                RegexEnum::CommentBegin => match self.current_block_info.read().unwrap().mode {
-                    TextBlockType::RawBlock => continue,
-                    TextBlockType::RawText => {
-                        self.finish_current_block(match_start, TextBlockType::Comment, None);
-                        self.current_block_info.write().unwrap().range.start = match_start + 2;
-                        self.current_block_info.write().unwrap().mode = TextBlockType::Comment;
-                    }
-                    _ => {
-                        self.finish_current_line(match_start + 2);
-                        return Err(Error::from(ErrorKind::UnexpectedCommentBegin(
-                            SourceLocation::new(match_start, match_start + 2),
-                        )));
-                    }
-                },
-                RegexEnum::CommentEnd => match self.current_block_info.read().unwrap().mode {
-                    TextBlockType::RawBlock => continue,
-                    TextBlockType::Comment => {
-                        self.current_block_info.write().unwrap().range.start =
-                            self.finish_current_block(match_start, TextBlockType::RawText, None);
-                    }
-                    _ => {
-                        self.finish_current_line(match_start + 2);
-                        return Err(Error::from(ErrorKind::UnexpectedCommentEnd(
-                            SourceLocation::new(match_start, match_start + 2),
-                        )));
-                    }
-                },
+                RegexEnum::CommentBegin => {
+                    match self.current_block_info.read().unwrap().mode {
+                        TextBlockType::RawBlock => continue,
+                        TextBlockType::RawText => {}
+                        _ => {
+                            self.finish_current_line(match_start + 2);
+                            return Err(Error::from(ErrorKind::UnexpectedCommentBegin(
+                                SourceLocation::new(match_start, match_start + 2),
+                            )));
+                        }
+                    };
+
+                    self.finish_current_block(match_start, TextBlockType::Comment, None);
+
+                    self.current_block_info.write().unwrap().range.start = match_start + 2;
+                    self.current_block_info.write().unwrap().mode = TextBlockType::Comment;
+                }
+
+                RegexEnum::CommentEnd => {
+                    match self.current_block_info.read().unwrap().mode {
+                        TextBlockType::RawBlock => continue,
+                        TextBlockType::Comment => {}
+                        _ => {
+                            self.finish_current_line(match_start + 2);
+                            return Err(Error::from(ErrorKind::UnexpectedCommentEnd(
+                                SourceLocation::new(match_start, match_start + 2),
+                            )));
+                        }
+                    };
+                    self.current_block_info.write().unwrap().range.start =
+                        self.finish_current_block(match_start, TextBlockType::RawText, None);
+                }
 
                 RegexEnum::ExprBegin => {}
                 RegexEnum::ExprEnd => {}
@@ -183,11 +188,15 @@ impl<'a, 'b> TemplateParser<'a, 'b> {
                 }
             }
         };
+
         self.current_block_info.write().unwrap().range.end = position;
+
         self.text_blocks
             .write()
             .unwrap()
             .push(*self.current_block_info.read().unwrap());
+
+        self.current_block_info.write().unwrap().mode = next_block;
 
         new_position
     }

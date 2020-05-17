@@ -25,3 +25,13 @@ Hello, world!",
 Hello, world!",
     )
 }
+
+#[test]
+fn render_multiline_with_comment() -> Result<()> {
+    test_render_template(
+        "Hello, world!
+{#Comment to skip #}Hello, world!",
+        "Hello, world!
+Hello, world!",
+    )
+}
