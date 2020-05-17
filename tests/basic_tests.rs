@@ -11,6 +11,7 @@ fn test_render_template(input: &str, expected: &str) -> Result<()> {
     assert_eq!(result, expected.to_string());
     Ok(())
 }
+
 #[test]
 fn render_plain_singe_line() -> Result<()> {
     test_render_template("Hello, world!", "Hello, world!")

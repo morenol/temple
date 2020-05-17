@@ -90,7 +90,8 @@ impl<'a, 'b> TemplateParser<'a, 'b> {
             let mut match_start = 0;
             let mut n_regex = 0;
             let mut match_end = 0;
-            for i in 1..9 {
+
+            for i in 1..10 {
                 if let Some(m) = capture.get(i) {
                     n_regex = i - 1;
                     match_start = m.start();
@@ -102,25 +103,20 @@ impl<'a, 'b> TemplateParser<'a, 'b> {
             match RegexEnum::n(n_regex).unwrap() {
                 RegexEnum::NewLine => {
                     self.finish_current_line(match_start);
-                    self.current_line_info.write().unwrap().range.start =
-                        self.current_line_info.read().unwrap().range.end + 1;
+
+                    let new_line_start = self.current_line_info.read().unwrap().range.end + 1;
+                    self.current_line_info.write().unwrap().range.start = new_line_start;
 
                     if self.current_line_info.read().unwrap().range.start
                         < self.template_body.read().unwrap().len()
                     {
                         match self.current_block_info.read().unwrap().mode {
-                            TextBlockType::RawText => {}
-                            TextBlockType::LineStatement => {
-                                self.finish_current_block(
-                                    match_start,
-                                    TextBlockType::RawText,
-                                    None,
-                                );
-                                self.current_block_info.write().unwrap().range.start =
-                                    self.current_line_info.read().unwrap().range.start;
-                            }
-                            _ => {}
-                        }
+                            TextBlockType::LineStatement => {}
+                            _ => continue,
+                        };
+                        self.finish_current_block(match_start, TextBlockType::RawText, None);
+                        self.current_block_info.write().unwrap().range.start =
+                            self.current_line_info.read().unwrap().range.start;
                     }
                 }
                 RegexEnum::CommentBegin => {
@@ -204,9 +200,7 @@ impl<'a, 'b> TemplateParser<'a, 'b> {
         mut start_offset: usize,
     ) {
         let end_offset = match self.current_block_info.read().unwrap().mode {
-            TextBlockType::RawText | TextBlockType::RawBlock => {
-                self.strip_block_left(start_offset, match_start)
-            }
+            TextBlockType::RawText => self.strip_block_left(start_offset, match_start),
             _ => return,
         };
         self.finish_current_block(end_offset, mode, None);
