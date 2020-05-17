@@ -89,11 +89,12 @@ impl<'a, 'b> TemplateParser<'a, 'b> {
             // This does not seem idiomatic to rust
             let mut match_start = 0;
             let mut n_regex = 0;
-
+            let mut match_end = 0;
             for i in 1..9 {
                 if let Some(m) = capture.get(i) {
                     n_regex = i - 1;
                     match_start = m.start();
+                    match_end = m.end();
                     break;
                 };
             }
@@ -127,16 +128,16 @@ impl<'a, 'b> TemplateParser<'a, 'b> {
                         TextBlockType::RawBlock => continue,
                         TextBlockType::RawText => {}
                         _ => {
-                            self.finish_current_line(match_start + 2);
+                            self.finish_current_line(match_end);
                             return Err(Error::from(ErrorKind::UnexpectedCommentBegin(
-                                SourceLocation::new(match_start, match_start + 2),
+                                SourceLocation::new(match_start, match_end),
                             )));
                         }
                     };
 
                     self.finish_current_block(match_start, TextBlockType::Comment, None);
 
-                    self.current_block_info.write().unwrap().range.start = match_start + 2;
+                    self.current_block_info.write().unwrap().range.start = match_end;
                     self.current_block_info.write().unwrap().mode = TextBlockType::Comment;
                 }
 
@@ -145,9 +146,9 @@ impl<'a, 'b> TemplateParser<'a, 'b> {
                         TextBlockType::RawBlock => continue,
                         TextBlockType::Comment => {}
                         _ => {
-                            self.finish_current_line(match_start + 2);
+                            self.finish_current_line(match_end);
                             return Err(Error::from(ErrorKind::UnexpectedCommentEnd(
-                                SourceLocation::new(match_start, match_start + 2),
+                                SourceLocation::new(match_start, match_end),
                             )));
                         }
                     };
@@ -159,12 +160,62 @@ impl<'a, 'b> TemplateParser<'a, 'b> {
                 RegexEnum::ExprEnd => {}
                 RegexEnum::StmtBegin => {}
                 RegexEnum::StmtEnd => {}
-                RegexEnum::RawBegin => {}
-                RegexEnum::RawEnd => {}
+                RegexEnum::RawBegin => {
+                    match self.current_block_info.read().unwrap().mode {
+                        TextBlockType::RawBlock => continue,
+                        TextBlockType::Comment | TextBlockType::RawText => {}
+                        _ => {
+                            self.finish_current_line(match_end);
+                            return Err(Error::from(ErrorKind::UnexpectedRawBegin(
+                                SourceLocation::new(match_start, match_end),
+                            )));
+                        }
+                    };
+                    self.start_control_block(TextBlockType::RawBlock, match_start, match_end);
+                }
+                RegexEnum::RawEnd => {
+                    match self.current_block_info.read().unwrap().mode {
+                        TextBlockType::Comment => continue,
+                        TextBlockType::RawBlock => {}
+                        _ => {
+                            self.finish_current_line(match_end);
+                            return Err(Error::from(ErrorKind::UnexpectedRawEnd(
+                                SourceLocation::new(match_start, match_end),
+                            )));
+                        }
+                    };
+                    self.current_block_info.write().unwrap().range.start = self
+                        .finish_current_block(
+                            match_end - 2,
+                            TextBlockType::RawText,
+                            Some(match_start),
+                        );
+                }
             };
         }
 
         Ok(())
+    }
+
+    fn start_control_block(
+        &self,
+        mode: TextBlockType,
+        match_start: usize,
+        mut start_offset: usize,
+    ) {
+        let end_offset = match self.current_block_info.read().unwrap().mode {
+            TextBlockType::RawText | TextBlockType::RawBlock => {
+                self.strip_block_left(start_offset, match_start)
+            }
+            _ => return,
+        };
+        self.finish_current_block(end_offset, mode, None);
+
+        //m_currentBlockInfo.type = blockType; TODO: remove line in jinja2cpp
+        if let TextBlockType::RawBlock = self.current_block_info.read().unwrap().mode {
+            start_offset = self.strip_block_right(start_offset - 2);
+        }
+        self.current_block_info.write().unwrap().range.start = start_offset;
     }
     fn finish_current_block(
         &self,
@@ -173,7 +224,6 @@ impl<'a, 'b> TemplateParser<'a, 'b> {
         match_start: Option<usize>,
     ) -> usize {
         let mut new_position = position;
-
         match self.current_block_info.read().unwrap().mode {
             TextBlockType::RawBlock => {
                 let current_position = match_start.unwrap_or(position);

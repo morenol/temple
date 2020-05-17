@@ -35,3 +35,34 @@ fn render_multiline_with_comment() -> Result<()> {
 Hello, world!",
     )
 }
+
+#[test]
+fn render_comment_with_code_inside() -> Result<()> {
+    test_render_template(
+        "(Hello World
+{#Comment to
+            {{for}}
+            {{endfor}}
+skip #}
+{#Comment to
+             {%
+ skip #}
+from Parser!)",
+        "(Hello World
+
+
+from Parser!)",
+    )
+}
+
+#[test]
+fn render_raw_test() -> Result<()> {
+    test_render_template(
+        "{% raw %}
+    This is a raw text {{ 2 + 2 }}
+{% endraw %}",
+        "
+    This is a raw text {{ 2 + 2 }}
+",
+    )
+}
