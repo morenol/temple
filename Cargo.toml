@@ -4,7 +4,7 @@ version = "0.0.1"
 authors = ["Luis Moreno <morenoluisma@gmail.com>"]
 edition = "2018"
 description = "WIP"
-license = "MIT OR Apache-2.0"
+license = "MIT"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
