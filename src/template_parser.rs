@@ -1,4 +1,5 @@
 use crate::error::{Error, ErrorKind, Result, SourceLocation};
+use crate::expression_parser::ExpressionParser;
 use crate::keyword::{RegexEnum, KEYWORDS, ROUGH_TOKENIZER};
 use crate::lexer::Token;
 use crate::renderer::{ComposedRenderer, RawTextRenderer, Render};
@@ -48,6 +49,17 @@ impl<'a, 'b> TemplateParser<'a, 'b> {
                     let text = self.template_body.read().unwrap();
                     let new_renderer =
                         RawTextRenderer::new(&text[orig_block.range.start..orig_block.range.end]);
+                    statements_stack
+                        .last()
+                        .unwrap()
+                        .current_composition
+                        .add_renderer(Box::new(new_renderer));
+                }
+                TextBlockType::Expression => {
+                    let text = self.template_body.read().unwrap();
+                    let new_renderer = ExpressionParser::parse(
+                        &text[orig_block.range.start..orig_block.range.end],
+                    )?;
                     statements_stack
                         .last()
                         .unwrap()
@@ -152,8 +164,25 @@ impl<'a, 'b> TemplateParser<'a, 'b> {
                         self.finish_current_block(match_start, TextBlockType::RawText, None);
                 }
 
-                RegexEnum::ExprBegin => {}
-                RegexEnum::ExprEnd => {}
+                RegexEnum::ExprBegin => {
+                    self.start_control_block(TextBlockType::Expression, match_start, match_end);
+                }
+                RegexEnum::ExprEnd => {
+                    match self.current_block_info.read().unwrap().mode {
+                        TextBlockType::RawText => {
+                            self.finish_current_line(match_end);
+                            return Err(Error::from(ErrorKind::UnexpectedExprEnd(
+                                SourceLocation::new(match_start, match_end),
+                            )));
+                        }
+                        TextBlockType::Expression => {}
+                        _ => {
+                            continue;
+                        }
+                    };
+                    self.current_block_info.write().unwrap().range.start =
+                        self.finish_current_block(match_start, TextBlockType::RawText, None);
+                }
                 RegexEnum::StmtBegin => {}
                 RegexEnum::StmtEnd => {}
                 RegexEnum::RawBegin => {

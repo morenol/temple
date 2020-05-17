@@ -36,15 +36,23 @@ pub enum Token<'a> {
     RCrlBracket,
     #[token("=")]
     Assign,
+    #[token(".")]
+    Point,
     #[token(",")]
     Comma,
+    #[token(":")]
+    Colon,
+    #[token("|")]
+    Pipe,
+    #[token("~")]
+    Tilde,
 
     // General
     #[regex("[A-Za-z_]+[A-Za-z_0-9]*", |lex| Cow::Borrowed(lex.slice())) ]
     Identifier(Cow<'a, str>),
-    #[regex("-?[0-9]+", |lex| lex.slice().parse())]
+    #[regex("[0-9]+", |lex| lex.slice().parse())]
     IntegerNum(i64),
-    #[regex("-?[0-9]+\\.[0-9]+", |lex| lex.slice().parse())]
+    #[regex("[0-9]+\\.[0-9]+", |lex| lex.slice().parse())]
     FloatNum(f64),
     #[regex("\"[A-Za-z0-9 ]*\"", |lex| Cow::Borrowed(&lex.slice()[1..lex.slice().len()-1]))]
     String(Cow<'a, str>),
@@ -164,7 +172,9 @@ pub enum Token<'a> {
 }
 
 mod test {
-    use super::*;
+    use super::Token;
+    use logos::Logos;
+
     #[test]
     fn lex_numbers() {
         let tokens: Vec<_> = Token::lexer("1 42 -100 3.14 -77.77").collect();
@@ -173,9 +183,11 @@ mod test {
             &[
                 Token::IntegerNum(1),
                 Token::IntegerNum(42),
-                Token::IntegerNum(-100),
+                Token::Minus,
+                Token::IntegerNum(100),
                 Token::FloatNum(3.14),
-                Token::FloatNum(-77.77),
+                Token::Minus,
+                Token::FloatNum(77.77),
             ]
         );
     }

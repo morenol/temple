@@ -1,6 +1,8 @@
 pub mod error;
 mod value;
 
+mod expression_evaluator;
+mod expression_parser;
 mod keyword;
 mod lexer;
 mod renderer;

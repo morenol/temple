@@ -1,6 +1,6 @@
+use std::rc::Rc;
 use temple::error::Result;
 use temple::{Template, TemplateEnv};
-use std::rc::Rc;
 
 fn test_render_template(input: &str, expected: &str) -> Result<()> {
     let temp_env = TemplateEnv::default();

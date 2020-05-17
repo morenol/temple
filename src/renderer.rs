@@ -1,3 +1,4 @@
+use crate::expression_evaluator::FullExpressionEvaluator;
 use std::fmt;
 use std::io::Write;
 use std::sync::RwLock;
@@ -48,5 +49,22 @@ impl<'a> RawTextRenderer<'a> {
 impl<'a> Render for RawTextRenderer<'a> {
     fn render(&self, out: &mut dyn Write) {
         out.write(self.content.as_bytes());
+    }
+}
+
+#[derive(Debug)]
+pub struct ExpressionRenderer {
+    expression: FullExpressionEvaluator,
+}
+
+impl Render for ExpressionRenderer {
+    fn render(&self, out: &mut dyn Write) {
+        self.expression.render(out);
+    }
+}
+
+impl ExpressionRenderer {
+    pub fn new(expression: FullExpressionEvaluator) -> Self {
+        Self { expression }
     }
 }

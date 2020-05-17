@@ -1,3 +1,5 @@
+use std::fmt;
+
 #[derive(Clone, Debug, PartialEq)]
 pub enum Value {
     Empty,
@@ -7,6 +9,18 @@ pub enum Value {
     Double(f64),
     ValuesList(ValuesList),
     ValuesMap(ValuesMap),
+}
+
+impl fmt::Display for Value {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Value::Empty => write!(f, ""),
+            Value::Boolean(boolean) => write!(f, "{}", boolean),
+            Value::Integer(integer) => write!(f, "{}", integer),
+            Value::Double(float) => write!(f, "{}", float),
+            _ => todo!(),
+        }
+    }
 }
 
 pub type ValuesMap = std::collections::HashMap<String, Value>;
@@ -20,3 +34,6 @@ impl Default for Value {
 }
 
 mod from;
+mod op;
+
+pub mod visitors;
