@@ -18,6 +18,8 @@ impl BinaryMathOperation {
                     todo!()
                 }
             }
+            BinaryOperation::Pow => left.pow(right),
+
             _ => todo!(),
         }
     }

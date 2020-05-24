@@ -81,3 +81,18 @@ impl Rem for Value {
         }
     }
 }
+
+impl Value {
+    pub fn pow(&self, other: Self) -> Self {
+        match (self, other) {
+            (Value::Integer(left), Value::Integer(right)) => Value::Integer(left.pow(right as u32)),
+            (Value::Double(left), Value::Integer(right)) => Value::Double(left.powf(right as f64)),
+            (Value::Integer(left), Value::Double(right)) => {
+                let left = *left as f64;
+                Value::Double(left.powf(right))
+            }
+            (Value::Double(left), Value::Double(right)) => Value::Double(left.powf(right)),
+            _ => todo!(),
+        }
+    }
+}

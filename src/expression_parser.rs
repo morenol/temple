@@ -104,7 +104,13 @@ impl ExpressionParser {
     fn parse_math_pow<'a>(mut lexer: &mut Peekable<Lexer<'a, Token<'a>>>) -> Result<Expression> {
         let left = ExpressionParser::parse_math_plus_minus(&mut lexer)?;
         if let Some(Token::MulMul) = lexer.peek() {
-            todo!()
+            lexer.next();
+            let right = ExpressionParser::parse_math_pow(&mut lexer)?;
+            return Ok(Expression::BinaryExpression(
+                BinaryOperation::Pow,
+                Box::new(left),
+                Box::new(right),
+            ));
         }
         Ok(left)
     }
