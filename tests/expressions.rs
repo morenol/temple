@@ -14,5 +14,26 @@ fn test_render_template(input: &str, expected: &str) -> Result<()> {
 
 #[test]
 fn basic_expression() -> Result<()> {
-    test_render_template("{{10 + 1}}", "11")
+    test_render_template(
+        "{{10 + 1}}
+{{ 1 - 10}}
+{{ 0.1 + 1 }}
+{{ 1 + 0.33 }}
+{{ 0.1 - 10.5 }}
+{{ 2 * 10 }}
+{{ 10 / 4 }}
+{{ 10 // 4 }}
+{{ 10 % 3 }}
+{{ 10.5 % 3 }}",
+        "11
+-9
+1.1
+1.33
+-10.4
+20
+2.5
+2
+1
+1.5",
+    )
 }

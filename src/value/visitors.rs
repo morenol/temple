@@ -9,6 +9,15 @@ impl BinaryMathOperation {
             BinaryOperation::Minus => left - right,
             BinaryOperation::Mul => left * right,
             BinaryOperation::Div => left / right,
+            BinaryOperation::Modulo => left % right,
+            BinaryOperation::DivInteger => {
+                let value = left / right;
+                if let Value::Double(num) = value {
+                    Value::Integer(num as i64)
+                } else {
+                    todo!()
+                }
+            }
             _ => todo!(),
         }
     }
