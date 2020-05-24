@@ -66,6 +66,7 @@ pub enum Token<'a> {
     LessEqual,
     #[token(">=")]
     GreaterEqual,
+    #[token("++")]
     PlusPlus,
     #[token("--")]
     DashDash,

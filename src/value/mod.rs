@@ -18,6 +18,7 @@ impl fmt::Display for Value {
             Value::Boolean(boolean) => write!(f, "{}", boolean),
             Value::Integer(integer) => write!(f, "{}", integer),
             Value::Double(float) => write!(f, "{}", float),
+            Value::String(string) => write!(f, "{}", string),
             _ => todo!(),
         }
     }

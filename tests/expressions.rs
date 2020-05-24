@@ -13,7 +13,7 @@ fn test_render_template(input: &str, expected: &str) -> Result<()> {
 }
 
 #[test]
-fn basic_expression() -> Result<()> {
+fn basic_math_expression() -> Result<()> {
     test_render_template(
         "{{10 + 1}}
 {{ 1 - 10}}
@@ -35,5 +35,13 @@ fn basic_expression() -> Result<()> {
 2
 1
 1.5",
+    )
+}
+
+#[test]
+fn basic_string_expression() -> Result<()> {
+    test_render_template(
+    	"{{ \"123\" * 3 }}",
+    	"123123123"
     )
 }
