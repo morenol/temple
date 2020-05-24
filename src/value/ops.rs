@@ -10,6 +10,9 @@ impl Add for Value {
             (Value::Double(left), Value::Integer(right)) => Value::Double(left + right as f64),
             (Value::Integer(left), Value::Double(right)) => Value::Double(left as f64 + right),
             (Value::Double(left), Value::Double(right)) => Value::Double(left + right),
+            (Value::String(left), Value::String(right)) => {
+                Value::String(format!("{}{}", left, right))
+            }
             _ => todo!(),
         }
     }
@@ -24,8 +27,12 @@ impl Mul for Value {
             (Value::Double(left), Value::Integer(right)) => Value::Double(left * right as f64),
             (Value::Integer(left), Value::Double(right)) => Value::Double(left as f64 * right),
             (Value::Double(left), Value::Double(right)) => Value::Double(left * right),
-            (Value::String(left), Value::Integer(right)) => Value::String(left.repeat(right as usize)),
-            (Value::String(left), Value::Double(right)) => Value::String(left.repeat(right as usize)),
+            (Value::String(left), Value::Integer(right)) => {
+                Value::String(left.repeat(right as usize))
+            }
+            (Value::String(left), Value::Double(right)) => {
+                Value::String(left.repeat(right as usize))
+            }
             _ => todo!(),
         }
     }

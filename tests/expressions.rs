@@ -41,7 +41,11 @@ fn basic_math_expression() -> Result<()> {
 #[test]
 fn basic_string_expression() -> Result<()> {
     test_render_template(
-    	"{{ \"123\" * 3 }}",
-    	"123123123"
+        "{{ \"123\" * 3 }}
+{{ \"abc\" * 0 }}
+{{ \"hello\" + \" \" + \"world\"}}",
+        "123123123
+
+hello world",
     )
 }
