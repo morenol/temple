@@ -34,6 +34,6 @@ impl Default for Value {
 }
 
 mod from;
-mod op;
+mod ops;
 
 pub mod visitors;
