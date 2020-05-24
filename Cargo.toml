@@ -11,3 +11,4 @@ license = "MIT"
 [dependencies]
 regex = "1.1"
 enumn = "0.1.2"
+logos = "0.11.4"

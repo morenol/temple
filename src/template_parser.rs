@@ -1,8 +1,8 @@
 use crate::error::{Error, ErrorKind, Result, SourceLocation};
 use crate::keyword::{RegexEnum, KEYWORDS, ROUGH_TOKENIZER};
+use crate::lexer::Token;
 use crate::renderer::{ComposedRenderer, RawTextRenderer, Render};
 use crate::template_env::TemplateEnv;
-use crate::token::Token;
 use regex::Regex;
 use std::sync::RwLock;
 
@@ -315,7 +315,7 @@ struct StatementInfo<'a, 'b> {
     mode: StatementInfoType,
     current_composition: &'a ComposedRenderer<'b>,
     compositions: Vec<ComposedRenderer<'a>>,
-    token: Token,
+    token: Token<'a>,
     renderer: Option<Box<dyn Render + 'a>>,
 }
 
@@ -337,7 +337,7 @@ enum StatementInfoType {
 impl<'a, 'b> StatementInfo<'a, 'b> {
     pub fn new(
         mode: StatementInfoType,
-        token: Token,
+        token: Token<'a>,
         renderers: &'a mut ComposedRenderer<'b>,
     ) -> Self {
         let compositions = vec![];
