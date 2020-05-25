@@ -62,7 +62,14 @@ impl Evaluate for Expression {
                 }
             }
 
-            Expression::UnaryExpression(op, expr) => todo!(),
+            Expression::UnaryExpression(op, expr) => {
+                let expression = expr.evaluate();
+                match op {
+                    UnaryOperation::Plus => expression,
+                    UnaryOperation::Minus => -expression,
+                    UnaryOperation::LogicalNot => !expression,
+                }
+            }
         }
     }
 }
@@ -83,8 +90,8 @@ impl FullExpressionEvaluator {
         Self { expression: None }
     }
 
-    pub fn set_expression(&mut self, expresion: Expression) {
-        self.expression = Some(expresion)
+    pub fn set_expression(&mut self, expression: Expression) {
+        self.expression = Some(expression)
     }
 }
 

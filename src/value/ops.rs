@@ -1,5 +1,5 @@
 use super::Value;
-use std::ops::{Add, Div, Mul, Rem, Sub};
+use std::ops::{Add, Div, Mul, Neg, Not, Rem, Sub};
 
 impl Add for Value {
     type Output = Self;
@@ -82,6 +82,28 @@ impl Rem for Value {
     }
 }
 
+impl Neg for Value {
+    type Output = Self;
+
+    fn neg(self) -> Self {
+        match self {
+            Value::Integer(value) => Value::Integer(-value),
+            Value::Double(value) => Value::Double(-value),
+            _ => todo!(),
+        }
+    }
+}
+
+impl Not for Value {
+    type Output = Self;
+
+    fn not(self) -> Self {
+        match self {
+            Value::Boolean(boolean) => Value::Boolean(!boolean),
+            _ => todo!(),
+        }
+    }
+}
 impl Value {
     pub fn pow(&self, other: Self) -> Self {
         match (self, other) {
