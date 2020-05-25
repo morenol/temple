@@ -1,4 +1,4 @@
-name: CI
+name: Coverage
 
 on:
   push:
@@ -24,17 +24,14 @@ jobs:
       with:
         path: ~/.cargo
         key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.toml') }}
-    - name: Run tests
-      uses: actions-rs/cargo@v1
+    - name: Run cargo-tarpaulin
+      uses: actions-rs/tarpaulin@v0.1
       with:
-        command: test
-    - name: Install cargo-cache
-      uses: actions-rs/install@v0.1
-      if: steps.cache.outputs.cache-hit != 'true'
+        out-type: Lcov
+        version: '0.13.0'
+        args: '-- --test-threads 1'
+    - name: Coveralls upload
+      uses: coverallsapp/github-action@master
       with:
-        crate: cargo-cache
-        use-tool-cache: true
-    - name: Cleanup cache
-      if: steps.cache.outputs.cache-hit != 'true'
-      run: cargo cache -a
-
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        path-to-lcov: "lcov.info"
