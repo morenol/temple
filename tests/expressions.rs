@@ -53,3 +53,11 @@ fn basic_string_expression() -> Result<()> {
 hello world",
     )
 }
+
+#[test]
+fn math_order_expression() -> Result<()> {
+    test_render_template("{{ ( 1 + 4 ) * 3 - 1 }}", "14")?;
+    test_render_template("{{ ( 1 + 4 ) * (3 - 1) }}", "10")?;
+    test_render_template("{{ 1 + 4 * 3 - 1 }}", "12")
+    // test_render_template("{{ 5 - 2 - 2 }}", "1") TODO: solve left associative operations.
+}

@@ -18,7 +18,7 @@ impl ExpressionParser {
 
         let evaluator = ExpressionParser::full_expresion_parser(&mut lexer)?;
 
-        if let Some(_) = lexer.next() {
+        if let Some(_tok) = lexer.next() {
             todo!()
         }
         Ok(ExpressionRenderer::new(evaluator))
@@ -96,6 +96,7 @@ impl ExpressionParser {
     ) -> Result<Expression> {
         let left = ExpressionParser::parse_math_pow(&mut lexer)?;
         if let Some(Token::Tilde) = lexer.peek() {
+            lexer.next();
             todo!()
         }
         Ok(left)
@@ -145,7 +146,7 @@ impl ExpressionParser {
             _ => return Ok(left),
         };
         lexer.next();
-        let right = ExpressionParser::parse_unary_plus_min(&mut lexer)?;
+        let right = ExpressionParser::parse_math_mul_div(&mut lexer)?;
 
         return Ok(Expression::BinaryExpression(
             binary_op,
@@ -187,16 +188,45 @@ impl ExpressionParser {
 
         let value = if let Some(tok) = token {
             match tok {
-                Token::Identifier(id) => todo!(),
                 Token::IntegerNum(num) => return Ok(Expression::Constant(Value::from(num))),
                 Token::FloatNum(num) => return Ok(Expression::Constant(Value::from(num))),
                 Token::String(string) => {
                     return Ok(Expression::Constant(Value::from(string.to_string())))
                 }
-
+                Token::LBracket => ExpressionParser::parse_braced_expression_or_tuple(&mut lexer),
                 _ => todo!(),
             }
+        } else {
+            Err(Error::from(ErrorKind::ExpectedExpression(
+                SourceLocation::new(1, 2), // TODO: Use actual source locations
+            )))
         };
-        todo!()
+
+        return value;
+        // TODO: implement accessors
+    }
+
+    fn parse_braced_expression_or_tuple<'a>(
+        mut lexer: &mut Peekable<Lexer<'a, Token<'a>>>,
+    ) -> Result<Expression> {
+        let mut is_tuple: bool = false;
+        let mut exprs = vec![];
+        loop {
+            if let Some(Token::RBracket) = lexer.peek() {
+                lexer.next();
+                break;
+            }
+            let expr = ExpressionParser::parse_logical_or(&mut lexer)?;
+            exprs.push(expr);
+            if let Some(Token::Comma) = lexer.peek() {
+                lexer.next();
+                is_tuple = true;
+            }
+        }
+        if is_tuple {
+            todo!()
+        } else {
+            return Ok(exprs.remove(0));
+        }
     }
 }
