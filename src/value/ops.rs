@@ -118,3 +118,31 @@ impl Value {
         }
     }
 }
+
+mod test {
+    use super::Value;
+
+    #[test]
+    fn operations() {
+        let two = Value::String("2".to_owned());
+        let three = Value::Double(3.0);
+        let four = Value::Double(4.0);
+        let five = Value::Integer(5);
+
+        assert_eq!(three.clone() * five.clone(), Value::Double(15.0));
+        assert_eq!(five.clone() * four.clone(), Value::Double(20.0));
+        assert_eq!(three.clone() * four.clone(), Value::Double(12.0));
+        assert_eq!(three.clone() + four.clone(), Value::Double(7.0));
+        assert_eq!(three.clone() / four.clone(), Value::Double(0.75));
+        assert_eq!(five.clone() / four.clone(), Value::Double(1.25));
+        assert_eq!(three.clone() / five.clone(), Value::Double(0.6));
+        assert_eq!(two.clone() * three.clone(), Value::String("222".to_owned()));
+        assert_eq!(five.clone() - three.clone(), Value::Double(2.0));
+        assert_eq!(-four.clone(), Value::Double(-4.0));
+        assert_eq!(!Value::Boolean(true), Value::Boolean(false));
+        assert_eq!(five.clone() % three.clone(), Value::Double(2.0));
+        assert_eq!(four.clone() % three.clone(), Value::Double(1.0));
+        assert_eq!(five.pow(three.clone()), Value::Double(125.0));
+        assert_eq!(four.pow(three.clone()), Value::Double(64.0));
+    }
+}
