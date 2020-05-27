@@ -97,7 +97,7 @@ impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
             Error::Io(ref err) => err.fmt(f),
-            Error::ParseRender(ref err) => write!(f, "{:?}", err),
+            Error::ParseRender(ref err) => err.fmt(f),
         }
     }
 }

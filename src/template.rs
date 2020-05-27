@@ -25,7 +25,7 @@ impl<'a> Template<'a> {
         self.template_body = Some(tpl_body);
 
         let mut parser = TemplateParser::new(tpl_body, &*self.template_env)?;
-        self.renderer = parser.parse().ok();
+        self.renderer = Some(parser.parse()?);
 
         Ok(())
     }

@@ -218,6 +218,11 @@ impl<'a, 'b> TemplateParser<'a, 'b> {
                 }
             };
         }
+        if let TextBlockType::RawBlock = self.current_block_info.read().unwrap().mode {
+            return Err(Error::from(ErrorKind::ExpectedRawEnd(SourceLocation::new(
+                1, 2,
+            ))));
+        }
 
         Ok(())
     }
