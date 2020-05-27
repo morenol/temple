@@ -75,15 +75,6 @@ impl<'a, 'b> TemplateParser<'a, 'b> {
     pub fn parse(&mut self) -> Result<ComposedRenderer<'a>> {
         match self.rough_parsing() {
             Ok(_) => {
-                let len_of_temp = self.template_body.read().unwrap().len();
-                self.finish_current_line(len_of_temp);
-                if let TextBlockType::RawBlock = self.current_block_info.read().unwrap().mode {
-                    return Err(Error::from(ErrorKind::ExpectedRawEnd(SourceLocation::new(
-                        len_of_temp,
-                        len_of_temp + 2, // TODO: THERE is not handling of expected end of comment????
-                    ))));
-                }
-                self.finish_current_block(len_of_temp, TextBlockType::RawText, None);
                 let mut renderer = ComposedRenderer::new();
                 self.fine_parsing(&mut renderer)?;
                 Ok(renderer)
@@ -218,11 +209,15 @@ impl<'a, 'b> TemplateParser<'a, 'b> {
                 }
             };
         }
+        let len_of_temp = self.template_body.read().unwrap().len();
+        self.finish_current_line(len_of_temp);
         if let TextBlockType::RawBlock = self.current_block_info.read().unwrap().mode {
             return Err(Error::from(ErrorKind::ExpectedRawEnd(SourceLocation::new(
-                1, 2,
+                len_of_temp,
+                len_of_temp + 2, // TODO: THERE is not handling of expected end of comment????
             ))));
         }
+        self.finish_current_block(len_of_temp, TextBlockType::RawText, None);
 
         Ok(())
     }
