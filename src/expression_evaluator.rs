@@ -55,7 +55,13 @@ impl Evaluate for Expression {
                     | BinaryOperation::Pow
                     | BinaryOperation::Div
                     | BinaryOperation::Modulo
-                    | BinaryOperation::DivInteger => {
+                    | BinaryOperation::DivInteger
+                    | BinaryOperation::LogicalEq
+                    | BinaryOperation::LogicalNe
+                    | BinaryOperation::LogicalLe
+                    | BinaryOperation::LogicalGe
+                    | BinaryOperation::LogicalGt
+                    | BinaryOperation::LogicalLt => {
                         visitors::BinaryMathOperation::apply(op, left_val, right_val)
                     }
                     _ => todo!(),

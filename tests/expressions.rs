@@ -34,3 +34,17 @@ fn math_order_expression() -> Result<()> {
     assert_render_template_eq("{{ -(-1) }}", "1")
     // assert_render_template_eq("{{ 5 - 2 - 2 }}", "1") TODO: solve left associative operations.
 }
+
+#[test]
+fn logical_compare() -> Result<()> {
+    assert_render_template_eq("{{ 1 == 1 }}", "true")?;
+    assert_render_template_eq("{{ 1 == 1.0 }}", "true")?;
+    assert_render_template_eq("{{ 2 > 1.0 }}", "true")?;
+    assert_render_template_eq("{{ 2.7 < 3.14 }}", "true")?;
+    assert_render_template_eq("{{ 10 >= -5.0 }}", "true")?;
+    assert_render_template_eq("{{  true != true }}", "false")?;
+    assert_render_template_eq("{{ false == false }}", "true")?;
+    assert_render_template_eq("{{ \"foo\" == \"bar\" }}", "false")?;
+    assert_render_template_eq("{{ \"foo\" == \"foo\" }}", "true")?;
+    assert_render_template_eq("{{ \"bar\" != \"bara\" }}", "true")
+}

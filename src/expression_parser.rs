@@ -189,6 +189,8 @@ impl ExpressionParser {
         let value = if let Some(tok) = token {
             match tok {
                 Token::IntegerNum(num) => return Ok(Expression::Constant(Value::from(num))),
+                Token::True => return Ok(Expression::Constant(Value::from(true))),
+                Token::False => return Ok(Expression::Constant(Value::from(false))),
                 Token::FloatNum(num) => return Ok(Expression::Constant(Value::from(num))),
                 Token::String(string) => {
                     return Ok(Expression::Constant(Value::from(string.to_string())))

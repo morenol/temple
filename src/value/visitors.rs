@@ -19,7 +19,12 @@ impl BinaryMathOperation {
                 }
             }
             BinaryOperation::Pow => left.pow(right),
-
+            BinaryOperation::LogicalEq => Value::Boolean(left == right),
+            BinaryOperation::LogicalLe => Value::Boolean(left <= right),
+            BinaryOperation::LogicalLt => Value::Boolean(left < right),
+            BinaryOperation::LogicalGe => Value::Boolean(left >= right),
+            BinaryOperation::LogicalGt => Value::Boolean(left > right),
+            BinaryOperation::LogicalNe => Value::Boolean(left != right),
             _ => todo!(),
         }
     }

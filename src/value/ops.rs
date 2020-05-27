@@ -1,4 +1,5 @@
 use super::Value;
+use std::cmp::{Ordering, PartialEq, PartialOrd};
 use std::ops::{Add, Div, Mul, Neg, Not, Rem, Sub};
 
 impl Add for Value {
@@ -114,6 +115,31 @@ impl Value {
                 Value::Double(left.powf(right))
             }
             (Value::Double(left), Value::Double(right)) => Value::Double(left.powf(right)),
+            _ => todo!(),
+        }
+    }
+}
+impl PartialOrd for Value {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        match (self, other) {
+            (Value::Integer(left), Value::Integer(right)) => left.partial_cmp(&right),
+            (Value::Integer(left), Value::Double(right)) => (*left as f64).partial_cmp(&right),
+            (Value::Double(left), Value::Integer(right)) => left.partial_cmp(&(*right as f64)),
+            (Value::Double(left), Value::Double(right)) => left.partial_cmp(&right),
+            _ => todo!(),
+        }
+    }
+}
+
+impl PartialEq for Value {
+    fn eq(&self, other: &Self) -> bool {
+        match (self, other) {
+            (Value::Integer(left), Value::Integer(right)) => left == right,
+            (Value::Integer(left), Value::Double(right)) => (*left as f64) == *right,
+            (Value::Double(left), Value::Integer(right)) => *left == (*right as f64),
+            (Value::Double(left), Value::Double(right)) => left == right,
+            (Value::Boolean(left), Value::Boolean(right)) => left == right,
+            (Value::String(left), Value::String(right)) => left == right,
             _ => todo!(),
         }
     }
