@@ -50,3 +50,11 @@ fn logical_compare() -> Result<()> {
     assert_render_template_eq("{{ \"foo\" == \"foo\" }}", "true")?;
     assert_render_template_eq("{{ \"bar\" != \"bara\" }}", "true")
 }
+
+#[test]
+fn logical_operators() -> Result<()> {
+    assert_render_template_eq("{{ true and false }}", "false")?;
+    assert_render_template_eq("{{ true and true }}", "true")?;
+    assert_render_template_eq("{{ false or false }}", "false")?;
+    assert_render_template_eq("{{ false or true }}", "true")
+}

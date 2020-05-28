@@ -25,7 +25,8 @@ impl BinaryMathOperation {
             BinaryOperation::LogicalGe => Value::Boolean(left >= right),
             BinaryOperation::LogicalGt => Value::Boolean(left > right),
             BinaryOperation::LogicalNe => Value::Boolean(left != right),
-            _ => todo!(),
+            BinaryOperation::LogicalOr => left | right,
+            BinaryOperation::LogicalAnd => left & right,
         }
     }
 }

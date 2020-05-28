@@ -1,6 +1,6 @@
 use super::Value;
 use std::cmp::{Ordering, PartialEq, PartialOrd};
-use std::ops::{Add, Div, Mul, Neg, Not, Rem, Sub};
+use std::ops::{Add, BitAnd, BitOr, Div, Mul, Neg, Not, Rem, Sub};
 
 impl Add for Value {
     type Output = Self;
@@ -140,6 +140,26 @@ impl PartialEq for Value {
             (Value::Double(left), Value::Double(right)) => left == right,
             (Value::Boolean(left), Value::Boolean(right)) => left == right,
             (Value::String(left), Value::String(right)) => left == right,
+            _ => todo!(),
+        }
+    }
+}
+
+impl BitAnd for Value {
+    type Output = Self;
+    fn bitand(self, other: Self) -> Self::Output {
+        match (self, other) {
+            (Value::Boolean(left), Value::Boolean(right)) => Value::Boolean(left & right),
+            _ => todo!(),
+        }
+    }
+}
+
+impl BitOr for Value {
+    type Output = Self;
+    fn bitor(self, other: Self) -> Self::Output {
+        match (self, other) {
+            (Value::Boolean(left), Value::Boolean(right)) => Value::Boolean(left || right),
             _ => todo!(),
         }
     }

@@ -61,7 +61,9 @@ impl Evaluate for Expression {
                     | BinaryOperation::LogicalLe
                     | BinaryOperation::LogicalGe
                     | BinaryOperation::LogicalGt
-                    | BinaryOperation::LogicalLt => {
+                    | BinaryOperation::LogicalLt
+                    | BinaryOperation::LogicalAnd
+                    | BinaryOperation::LogicalOr => {
                         visitors::BinaryMathOperation::apply(op, left_val, right_val)
                     }
                     _ => todo!(),
