@@ -32,7 +32,7 @@ impl ExpressionParser {
         let value = ExpressionParser::parse_logical_or(&mut lexer);
         match value {
             Ok(expression) => evaluator.set_expression(expression),
-            _ => todo!(),
+            Err(err) => return Err(err),
         }
 
         Ok(evaluator)

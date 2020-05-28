@@ -53,3 +53,20 @@ fn unexpected_endcomment() -> Result<()> {
     );
     Ok(())
 }
+
+#[test]
+fn expected_expression() -> Result<()> {
+    let temp_env = TemplateEnv::default();
+    let template_env = Rc::new(&temp_env);
+    let mut template = Template::new(&template_env)?;
+    let result = template.load("{{            }}");
+    assert_matches!(
+        result,
+        Err(Error::ParseRender(ErrorKind::ExpectedExpression(_)))
+    );
+    assert_eq!(
+        result.err().unwrap().to_string(),
+        "Expression expected".to_string()
+    );
+    Ok(())
+}

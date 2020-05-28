@@ -42,8 +42,10 @@ fn logical_compare() -> Result<()> {
     assert_render_template_eq("{{ 2 > 1.0 }}", "true")?;
     assert_render_template_eq("{{ 2.7 < 3.14 }}", "true")?;
     assert_render_template_eq("{{ 10 >= -5.0 }}", "true")?;
+    assert_render_template_eq("{{ 5.0 <= 5  }}", "true")?;
     assert_render_template_eq("{{  true != true }}", "false")?;
     assert_render_template_eq("{{ false == false }}", "true")?;
+    assert_render_template_eq("{{ not false == false }}", "false")?;
     assert_render_template_eq("{{ \"foo\" == \"bar\" }}", "false")?;
     assert_render_template_eq("{{ \"foo\" == \"foo\" }}", "true")?;
     assert_render_template_eq("{{ \"bar\" != \"bara\" }}", "true")
