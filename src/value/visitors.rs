@@ -27,6 +27,7 @@ impl BinaryMathOperation {
             BinaryOperation::LogicalNe => Value::Boolean(left != right),
             BinaryOperation::LogicalOr => left | right,
             BinaryOperation::LogicalAnd => left & right,
+            BinaryOperation::StringConcat => Value::String(left.to_string() + &right.to_string()),
         }
     }
 }

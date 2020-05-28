@@ -97,7 +97,12 @@ impl ExpressionParser {
         let left = ExpressionParser::parse_math_pow(&mut lexer)?;
         if let Some(Token::Tilde) = lexer.peek() {
             lexer.next();
-            todo!()
+            let right = ExpressionParser::parse_logical_and(&mut lexer)?;
+            return Ok(Expression::BinaryExpression(
+                BinaryOperation::StringConcat,
+                Box::new(left),
+                Box::new(right),
+            ));
         }
         Ok(left)
     }

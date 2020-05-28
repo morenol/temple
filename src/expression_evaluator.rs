@@ -25,6 +25,7 @@ pub enum BinaryOperation {
     LogicalGt,
     LogicalGe,
     LogicalLe,
+    StringConcat,
 }
 
 #[derive(Debug)]
@@ -48,28 +49,8 @@ impl Evaluate for Expression {
             Expression::BinaryExpression(op, left, right) => {
                 let left_val = left.evaluate();
                 let right_val = right.evaluate();
-                match op {
-                    BinaryOperation::Plus
-                    | BinaryOperation::Minus
-                    | BinaryOperation::Mul
-                    | BinaryOperation::Pow
-                    | BinaryOperation::Div
-                    | BinaryOperation::Modulo
-                    | BinaryOperation::DivInteger
-                    | BinaryOperation::LogicalEq
-                    | BinaryOperation::LogicalNe
-                    | BinaryOperation::LogicalLe
-                    | BinaryOperation::LogicalGe
-                    | BinaryOperation::LogicalGt
-                    | BinaryOperation::LogicalLt
-                    | BinaryOperation::LogicalAnd
-                    | BinaryOperation::LogicalOr => {
-                        visitors::BinaryMathOperation::apply(op, left_val, right_val)
-                    }
-                    _ => todo!(),
-                }
+                visitors::BinaryMathOperation::apply(op, left_val, right_val)
             }
-
             Expression::UnaryExpression(op, expr) => {
                 let expression = expr.evaluate();
                 match op {

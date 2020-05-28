@@ -23,7 +23,9 @@ fn basic_math_expression() -> Result<()> {
 fn basic_string_expression() -> Result<()> {
     assert_render_template_eq("{{ \"123\" * 3 }}", "123123123")?;
     assert_render_template_eq("{{ \"abc\" * 0 }}", "")?;
-    assert_render_template_eq("{{ \"hello\" + \" \" + \"world\"}}", "hello world")
+    assert_render_template_eq("{{ \"hello\" + \" \" + \"world\"}}", "hello world")?;
+    assert_render_template_eq("{{ \"hello \" ~ 123 }}", "hello 123")?;
+    assert_render_template_eq("{{ \"hello\" ~ \" \" ~ false }}", "hello false")
 }
 
 #[test]
