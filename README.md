@@ -37,8 +37,58 @@ TODO:
   - [ ] Accessors ([],.)
   - [ ] Identifiers 
 - [ ] Filters
+  - [ ] abs
+  - [ ] attr
+  - [ ] batch
+  - [ ] capitalize
+  - [ ] center
+  - [ ] default
+  - [ ] dictsort
+  - [ ] escape
+  - [ ] filesizeformat
+  - [ ] first
+  - [ ] float
+  - [ ] forceescape
+  - [ ] format
+  - [ ] groupby
+  - [ ] indent
+  - [ ] int
+  - [ ] last
+  - [ ] length
+  - [ ] list
+  - [ ] lower
+  - [ ] lower
+  - [ ] map
+  - [ ] max
+  - [ ] min
+  - [ ] pprint
+  - [ ] random
+  - [ ] reject
+  - [ ] rejectattr
+  - [ ] replace
+  - [ ] reverse
+  - [ ] round
+  - [ ] safe
+  - [ ] select
+  - [ ]  selectattr
+  - [ ] slice
+  - [ ] sort
+  - [ ] string
+  - [ ] striptags
+  - [ ] sum
+  - [ ] title
+  - [ ] tojson
+  - [ ] truncate
+  - [ ] unique
+  - [ ] upper
+  - [ ] urlencode
+  - [ ] urlize
+  - [ ] wordcount
+  - [ ] wordwrap
+  - [ ] xmlattr
+- [ ] Custom filters
 - [x] Raw-blocks
 - [x] Comments
 - [ ] Use of context
-- [ ] Whitespace control
+- [x] Whitespace control
 - [ ] Use of settings
