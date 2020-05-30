@@ -15,15 +15,15 @@ impl Default for Jinja2CompatMode {
 #[derive(Clone, Debug, PartialEq)]
 pub struct Settings {
     /// Enables use of line statements (yet not supported)
-    use_line_statements: bool,
+    pub use_line_statements: bool,
     /// Enables blocks trimming the same way as it does python Jinja2 engine
-    trim_blocks: bool,
+    pub trim_blocks: bool,
     /// Enables blocks stripping (from the left) the same way as it does python Jinja2 engine
-    lstrip_blocks: bool,
+    pub lstrip_blocks: bool,
     /// Templates cache size
-    cache_size: usize,
+    pub cache_size: usize,
     /// If auto_reload is set to true (default) every time a template is requested the loader checks if the source changed and if yes, it will reload the template
-    auto_reload: bool,
+    pub auto_reload: bool,
     /// Extensions set enabled for templates
     extensions: Extensions,
     /// Controls Jinja2 compatibility mode
