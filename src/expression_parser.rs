@@ -24,7 +24,7 @@ impl ExpressionParser {
         Ok(ExpressionRenderer::new(evaluator))
     }
 
-    fn full_expresion_parser<'a>(
+    pub fn full_expresion_parser<'a>(
         mut lexer: &mut Peekable<Lexer<'a, Token<'a>>>,
     ) -> Result<FullExpressionEvaluator> {
         let mut evaluator = FullExpressionEvaluator::new();
@@ -160,9 +160,7 @@ impl ExpressionParser {
         ));
     }
 
-    fn parse_unary_plus_min<'a>(
-        mut lexer: &mut Peekable<Lexer<'a, Token<'a>>>,
-    ) -> Result<Expression> {
+    fn parse_unary_plus_min<'a>(lexer: &mut Peekable<Lexer<'a, Token<'a>>>) -> Result<Expression> {
         let unary_op = match lexer.peek() {
             Some(Token::Plus) => Some(UnaryOperation::Plus),
             Some(Token::Minus) => Some(UnaryOperation::Minus),

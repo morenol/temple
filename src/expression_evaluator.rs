@@ -1,4 +1,3 @@
-use crate::error::Result;
 use crate::renderer::Render;
 use crate::value::visitors;
 use crate::value::Value;
@@ -7,7 +6,6 @@ use std::io::Write;
 pub trait Evaluate {
     fn evaluate(&self) -> Value;
 }
-
 #[derive(Debug)]
 pub enum BinaryOperation {
     Plus,

@@ -2,9 +2,12 @@ use crate::error::{Error, ErrorKind, Result, SourceLocation};
 use crate::expression_parser::ExpressionParser;
 use crate::keyword::{RegexEnum, KEYWORDS, ROUGH_TOKENIZER};
 use crate::lexer::Token;
-use crate::renderer::{ComposedRenderer, RawTextRenderer, Render};
+use crate::renderer::{ComposedRenderer, RawTextRenderer};
+use crate::statement::parser::StatementParser;
+use crate::statement::{StatementInfo, StatementInfoList, StatementInfoType};
 use crate::template_env::TemplateEnv;
 use regex::Regex;
+use std::rc::Rc;
 use std::sync::RwLock;
 
 #[derive(Debug)]
@@ -36,7 +39,7 @@ impl<'a, 'b> TemplateParser<'a, 'b> {
         })
     }
 
-    fn fine_parsing(&self, renderer: &mut ComposedRenderer<'a>) -> Result<()> {
+    fn fine_parsing(&self, renderer: Rc<ComposedRenderer<'a>>) -> Result<()> {
         let mut statements_stack: StatementInfoList = vec![];
         let root = StatementInfo::new(StatementInfoType::TemplateRoot, Token::Unknown, renderer);
         statements_stack.push(root);
@@ -66,7 +69,14 @@ impl<'a, 'b> TemplateParser<'a, 'b> {
                         .current_composition
                         .add_renderer(Box::new(new_renderer));
                 }
-                _ => {}
+                TextBlockType::Comment => {}
+                TextBlockType::Statement | TextBlockType::LineStatement => {
+                    let text = self.template_body.read().unwrap();
+                    StatementParser::parse(
+                        &text[orig_block.range.start..orig_block.range.end],
+                        &mut statements_stack,
+                    )?;
+                }
             }
         }
         Ok(())
@@ -75,9 +85,9 @@ impl<'a, 'b> TemplateParser<'a, 'b> {
     pub fn parse(&mut self) -> Result<ComposedRenderer<'a>> {
         match self.rough_parsing() {
             Ok(_) => {
-                let mut renderer = ComposedRenderer::new();
-                self.fine_parsing(&mut renderer)?;
-                Ok(renderer)
+                let renderer = Rc::new(ComposedRenderer::new());
+                self.fine_parsing(renderer.clone())?;
+                Ok(Rc::try_unwrap(renderer).unwrap())
             }
             Err(error) => Err(error),
         }
@@ -174,8 +184,25 @@ impl<'a, 'b> TemplateParser<'a, 'b> {
                     self.current_block_info.write().unwrap().range.start =
                         self.finish_current_block(match_start, TextBlockType::RawText, None);
                 }
-                RegexEnum::StmtBegin => {}
-                RegexEnum::StmtEnd => {}
+                RegexEnum::StmtBegin => {
+                    self.start_control_block(TextBlockType::Statement, match_start, match_end);
+                }
+                RegexEnum::StmtEnd => {
+                    match self.current_block_info.read().unwrap().mode {
+                        TextBlockType::RawBlock => {
+                            self.finish_current_line(match_end);
+                            return Err(Error::from(ErrorKind::UnexpectedStmtEnd(
+                                SourceLocation::new(match_start, match_end),
+                            )));
+                        }
+                        TextBlockType::Statement => {}
+                        _ => {
+                            continue;
+                        }
+                    }
+                    self.current_block_info.write().unwrap().range.start =
+                        self.finish_current_block(match_start, TextBlockType::RawText, None);
+                }
                 RegexEnum::RawBegin => {
                     match self.current_block_info.read().unwrap().mode {
                         TextBlockType::RawBlock => continue,
@@ -339,46 +366,3 @@ impl Default for LineInfo {
         }
     }
 }
-
-struct StatementInfo<'a, 'b> {
-    mode: StatementInfoType,
-    current_composition: &'a ComposedRenderer<'b>,
-    compositions: Vec<ComposedRenderer<'a>>,
-    token: Token<'a>,
-    renderer: Option<Box<dyn Render + 'a>>,
-}
-
-enum StatementInfoType {
-    TemplateRoot,
-    IfStatement,
-    ElseIfStatement,
-    ForStatement,
-    SetStatement,
-    ExtendsStatement,
-    BlockStatement,
-    ParentBlockStatement,
-    MacroStatement,
-    MacroCallStatement,
-    WithStatement,
-    FilterStatement,
-}
-
-impl<'a, 'b> StatementInfo<'a, 'b> {
-    pub fn new(
-        mode: StatementInfoType,
-        token: Token<'a>,
-        renderers: &'a mut ComposedRenderer<'b>,
-    ) -> Self {
-        let compositions = vec![];
-        let current_composition = renderers;
-        Self {
-            mode,
-            token,
-            current_composition,
-            compositions,
-            renderer: None,
-        }
-    }
-}
-
-type StatementInfoList<'a, 'b> = Vec<StatementInfo<'a, 'b>>;

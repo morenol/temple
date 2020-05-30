@@ -64,12 +64,12 @@ pub struct TemplateEnv {
 }
 
 impl TemplateEnv {
-    pub fn add_global(&mut self, name: String, val: Value) {
-        todo!("Unimplemented")
+    pub fn add_global(&mut self, _name: String, _val: Value) {
+        todo!()
     }
 
-    pub fn remove_global(&mut self, name: String, val: Value) {
-        todo!("Unimplemented")
+    pub fn remove_global(&mut self, _name: String, _val: Value) {
+        todo!()
     }
 
     pub fn set_settings(&mut self, settings: Settings) {
