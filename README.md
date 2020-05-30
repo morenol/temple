@@ -41,3 +41,4 @@ TODO:
 - [x] Comments
 - [ ] Use of context
 - [ ] Whitespace control
+- [ ] Use of settings
