@@ -256,14 +256,34 @@ impl<'a, 'b> TemplateParser<'a, 'b> {
         mut start_offset: usize,
     ) {
         let end_offset = match self.current_block_info.read().unwrap().mode {
-            TextBlockType::RawText => self.strip_block_left(start_offset, match_start),
+            TextBlockType::RawText => self.strip_block_left(
+                start_offset,
+                match_start,
+                self.env.read().unwrap().settings().lstrip_blocks,
+            ),
             _ => return,
         };
         self.finish_current_block(end_offset, mode, None);
 
+        if start_offset < self.template_body.read().unwrap().len() {
+            let ctrl_char = self
+                .template_body
+                .read()
+                .unwrap()
+                .chars()
+                .nth(start_offset)
+                .unwrap();
+
+            if ctrl_char == '+' || ctrl_char == '-' {
+                start_offset += 1;
+            }
+        }
         //m_currentBlockInfo.type = blockType; TODO: remove line in jinja2cpp
         if let TextBlockType::RawBlock = self.current_block_info.read().unwrap().mode {
-            start_offset = self.strip_block_right(start_offset - 2);
+            start_offset = self.strip_block_right(
+                start_offset - 2,
+                self.env.read().unwrap().settings().trim_blocks,
+            );
         }
         self.current_block_info.write().unwrap().range.start = start_offset;
     }
@@ -278,13 +298,43 @@ impl<'a, 'b> TemplateParser<'a, 'b> {
             TextBlockType::RawBlock => {
                 let current_position = match_start.unwrap_or(position);
                 let original_position = position;
-                position = self.strip_block_left(current_position + 2, current_position);
-                new_position = self.strip_block_right(original_position);
+                position = self.strip_block_left(
+                    current_position + 2,
+                    current_position,
+                    self.env.read().unwrap().settings().lstrip_blocks,
+                );
+                new_position = self.strip_block_right(
+                    original_position,
+                    self.env.read().unwrap().settings().trim_blocks,
+                );
             }
-            TextBlockType::RawText => position = self.strip_block_left(position + 2, position),
+            TextBlockType::RawText => {
+                position = self.strip_block_left(
+                    position + 2,
+                    position,
+                    self.env.read().unwrap().settings().lstrip_blocks,
+                )
+            }
             _ => {
                 if let TextBlockType::RawText = next_block {
-                    new_position = self.strip_block_right(position);
+                    new_position = self.strip_block_right(
+                        position,
+                        self.env.read().unwrap().settings().trim_blocks,
+                    );
+                }
+
+                if position != 0 {
+                    let ctrl_char = self
+                        .template_body
+                        .read()
+                        .unwrap()
+                        .chars()
+                        .nth(position - 1)
+                        .unwrap();
+
+                    if ctrl_char == '+' || ctrl_char == '-' {
+                        position -= 1;
+                    }
                 }
             }
         };
@@ -300,11 +350,105 @@ impl<'a, 'b> TemplateParser<'a, 'b> {
 
         new_position
     }
-    fn strip_block_left(&self, ctrl_char_pos: usize, end_offset: usize) -> usize {
+    fn strip_block_left(
+        &self,
+        ctrl_char_pos: usize,
+        mut end_offset: usize,
+        mut do_trim: bool,
+    ) -> usize {
+        let mut do_total_strip = false;
+        if ctrl_char_pos < self.template_body.read().unwrap().len() {
+            let ctrl_char = self
+                .template_body
+                .read()
+                .unwrap()
+                .chars()
+                .nth(ctrl_char_pos)
+                .unwrap();
+            if ctrl_char == '+' {
+                do_trim = false;
+            } else {
+                do_total_strip = ctrl_char == '-';
+            }
+            do_trim |= do_total_strip;
+        }
+        if !do_trim {
+            return end_offset;
+        }
+        match self.current_block_info.read().unwrap().mode {
+            TextBlockType::RawText | TextBlockType::RawBlock => {}
+            _ => return end_offset,
+        }
+
+        let original_offset = end_offset;
+        let mut same_line = true;
+        let start_offset = self.current_block_info.read().unwrap().range.start;
+        let templ = self.template_body.read().unwrap();
+        for ch in templ[start_offset..original_offset].chars().rev() {
+            if !ch.is_whitespace() {
+                if !same_line {
+                    break;
+                }
+                if do_total_strip {
+                    return end_offset;
+                } else {
+                    return original_offset;
+                }
+            }
+            if ch == '\n' {
+                if !do_total_strip {
+                    break;
+                }
+                same_line = false;
+            }
+            end_offset -= 1;
+        }
+
         end_offset
     }
-    fn strip_block_right(&self, position: usize) -> usize {
-        position + 2
+    fn strip_block_right(&self, position: usize, mut do_trim: bool) -> usize {
+        let mut new_pos = position + 2;
+
+        if position != 0 {
+            match self.current_block_info.read().unwrap().mode {
+                TextBlockType::RawText => {}
+                _ => {
+                    let ctrl_char = self
+                        .template_body
+                        .read()
+                        .unwrap()
+                        .chars()
+                        .nth(position - 1)
+                        .unwrap();
+                    do_trim = if ctrl_char == '-' {
+                        true
+                    } else {
+                        if ctrl_char == '+' {
+                            false
+                        } else {
+                            do_trim
+                        }
+                    }
+                }
+            }
+        }
+
+        if do_trim {
+            let templ = self.template_body.read().unwrap();
+
+            for ch in templ[position + 2..].chars() {
+                if ch == '\n' {
+                    new_pos += 1;
+                    break;
+                }
+                if !ch.is_whitespace() {
+                    break;
+                }
+                new_pos += 1;
+            }
+        }
+
+        new_pos
     }
     fn finish_current_line(&self, position: usize) {
         self.current_line_info.write().unwrap().range.end = position;
