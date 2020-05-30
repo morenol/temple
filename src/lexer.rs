@@ -172,65 +172,60 @@ pub enum Token<'a> {
     ExprEnd,
 }
 
-mod test {
-    use super::Token;
-    use logos::Logos;
+#[test]
+fn lex_numbers() {
+    let tokens: Vec<_> = Token::lexer("1 42 -100 3.14 -77.77").collect();
+    assert_eq!(
+        tokens,
+        &[
+            Token::IntegerNum(1),
+            Token::IntegerNum(42),
+            Token::Minus,
+            Token::IntegerNum(100),
+            Token::FloatNum(3.14),
+            Token::Minus,
+            Token::FloatNum(77.77),
+        ]
+    );
+}
 
-    #[test]
-    fn lex_numbers() {
-        let tokens: Vec<_> = Token::lexer("1 42 -100 3.14 -77.77").collect();
-        assert_eq!(
-            tokens,
-            &[
-                Token::IntegerNum(1),
-                Token::IntegerNum(42),
-                Token::Minus,
-                Token::IntegerNum(100),
-                Token::FloatNum(3.14),
-                Token::Minus,
-                Token::FloatNum(77.77),
-            ]
-        );
-    }
+#[test]
+fn lex_strings() {
+    let tokens: Vec<_> = Token::lexer("\"some string\" \"\"").collect();
+    assert_eq!(
+        tokens,
+        &[
+            Token::String(std::borrow::Cow::Borrowed("some string")),
+            Token::String(std::borrow::Cow::Borrowed("")),
+        ]
+    );
+}
 
-    #[test]
-    fn lex_strings() {
-        let tokens: Vec<_> = Token::lexer("\"some string\" \"\"").collect();
-        assert_eq!(
-            tokens,
-            &[
-                Token::String(std::borrow::Cow::Borrowed("some string")),
-                Token::String(std::borrow::Cow::Borrowed("")),
-            ]
-        );
-    }
-
-    #[test]
-    fn lex_math() {
-        let tokens: Vec<_> = Token::lexer("(2 + 3 * (5 - 1) + 2 ** 3 / 16) % 5").collect();
-        assert_eq!(
-            tokens,
-            &[
-                Token::LBracket,
-                Token::IntegerNum(2),
-                Token::Plus,
-                Token::IntegerNum(3),
-                Token::Mul,
-                Token::LBracket,
-                Token::IntegerNum(5),
-                Token::Minus,
-                Token::IntegerNum(1),
-                Token::RBracket,
-                Token::Plus,
-                Token::IntegerNum(2),
-                Token::MulMul,
-                Token::IntegerNum(3),
-                Token::Div,
-                Token::IntegerNum(16),
-                Token::RBracket,
-                Token::Percent,
-                Token::IntegerNum(5),
-            ]
-        );
-    }
+#[test]
+fn lex_math() {
+    let tokens: Vec<_> = Token::lexer("(2 + 3 * (5 - 1) + 2 ** 3 / 16) % 5").collect();
+    assert_eq!(
+        tokens,
+        &[
+            Token::LBracket,
+            Token::IntegerNum(2),
+            Token::Plus,
+            Token::IntegerNum(3),
+            Token::Mul,
+            Token::LBracket,
+            Token::IntegerNum(5),
+            Token::Minus,
+            Token::IntegerNum(1),
+            Token::RBracket,
+            Token::Plus,
+            Token::IntegerNum(2),
+            Token::MulMul,
+            Token::IntegerNum(3),
+            Token::Div,
+            Token::IntegerNum(16),
+            Token::RBracket,
+            Token::Percent,
+            Token::IntegerNum(5),
+        ]
+    );
 }

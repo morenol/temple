@@ -93,7 +93,7 @@ impl<'a> Statement<'a> {
     pub fn add_else_branch(&mut self, branch: Statement<'a>) {
         match self {
             Statement::If(statement) => statement.add_else_branch(branch),
-            Statement::Else(statement) => todo!(),
+            Statement::Else(_statement) => todo!(),
         }
     }
 }
