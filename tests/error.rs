@@ -68,5 +68,43 @@ fn expected_expression() -> Result<()> {
         result.err().unwrap().to_string(),
         "Expression expected".to_string()
     );
+    let result = template.load("{{ \"text\"[] ");
+    assert_matches!(
+        result,
+        Err(Error::ParseRender(ErrorKind::ExpectedExpression(_)))
+    );
+    assert_eq!(
+        result.err().unwrap().to_string(),
+        "Expression expected".to_string()
+    );
+
+    Ok(())
+}
+
+#[test]
+fn expected_right_bracket() -> Result<()> {
+    let temp_env = TemplateEnv::default();
+    let template_env = Rc::new(&temp_env);
+    let mut template = Template::new(&template_env)?;
+    let result = template.load("{{ \"text\"[2 }}");
+    assert_matches!(
+        result,
+        Err(Error::ParseRender(ErrorKind::ExpectedSquareBracket(_)))
+    );
+    assert_eq!(
+        result.err().unwrap().to_string(),
+        "']' expected".to_string()
+    );
+    let result = template.load("{{ (2 + 2   }}");
+    assert_matches!(
+        result,
+        Err(Error::ParseRender(ErrorKind::ExpectedRoundBracket(_)))
+    );
+
+    assert_eq!(
+        result.err().unwrap().to_string(),
+        "')' expected".to_string()
+    );
+
     Ok(())
 }

@@ -205,7 +205,11 @@ impl ExpressionParser {
                 Token::FloatNum(num) => Expression::Constant(Value::from(num)),
                 Token::String(string) => Expression::Constant(Value::from(string.to_string())),
                 Token::LBracket => ExpressionParser::parse_braced_expression_or_tuple(&mut lexer)?,
-                _ => todo!(),
+                _ => {
+                    return Err(Error::from(ErrorKind::ExpectedExpression(
+                        SourceLocation::new(1, 2), // TODO: Use actual source locations
+                    )));
+                }
             }
         } else {
             return Err(Error::from(ErrorKind::ExpectedExpression(
@@ -236,8 +240,19 @@ impl ExpressionParser {
                 lexer.next();
                 break;
             }
-            let expr = ExpressionParser::parse_logical_or(&mut lexer)?;
-            exprs.push(expr);
+            let expr = ExpressionParser::parse_logical_or(&mut lexer);
+            match expr {
+                Ok(expr) => exprs.push(expr),
+                Err(err) => {
+                    if exprs.len() > 0 {
+                        return Err(Error::from(ErrorKind::ExpectedRoundBracket(
+                            SourceLocation::new(1, 2),
+                        )));
+                    } else {
+                        return Err(err);
+                    }
+                }
+            }
             if let Some(Token::Comma) = lexer.peek() {
                 lexer.next();
                 is_tuple = true;
