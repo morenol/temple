@@ -48,7 +48,7 @@ impl<'a> RawTextRenderer<'a> {
 }
 
 impl<'a> Render for RawTextRenderer<'a> {
-    fn render(&self, out: &mut dyn Write, params: &ValuesMap) {
+    fn render(&self, out: &mut dyn Write, _params: &ValuesMap) {
         out.write(self.content.as_bytes());
     }
 }
