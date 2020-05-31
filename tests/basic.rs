@@ -3,7 +3,7 @@ use temple::error::Result;
 
 #[test]
 fn render_plain_singe_line() -> Result<()> {
-    assert_render_template_eq("Hello, world!", "Hello, world!")
+    assert_render_template_eq("Hello, world!", "Hello, world!", None)
 }
 
 #[test]
@@ -13,6 +13,7 @@ fn render_plain_multiline() -> Result<()> {
 Hello, world!",
         "Hello, world!
 Hello, world!",
+        None,
     )
 }
 
@@ -23,6 +24,7 @@ fn render_multiline_with_comment() -> Result<()> {
 {#Comment to skip #}Hello, world!",
         "Hello, world!
 Hello, world!",
+        None,
     )
 }
 
@@ -42,6 +44,7 @@ from Parser!)",
 
 
 from Parser!)",
+        None,
     )
 }
 
@@ -54,5 +57,6 @@ fn render_raw_test() -> Result<()> {
         "
     This is a raw text {{ 2 + 2 }}
 ",
+        None,
     )
 }

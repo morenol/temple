@@ -1,46 +1,60 @@
 use super::utils::assert_render_template_eq;
 use temple::error::Result;
+use temple::value::{Value, ValuesMap};
 
 #[test]
 fn render_if_body() -> Result<()> {
+    let mut context = ValuesMap::default();
+    context.insert("trueValue".to_string(), Value::Boolean(true));
     assert_render_template_eq(
-        "{% if true %}
+        "{% if trueValue %}
 Hello, world!
 {% endif %}",
         "
 Hello, world!
 ",
+        Some(&context),
     )
 }
 
 #[test]
 fn dont_render_if_body() -> Result<()> {
+    let mut context = ValuesMap::default();
+    context.insert("falseValue".to_string(), Value::Boolean(false));
     assert_render_template_eq(
-        "Only render this.{% if false %}
+        "Only render this.{% if falseValue %}
 this not
 {% endif %}",
         "Only render this.",
+        Some(&context),
     )
 }
 
 #[test]
 fn render_else() -> Result<()> {
+    let mut context = ValuesMap::default();
+    context.insert("six".to_string(), Value::Double(6.0));
     assert_render_template_eq(
-        "{% if true == false %}
+        "{% if six < 5 %}
         This should not be rendered
     {% else %}Rendered from else branch{% endif %}",
         "Rendered from else branch",
+        Some(&context),
     )
 }
 
 #[test]
 fn render_elif() -> Result<()> {
+    let mut context = ValuesMap::default();
+    context.insert("number".to_string(), Value::Double(42.0));
+
     assert_render_template_eq(
-        "{% if 5 > 7 %}
+        "{% if number > 50 %}
         This should not be rendered
-    {% elif 5 == 6 %}Not rendered from elif elif branch
-    {% elif 5 == 5 %}Rendered from elif branch{% else %} 
+    {% elif number == 43 %}Not rendered from elif elif branch
+    {% elif number >= 42 %}Rendered from elif branch{% else %} 
     Ignored{% endif %}",
         "Rendered from elif branch",
+        Some(&context),
     )
 }
