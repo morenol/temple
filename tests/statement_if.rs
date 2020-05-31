@@ -10,6 +10,7 @@ Hello, world!
         "
 Hello, world!
 ",
+        None,
     )
 }
 
@@ -20,6 +21,7 @@ fn dont_render_if_body() -> Result<()> {
 this not
 {% endif %}",
         "Only render this.",
+        None,
     )
 }
 
@@ -30,6 +32,7 @@ fn render_else() -> Result<()> {
         This should not be rendered
     {% else %}Rendered from else branch{% endif %}",
         "Rendered from else branch",
+        None,
     )
 }
 
@@ -42,5 +45,6 @@ fn render_elif() -> Result<()> {
     {% elif 5 == 5 %}Rendered from elif branch{% else %} 
     Ignored{% endif %}",
         "Rendered from elif branch",
+        None,
     )
 }

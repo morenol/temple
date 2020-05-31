@@ -1,6 +1,6 @@
 use crate::renderer::Render;
 use crate::value::visitors;
-use crate::value::Value;
+use crate::value::{Value, ValuesMap};
 use std::io::Write;
 
 pub trait Evaluate {
@@ -92,7 +92,7 @@ pub struct FullExpressionEvaluator<'a> {
 }
 
 impl<'a> Render for FullExpressionEvaluator<'a> {
-    fn render(&self, out: &mut dyn Write) {
+    fn render(&self, out: &mut dyn Write, params: &ValuesMap) {
         let value = self.evaluate();
         out.write(value.to_string().as_bytes());
     }

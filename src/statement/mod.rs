@@ -4,7 +4,7 @@ use std::io::Write;
 use crate::expression_evaluator::Evaluate;
 use crate::renderer::ComposedRenderer;
 use crate::renderer::Render;
-use crate::value::Value;
+use crate::value::{Value, ValuesMap};
 use std::rc::Rc;
 pub mod parser;
 pub struct IfStatement<'a> {
@@ -29,15 +29,15 @@ impl<'a> IfStatement<'a> {
     }
 }
 impl<'a> Render for IfStatement<'a> {
-    fn render(&self, out: &mut dyn Write) {
+    fn render(&self, out: &mut dyn Write, params: &ValuesMap) {
         let value = self.expression.evaluate();
         if let Value::Boolean(true) = value {
-            self.body.as_ref().unwrap().render(out)
+            self.body.as_ref().unwrap().render(out, params)
         } else {
             for branch in &self.else_branches {
                 if let Statement::Else(else_branch) = branch {
                     if else_branch.should_render() {
-                        branch.render(out);
+                        branch.render(out, params);
                         break;
                     }
                 } else {
@@ -74,8 +74,8 @@ impl<'a> ElseStatement<'a> {
     }
 }
 impl<'a> Render for ElseStatement<'a> {
-    fn render(&self, out: &mut dyn Write) {
-        self.body.as_ref().unwrap().render(out);
+    fn render(&self, out: &mut dyn Write, params: &ValuesMap) {
+        self.body.as_ref().unwrap().render(out, params);
     }
 }
 
@@ -98,10 +98,10 @@ impl<'a> Statement<'a> {
     }
 }
 impl<'a> Render for Statement<'a> {
-    fn render(&self, out: &mut dyn Write) {
+    fn render(&self, out: &mut dyn Write, params: &ValuesMap) {
         match self {
-            Statement::If(statement) => statement.render(out),
-            Statement::Else(statement) => statement.render(out),
+            Statement::If(statement) => statement.render(out, params),
+            Statement::Else(statement) => statement.render(out, params),
         }
     }
 }

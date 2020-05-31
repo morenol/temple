@@ -1,5 +1,5 @@
 pub mod error;
-mod value;
+pub mod value;
 
 mod expression_evaluator;
 mod expression_parser;

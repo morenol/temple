@@ -1,4 +1,5 @@
 use crate::expression_evaluator::FullExpressionEvaluator;
+use crate::value::ValuesMap;
 use std::fmt;
 use std::io::Write;
 use std::sync::RwLock;
@@ -8,7 +9,7 @@ pub struct ComposedRenderer<'a> {
 }
 
 pub trait Render {
-    fn render(&self, out: &mut dyn Write);
+    fn render(&self, out: &mut dyn Write, params: &ValuesMap);
 }
 
 impl<'a> ComposedRenderer<'a> {
@@ -22,9 +23,9 @@ impl<'a> ComposedRenderer<'a> {
 }
 
 impl<'a> Render for ComposedRenderer<'a> {
-    fn render(&self, out: &mut dyn Write) {
+    fn render(&self, out: &mut dyn Write, params: &ValuesMap) {
         for r in self.renderers.read().unwrap().iter() {
-            r.render(out)
+            r.render(out, params)
         }
     }
 }
@@ -47,7 +48,7 @@ impl<'a> RawTextRenderer<'a> {
 }
 
 impl<'a> Render for RawTextRenderer<'a> {
-    fn render(&self, out: &mut dyn Write) {
+    fn render(&self, out: &mut dyn Write, params: &ValuesMap) {
         out.write(self.content.as_bytes());
     }
 }
@@ -57,8 +58,8 @@ pub struct ExpressionRenderer<'a> {
 }
 
 impl<'a> Render for ExpressionRenderer<'a> {
-    fn render(&self, out: &mut dyn Write) {
-        self.expression.render(out);
+    fn render(&self, out: &mut dyn Write, params: &ValuesMap) {
+        self.expression.render(out, params);
     }
 }
 
