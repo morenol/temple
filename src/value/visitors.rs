@@ -31,3 +31,15 @@ impl BinaryMathOperation {
         }
     }
 }
+
+pub struct Subscription;
+impl Subscription {
+    pub fn apply(value: Value, subscript: Value) -> Value {
+        match (value, subscript) {
+            (Value::String(st), Value::Integer(idx)) => {
+                Value::String(st.chars().nth(idx as usize).unwrap().to_string())
+            }
+            _ => todo!(),
+        }
+    }
+}

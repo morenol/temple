@@ -31,7 +31,7 @@ impl StatementParser {
     }
     fn parse_if<'a>(
         lexer: &mut Peekable<Lexer<'a, Token<'a>>>,
-        statementinfo_list: &mut StatementInfoList,
+        statementinfo_list: &mut StatementInfoList<'a>,
     ) -> Result<()> {
         let value = ExpressionParser::full_expresion_parser(lexer)?;
         let composed_renderer = Rc::new(ComposedRenderer::new());
@@ -45,7 +45,7 @@ impl StatementParser {
     }
     fn parse_elif<'a>(
         lexer: &mut Peekable<Lexer<'a, Token<'a>>>,
-        statementinfo_list: &mut StatementInfoList,
+        statementinfo_list: &mut StatementInfoList<'a>,
     ) -> Result<()> {
         let value = ExpressionParser::full_expresion_parser(lexer)?;
         let composed_renderer = Rc::new(ComposedRenderer::new());

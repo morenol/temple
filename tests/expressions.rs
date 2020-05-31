@@ -61,3 +61,8 @@ fn logical_operators() -> Result<()> {
     assert_render_template_eq("{{ false or false }}", "false")?;
     assert_render_template_eq("{{ false or true }}", "true")
 }
+
+#[test]
+fn accessors() -> Result<()> {
+    assert_render_template_eq("{{ \"hola\"[2] }}", "l")
+}

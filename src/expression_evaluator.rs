@@ -32,15 +32,41 @@ pub enum UnaryOperation {
     Minus,
     LogicalNot,
 }
-
-#[derive(Debug)]
-pub enum Expression {
+pub struct SubscriptExpression<'a> {
+    expression: Box<Expression<'a>>,
+    subscript_expression: Vec<Box<dyn Evaluate + 'a>>,
+}
+pub enum Expression<'a> {
     Constant(Value),
-    BinaryExpression(BinaryOperation, Box<Expression>, Box<Expression>),
-    UnaryExpression(UnaryOperation, Box<Expression>),
+    BinaryExpression(BinaryOperation, Box<Expression<'a>>, Box<Expression<'a>>),
+    UnaryExpression(UnaryOperation, Box<Expression<'a>>),
+    SubscriptExpression(SubscriptExpression<'a>),
 }
 
-impl Evaluate for Expression {
+impl<'a> SubscriptExpression<'a> {
+    pub fn new(expression: Box<Expression<'a>>) -> Self {
+        let subscript_expression = vec![];
+        Self {
+            expression,
+            subscript_expression,
+        }
+    }
+    pub fn add_index(&mut self, subscript: Box<dyn Evaluate + 'a>) {
+        self.subscript_expression.push(subscript);
+    }
+}
+impl<'a> Evaluate for SubscriptExpression<'a> {
+    fn evaluate(&self) -> Value {
+        let mut cur = self.expression.evaluate();
+        for idx in &self.subscript_expression {
+            let subscript = idx.evaluate();
+            cur = visitors::Subscription::apply(cur, subscript);
+        }
+
+        cur
+    }
+}
+impl<'a> Evaluate for Expression<'a> {
     fn evaluate(&self) -> Value {
         match &self {
             Expression::Constant(value) => value.clone(),
@@ -57,32 +83,32 @@ impl Evaluate for Expression {
                     UnaryOperation::LogicalNot => !expression,
                 }
             }
+            Expression::SubscriptExpression(sub) => sub.evaluate(),
         }
     }
 }
-#[derive(Debug)]
-pub struct FullExpressionEvaluator {
-    expression: Option<Expression>,
+pub struct FullExpressionEvaluator<'a> {
+    expression: Option<Expression<'a>>,
 }
 
-impl Render for FullExpressionEvaluator {
+impl<'a> Render for FullExpressionEvaluator<'a> {
     fn render(&self, out: &mut dyn Write) {
         let value = self.evaluate();
         out.write(value.to_string().as_bytes());
     }
 }
 
-impl FullExpressionEvaluator {
+impl<'a> FullExpressionEvaluator<'a> {
     pub fn new() -> Self {
         Self { expression: None }
     }
 
-    pub fn set_expression(&mut self, expression: Expression) {
+    pub fn set_expression(&mut self, expression: Expression<'a>) {
         self.expression = Some(expression)
     }
 }
 
-impl Evaluate for FullExpressionEvaluator {
+impl<'a> Evaluate for FullExpressionEvaluator<'a> {
     fn evaluate(&self) -> Value {
         match &self.expression {
             Some(expression) => expression.evaluate(),
