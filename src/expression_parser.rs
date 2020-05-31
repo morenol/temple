@@ -1,6 +1,7 @@
 use crate::error::{Error, ErrorKind, Result, SourceLocation};
 use crate::expression_evaluator::{
     BinaryOperation, Expression, FullExpressionEvaluator, SubscriptExpression, UnaryOperation,
+    ValueRefExpression,
 };
 use crate::lexer::Token;
 use crate::value::Value;
@@ -205,6 +206,10 @@ impl ExpressionParser {
                 Token::FloatNum(num) => Expression::Constant(Value::from(num)),
                 Token::String(string) => Expression::Constant(Value::from(string.to_string())),
                 Token::LBracket => ExpressionParser::parse_braced_expression_or_tuple(&mut lexer)?,
+                Token::Identifier(identifier) => {
+                    Expression::ValueRef(ValueRefExpression::new(identifier.to_string()))
+                }
+
                 _ => {
                     return Err(Error::from(ErrorKind::ExpectedExpression(
                         SourceLocation::new(1, 2), // TODO: Use actual source locations

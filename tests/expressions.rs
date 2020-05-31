@@ -1,5 +1,6 @@
 use super::utils::assert_render_template_eq;
 use temple::error::Result;
+use temple::value::{Value, ValuesMap};
 
 #[test]
 fn basic_math_expression() -> Result<()> {
@@ -61,7 +62,12 @@ fn logical_operators() -> Result<()> {
     assert_render_template_eq("{{ false or false }}", "false", None)?;
     assert_render_template_eq("{{ false or true }}", "true", None)
 }
-
+#[test]
+fn render_with_context() -> Result<()> {
+    let mut context = ValuesMap::default();
+    context.insert("foo".to_string(), Value::Integer(42));
+    assert_render_template_eq("{{ foo }}", "42", Some(&context))
+}
 #[test]
 fn accessors() -> Result<()> {
     assert_render_template_eq("{{ \"hola\"[2] }}", "l", None)

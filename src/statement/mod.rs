@@ -30,13 +30,13 @@ impl<'a> IfStatement<'a> {
 }
 impl<'a> Render for IfStatement<'a> {
     fn render(&self, out: &mut dyn Write, params: &ValuesMap) {
-        let value = self.expression.evaluate();
+        let value = self.expression.evaluate(params);
         if let Value::Boolean(true) = value {
             self.body.as_ref().unwrap().render(out, params)
         } else {
             for branch in &self.else_branches {
                 if let Statement::Else(else_branch) = branch {
-                    if else_branch.should_render() {
+                    if else_branch.should_render(params) {
                         branch.render(out, params);
                         break;
                     }
@@ -65,9 +65,9 @@ impl<'a> ElseStatement<'a> {
         self.body = Some(else_body);
     }
 
-    fn should_render(&self) -> bool {
+    fn should_render(&self, values: &ValuesMap) -> bool {
         self.expression.is_none()
-            || match self.expression.as_ref().unwrap().evaluate() {
+            || match self.expression.as_ref().unwrap().evaluate(values) {
                 Value::Boolean(boolean) => boolean,
                 _ => todo!(),
             }
