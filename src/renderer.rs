@@ -52,19 +52,18 @@ impl<'a> Render for RawTextRenderer<'a> {
     }
 }
 
-#[derive(Debug)]
-pub struct ExpressionRenderer {
-    expression: FullExpressionEvaluator,
+pub struct ExpressionRenderer<'a> {
+    expression: FullExpressionEvaluator<'a>,
 }
 
-impl Render for ExpressionRenderer {
+impl<'a> Render for ExpressionRenderer<'a> {
     fn render(&self, out: &mut dyn Write) {
         self.expression.render(out);
     }
 }
 
-impl ExpressionRenderer {
-    pub fn new(expression: FullExpressionEvaluator) -> Self {
+impl<'a> ExpressionRenderer<'a> {
+    pub fn new(expression: FullExpressionEvaluator<'a>) -> Self {
         Self { expression }
     }
 }
