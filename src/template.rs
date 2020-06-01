@@ -33,7 +33,7 @@ impl<'a> Template<'a> {
 
     pub fn render_as_string(&self, params: &ValuesMap) -> Result<String> {
         let mut b: Vec<u8> = Vec::new();
-        self.render(&mut b, params);
+        self.render(&mut b, params)?;
         Ok(String::from_utf8(b).expect("Found invalid UTF-8"))
     }
 }

@@ -1,4 +1,4 @@
-use crate::error::Result;
+use crate::error::{Error, ErrorKind, Result, SourceLocation};
 use crate::renderer::Render;
 use crate::value::visitors;
 use crate::value::{Value, ValuesMap};
@@ -55,10 +55,14 @@ impl ValueRefExpression {
 impl Evaluate for ValueRefExpression {
     fn evaluate(&self, values: &ValuesMap) -> Result<Value> {
         let val = values.get(&self.identifier);
-
         let result = match val {
             Some(value) => value.clone(),
-            None => Value::default(),
+            None => {
+                return Err(Error::from(ErrorKind::UndefinedValue(
+                    SourceLocation::new(1, 2),
+                    self.identifier.clone(),
+                )))
+            }
         };
         Ok(result)
     }

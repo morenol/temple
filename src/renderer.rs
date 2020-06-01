@@ -62,8 +62,7 @@ pub struct ExpressionRenderer<'a> {
 
 impl<'a> Render for ExpressionRenderer<'a> {
     fn render(&self, out: &mut dyn Write, params: &ValuesMap) -> Result<()> {
-        self.expression.render(out, params);
-        Ok(())
+        self.expression.render(out, params)
     }
 }
 

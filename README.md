@@ -34,8 +34,10 @@ TODO:
   - [x] logical comparisons (<,<=,==,!=,>,>=)
   - [ ] filters (|)
   - [ ] if expressions
-  - [ ] Accessors ([],.)
-  - [ ] Identifiers 
+  - [ ] Accessors
+    - [x] Square brackets ([])
+    - [ ] Points (.) 
+  - [x] Identifiers 
 - [ ] Filters
   - [ ] abs
   - [ ] attr
@@ -90,5 +92,7 @@ TODO:
 - [x] Raw-blocks
 - [x] Comments
 - [ ] Use of context
+  - [x] Basic context
+  - [ ] Several levels of context (Global and Local variables)
 - [x] Whitespace control
 - [ ] Use of settings

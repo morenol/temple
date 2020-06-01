@@ -1,5 +1,6 @@
 use std::rc::Rc;
 use temple::error::{Error, ErrorKind, Result};
+use temple::value::ValuesMap;
 use temple::{Template, TemplateEnv};
 
 #[test]
@@ -106,5 +107,24 @@ fn expected_right_bracket() -> Result<()> {
         "')' expected".to_string()
     );
 
+    Ok(())
+}
+
+#[test]
+fn undefined_value() -> Result<()> {
+    let temp_env = TemplateEnv::default();
+    let template_env = Rc::new(&temp_env);
+    let mut template = Template::new(&template_env)?;
+    template.load("{{ undefinedValue }}")?;
+    let context = ValuesMap::default();
+    let result = template.render_as_string(&context);
+    assert_matches!(
+        result,
+        Err(Error::ParseRender(ErrorKind::UndefinedValue(_, _)))
+    );
+    assert_eq!(
+        result.err().unwrap().to_string(),
+        "Value is not defined".to_string()
+    );
     Ok(())
 }
