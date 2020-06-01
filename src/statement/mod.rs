@@ -1,10 +1,10 @@
-use crate::lexer::Token;
-use std::io::Write;
-
+use crate::error::Result;
 use crate::expression_evaluator::Evaluate;
+use crate::lexer::Token;
 use crate::renderer::ComposedRenderer;
 use crate::renderer::Render;
 use crate::value::{Value, ValuesMap};
+use std::io::Write;
 use std::rc::Rc;
 pub mod parser;
 pub struct IfStatement<'a> {
@@ -29,15 +29,15 @@ impl<'a> IfStatement<'a> {
     }
 }
 impl<'a> Render for IfStatement<'a> {
-    fn render(&self, out: &mut dyn Write, params: &ValuesMap) {
-        let value = self.expression.evaluate(params);
+    fn render(&self, out: &mut dyn Write, params: &ValuesMap) -> Result<()> {
+        let value = self.expression.evaluate(params)?;
         if let Value::Boolean(true) = value {
-            self.body.as_ref().unwrap().render(out, params)
+            self.body.as_ref().unwrap().render(out, params)?
         } else {
             for branch in &self.else_branches {
                 if let Statement::Else(else_branch) = branch {
                     if else_branch.should_render(params) {
-                        branch.render(out, params);
+                        branch.render(out, params)?;
                         break;
                     }
                 } else {
@@ -45,6 +45,7 @@ impl<'a> Render for IfStatement<'a> {
                 }
             }
         };
+        Ok(())
     }
 }
 
@@ -68,14 +69,14 @@ impl<'a> ElseStatement<'a> {
     fn should_render(&self, values: &ValuesMap) -> bool {
         self.expression.is_none()
             || match self.expression.as_ref().unwrap().evaluate(values) {
-                Value::Boolean(boolean) => boolean,
+                Ok(Value::Boolean(boolean)) => boolean,
                 _ => todo!(),
             }
     }
 }
 impl<'a> Render for ElseStatement<'a> {
-    fn render(&self, out: &mut dyn Write, params: &ValuesMap) {
-        self.body.as_ref().unwrap().render(out, params);
+    fn render(&self, out: &mut dyn Write, params: &ValuesMap) -> Result<()> {
+        self.body.as_ref().unwrap().render(out, params)
     }
 }
 
@@ -98,7 +99,7 @@ impl<'a> Statement<'a> {
     }
 }
 impl<'a> Render for Statement<'a> {
-    fn render(&self, out: &mut dyn Write, params: &ValuesMap) {
+    fn render(&self, out: &mut dyn Write, params: &ValuesMap) -> Result<()> {
         match self {
             Statement::If(statement) => statement.render(out, params),
             Statement::Else(statement) => statement.render(out, params),

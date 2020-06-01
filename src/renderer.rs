@@ -1,3 +1,4 @@
+use crate::error::Result;
 use crate::expression_evaluator::FullExpressionEvaluator;
 use crate::value::ValuesMap;
 use std::fmt;
@@ -9,7 +10,7 @@ pub struct ComposedRenderer<'a> {
 }
 
 pub trait Render {
-    fn render(&self, out: &mut dyn Write, params: &ValuesMap);
+    fn render(&self, out: &mut dyn Write, params: &ValuesMap) -> Result<()>;
 }
 
 impl<'a> ComposedRenderer<'a> {
@@ -23,10 +24,11 @@ impl<'a> ComposedRenderer<'a> {
 }
 
 impl<'a> Render for ComposedRenderer<'a> {
-    fn render(&self, out: &mut dyn Write, params: &ValuesMap) {
+    fn render(&self, out: &mut dyn Write, params: &ValuesMap) -> Result<()> {
         for r in self.renderers.read().unwrap().iter() {
-            r.render(out, params)
+            r.render(out, params)?;
         }
+        Ok(())
     }
 }
 
@@ -48,8 +50,9 @@ impl<'a> RawTextRenderer<'a> {
 }
 
 impl<'a> Render for RawTextRenderer<'a> {
-    fn render(&self, out: &mut dyn Write, _params: &ValuesMap) {
+    fn render(&self, out: &mut dyn Write, _params: &ValuesMap) -> Result<()> {
         out.write(self.content.as_bytes());
+        Ok(())
     }
 }
 
@@ -58,8 +61,9 @@ pub struct ExpressionRenderer<'a> {
 }
 
 impl<'a> Render for ExpressionRenderer<'a> {
-    fn render(&self, out: &mut dyn Write, params: &ValuesMap) {
+    fn render(&self, out: &mut dyn Write, params: &ValuesMap) -> Result<()> {
         self.expression.render(out, params);
+        Ok(())
     }
 }
 

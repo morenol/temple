@@ -1,10 +1,11 @@
+use crate::error::Result;
 use crate::renderer::Render;
 use crate::value::visitors;
 use crate::value::{Value, ValuesMap};
 use std::io::Write;
 
 pub trait Evaluate {
-    fn evaluate(&self, values: &ValuesMap) -> Value;
+    fn evaluate(&self, values: &ValuesMap) -> Result<Value>;
 }
 #[derive(Debug)]
 pub enum BinaryOperation {
@@ -52,13 +53,14 @@ impl ValueRefExpression {
     }
 }
 impl Evaluate for ValueRefExpression {
-    fn evaluate(&self, values: &ValuesMap) -> Value {
+    fn evaluate(&self, values: &ValuesMap) -> Result<Value> {
         let val = values.get(&self.identifier);
 
-        match val {
+        let result = match val {
             Some(value) => value.clone(),
             None => Value::default(),
-        }
+        };
+        Ok(result)
     }
 }
 
@@ -75,36 +77,37 @@ impl<'a> SubscriptExpression<'a> {
     }
 }
 impl<'a> Evaluate for SubscriptExpression<'a> {
-    fn evaluate(&self, values: &ValuesMap) -> Value {
-        let mut cur = self.expression.evaluate(values);
+    fn evaluate(&self, values: &ValuesMap) -> Result<Value> {
+        let mut cur = self.expression.evaluate(values)?;
         for idx in &self.subscript_expression {
-            let subscript = idx.evaluate(values);
+            let subscript = idx.evaluate(values)?;
             cur = visitors::Subscription::apply(cur, subscript);
         }
 
-        cur
+        Ok(cur)
     }
 }
 impl<'a> Evaluate for Expression<'a> {
-    fn evaluate(&self, values: &ValuesMap) -> Value {
-        match &self {
+    fn evaluate(&self, values: &ValuesMap) -> Result<Value> {
+        let result = match &self {
             Expression::Constant(value) => value.clone(),
             Expression::BinaryExpression(op, left, right) => {
-                let left_val = left.evaluate(values);
-                let right_val = right.evaluate(values);
+                let left_val = left.evaluate(values)?;
+                let right_val = right.evaluate(values)?;
                 visitors::BinaryMathOperation::apply(op, left_val, right_val)
             }
             Expression::UnaryExpression(op, expr) => {
-                let expression = expr.evaluate(values);
+                let expression = expr.evaluate(values)?;
                 match op {
                     UnaryOperation::Plus => expression,
                     UnaryOperation::Minus => -expression,
                     UnaryOperation::LogicalNot => !expression,
                 }
             }
-            Expression::SubscriptExpression(sub) => sub.evaluate(values),
-            Expression::ValueRef(identifier) => identifier.evaluate(values),
-        }
+            Expression::SubscriptExpression(sub) => sub.evaluate(values)?,
+            Expression::ValueRef(identifier) => identifier.evaluate(values)?,
+        };
+        Ok(result)
     }
 }
 pub struct FullExpressionEvaluator<'a> {
@@ -112,9 +115,10 @@ pub struct FullExpressionEvaluator<'a> {
 }
 
 impl<'a> Render for FullExpressionEvaluator<'a> {
-    fn render(&self, out: &mut dyn Write, params: &ValuesMap) {
-        let value = self.evaluate(params);
+    fn render(&self, out: &mut dyn Write, params: &ValuesMap) -> Result<()> {
+        let value = self.evaluate(params)?;
         out.write(value.to_string().as_bytes());
+        Ok(())
     }
 }
 
@@ -129,10 +133,11 @@ impl<'a> FullExpressionEvaluator<'a> {
 }
 
 impl<'a> Evaluate for FullExpressionEvaluator<'a> {
-    fn evaluate(&self, values: &ValuesMap) -> Value {
-        match &self.expression {
-            Some(expression) => expression.evaluate(values),
+    fn evaluate(&self, values: &ValuesMap) -> Result<Value> {
+        let result = match &self.expression {
+            Some(expression) => expression.evaluate(values)?,
             None => Value::default(),
-        }
+        };
+        Ok(result)
     }
 }

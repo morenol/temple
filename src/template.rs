@@ -39,9 +39,11 @@ impl<'a> Template<'a> {
 }
 
 impl<'a> Render for Template<'a> {
-    fn render(&self, out: &mut dyn Write, params: &ValuesMap) {
+    fn render(&self, out: &mut dyn Write, params: &ValuesMap) -> Result<()> {
         if let Some(ref renderer) = self.renderer {
             renderer.render(out, params)
+        } else {
+            todo!()
         }
     }
 }
