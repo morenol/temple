@@ -1,7 +1,7 @@
 use crate::error::{Error, ErrorKind, Result, SourceLocation};
 use crate::renderer::Render;
 use crate::value::visitors;
-use crate::value::{Value, ValuesMap};
+use crate::value::{Value, ValuesList, ValuesMap};
 use std::io::Write;
 
 pub trait Evaluate {
@@ -37,6 +37,29 @@ pub struct SubscriptExpression<'a> {
     expression: Box<Expression<'a>>,
     subscript_expression: Vec<Box<dyn Evaluate + 'a>>,
 }
+pub struct TupleExpression<'a> {
+    pub expressions: Vec<Box<dyn Evaluate + 'a>>,
+}
+impl<'a> TupleExpression<'a> {
+    pub fn new() -> Self {
+        let expressions = vec![];
+        Self { expressions }
+    }
+    pub fn push(&mut self, expression: Box<dyn Evaluate + 'a>) {
+        self.expressions.push(expression)
+    }
+}
+impl<'a> Evaluate for TupleExpression<'a> {
+    fn evaluate(&self, values: &ValuesMap) -> Result<Value> {
+        let tuple: ValuesList = self
+            .expressions
+            .iter()
+            .map(|expr| expr.evaluate(values).unwrap())
+            .collect();
+        Ok(Value::ValuesList(tuple))
+    }
+}
+
 pub struct ValueRefExpression {
     identifier: String,
 }
@@ -46,6 +69,7 @@ pub enum Expression<'a> {
     UnaryExpression(UnaryOperation, Box<Expression<'a>>),
     SubscriptExpression(SubscriptExpression<'a>),
     ValueRef(ValueRefExpression),
+    Tuple(TupleExpression<'a>),
 }
 impl ValueRefExpression {
     pub fn new(identifier: String) -> Self {
@@ -110,6 +134,7 @@ impl<'a> Evaluate for Expression<'a> {
             }
             Expression::SubscriptExpression(sub) => sub.evaluate(values)?,
             Expression::ValueRef(identifier) => identifier.evaluate(values)?,
+            Expression::Tuple(tuple) => tuple.evaluate(values)?,
         };
         Ok(result)
     }

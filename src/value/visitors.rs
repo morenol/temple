@@ -39,6 +39,7 @@ impl Subscription {
             (Value::String(st), Value::Integer(idx)) => {
                 Value::String(st.chars().nth(idx as usize).unwrap().to_string())
             }
+            (Value::ValuesList(tuple), Value::Integer(idx)) => (&tuple[idx as usize]).clone(),
             _ => todo!(),
         }
     }

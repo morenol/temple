@@ -1,7 +1,7 @@
 use crate::error::{Error, ErrorKind, Result, SourceLocation};
 use crate::expression_evaluator::{
-    BinaryOperation, Expression, FullExpressionEvaluator, SubscriptExpression, UnaryOperation,
-    ValueRefExpression,
+    BinaryOperation, Expression, FullExpressionEvaluator, SubscriptExpression, TupleExpression,
+    UnaryOperation, ValueRefExpression,
 };
 use crate::lexer::Token;
 use crate::value::Value;
@@ -209,6 +209,7 @@ impl ExpressionParser {
                 Token::Identifier(identifier) => {
                     Expression::ValueRef(ValueRefExpression::new(identifier.to_string()))
                 }
+                Token::LSqBracket => ExpressionParser::parse_tuple(&mut lexer)?,
 
                 _ => {
                     return Err(Error::from(ErrorKind::ExpectedExpression(
@@ -264,7 +265,11 @@ impl ExpressionParser {
             }
         }
         if is_tuple {
-            todo!()
+            let mut tuple = TupleExpression::new();
+            for expr in exprs {
+                tuple.push(Box::new(expr));
+            }
+            Ok(Expression::Tuple(tuple))
         } else {
             return Ok(exprs.remove(0));
         }
@@ -308,5 +313,30 @@ impl ExpressionParser {
             }
         }
         Ok(Expression::SubscriptExpression(subscript))
+    }
+    fn parse_tuple<'a>(mut lexer: &mut Peekable<Lexer<'a, Token<'a>>>) -> Result<Expression<'a>> {
+        let mut tuple = TupleExpression::new();
+        if let Some(Token::RSqBracket) = lexer.peek() {
+            lexer.next();
+            return Ok(Expression::Tuple(tuple));
+        }
+
+        loop {
+            let expr = ExpressionParser::full_expresion_parser(&mut lexer)?;
+            tuple.push(Box::new(expr));
+            if let Some(Token::Comma) = lexer.peek() {
+                lexer.next();
+            } else {
+                break;
+            }
+        }
+        if let Some(Token::RSqBracket) = lexer.peek() {
+            lexer.next();
+            Ok(Expression::Tuple(tuple))
+        } else {
+            Err(Error::from(ErrorKind::ExpectedSquareBracket(
+                SourceLocation::new(1, 2),
+            )))
+        }
     }
 }

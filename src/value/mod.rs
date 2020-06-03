@@ -19,6 +19,20 @@ impl fmt::Display for Value {
             Value::Integer(integer) => write!(f, "{}", integer),
             Value::Double(float) => write!(f, "{}", float),
             Value::String(string) => write!(f, "{}", string),
+            Value::ValuesList(tuple) => {
+                write!(f, "[")?;
+                for (idx, value) in tuple.into_iter().enumerate() {
+                    if idx == 0 {
+                        write!(f, "{}", value)?;
+                    } else {
+                        write!(f, " {}", value)?;
+                    }
+                    if idx < tuple.len() - 1 {
+                        write!(f, ",")?;
+                    }
+                }
+                write!(f, "]")
+            }
             _ => todo!(),
         }
     }

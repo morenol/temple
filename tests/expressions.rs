@@ -63,6 +63,12 @@ fn logical_operators() -> Result<()> {
     assert_render_template_eq("{{ false or true }}", "true", None)
 }
 #[test]
+fn render_lists() -> Result<()> {
+    assert_render_template_eq("{{ [] }}", "[]", None)?;
+    assert_render_template_eq("{{ [\"a\", \"b\", \"c\"] }}", "[a, b, c]", None)
+}
+
+#[test]
 fn render_with_context() -> Result<()> {
     let mut context = ValuesMap::default();
     context.insert("foo".to_string(), Value::Integer(42));
@@ -74,5 +80,7 @@ fn render_with_context() -> Result<()> {
 fn accessors() -> Result<()> {
     let mut context = ValuesMap::default();
     context.insert("text".to_string(), Value::String("hello".to_string()));
-    assert_render_template_eq("{{ text[2] }}", "l", Some(&context))
+    assert_render_template_eq("{{ text[2] }}", "l", Some(&context))?;
+    assert_render_template_eq("{{ [0, 1, 2][2] }}", "2", None)?;
+    assert_render_template_eq("{{ (0, 1, 2)[2] }}", "2", None)
 }
