@@ -35,11 +35,13 @@ impl BinaryMathOperation {
 pub struct Subscription;
 impl Subscription {
     pub fn apply(value: Value, subscript: Value) -> Value {
+        // TODO: Change to Result<Value>
         match (value, subscript) {
             (Value::String(st), Value::Integer(idx)) => {
                 Value::String(st.chars().nth(idx as usize).unwrap().to_string())
             }
             (Value::ValuesList(tuple), Value::Integer(idx)) => (&tuple[idx as usize]).clone(),
+            (Value::ValuesMap(dict), Value::String(key)) => dict.get(&key).unwrap().clone(),
             _ => todo!(),
         }
     }

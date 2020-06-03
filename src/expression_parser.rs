@@ -1,7 +1,7 @@
 use crate::error::{Error, ErrorKind, Result, SourceLocation};
 use crate::expression_evaluator::{
-    BinaryOperation, Expression, FullExpressionEvaluator, SubscriptExpression, TupleExpression,
-    UnaryOperation, ValueRefExpression,
+    BinaryOperation, DictionaryExpression, Expression, FullExpressionEvaluator,
+    SubscriptExpression, TupleExpression, UnaryOperation, ValueRefExpression,
 };
 use crate::lexer::Token;
 use crate::value::Value;
@@ -210,6 +210,7 @@ impl ExpressionParser {
                     Expression::ValueRef(ValueRefExpression::new(identifier.to_string()))
                 }
                 Token::LSqBracket => ExpressionParser::parse_tuple(&mut lexer)?,
+                Token::LCrlBracket => ExpressionParser::parse_dict(&mut lexer)?,
 
                 _ => {
                     return Err(Error::from(ErrorKind::ExpectedExpression(
@@ -335,6 +336,43 @@ impl ExpressionParser {
             Ok(Expression::Tuple(tuple))
         } else {
             Err(Error::from(ErrorKind::ExpectedSquareBracket(
+                SourceLocation::new(1, 2),
+            )))
+        }
+    }
+    fn parse_dict<'a>(mut lexer: &mut Peekable<Lexer<'a, Token<'a>>>) -> Result<Expression<'a>> {
+        let mut dict = DictionaryExpression::new();
+        if let Some(Token::RCrlBracket) = lexer.peek() {
+            lexer.next();
+            return Ok(Expression::Dict(dict));
+        }
+        loop {
+            let key = lexer.next();
+            if let Some(Token::String(key_string)) = key {
+                if let Some(Token::Colon) = lexer.next() {
+                    let expr = ExpressionParser::full_expresion_parser(&mut lexer)?;
+                    dict.push(key_string.to_string(), Box::new(expr));
+                    if let Some(Token::Comma) = lexer.peek() {
+                        lexer.next();
+                        continue;
+                    } else {
+                        break;
+                    }
+                } else {
+                    return Err(Error::from(ErrorKind::ExpectedToken(SourceLocation::new(
+                        1, 2,
+                    ))));
+                }
+            } else {
+                return Err(Error::from(ErrorKind::ExpectedStringLiteral(
+                    SourceLocation::new(1, 2),
+                )));
+            }
+        }
+        if let Some(Token::RCrlBracket) = lexer.next() {
+            Ok(Expression::Dict(dict))
+        } else {
+            Err(Error::from(ErrorKind::ExpectedCurlyBracket(
                 SourceLocation::new(1, 2),
             )))
         }

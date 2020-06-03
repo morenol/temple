@@ -69,6 +69,12 @@ fn render_lists() -> Result<()> {
 }
 
 #[test]
+fn render_dicts() -> Result<()> {
+    assert_render_template_eq("{{ {} }}", "{}", None)?;
+    assert_render_template_eq("{{ {\"foo\": \"bar\"} }}", "{\"foo\": bar}", None)
+}
+
+#[test]
 fn render_with_context() -> Result<()> {
     let mut context = ValuesMap::default();
     context.insert("foo".to_string(), Value::Integer(42));
@@ -82,5 +88,6 @@ fn accessors() -> Result<()> {
     context.insert("text".to_string(), Value::String("hello".to_string()));
     assert_render_template_eq("{{ text[2] }}", "l", Some(&context))?;
     assert_render_template_eq("{{ [0, 1, 2][2] }}", "2", None)?;
-    assert_render_template_eq("{{ (0, 1, 2)[2] }}", "2", None)
+    assert_render_template_eq("{{ (0, 1, 2)[2] }}", "2", None)?;
+    assert_render_template_eq("{{ {\"one\": 1, \"two\":2}[\"two\"] }}", "2", None)
 }

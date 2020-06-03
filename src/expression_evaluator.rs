@@ -63,6 +63,28 @@ impl<'a> Evaluate for TupleExpression<'a> {
 pub struct ValueRefExpression {
     identifier: String,
 }
+pub struct DictionaryExpression<'a> {
+    elems: std::collections::HashMap<String, Box<dyn Evaluate + 'a>>,
+}
+impl<'a> DictionaryExpression<'a> {
+    pub fn new() -> Self {
+        let elems = std::collections::HashMap::new();
+        Self { elems }
+    }
+    pub fn push(&mut self, key: String, value: Box<dyn Evaluate + 'a>) {
+        self.elems.insert(key, value);
+    }
+}
+impl<'a> Evaluate for DictionaryExpression<'a> {
+    fn evaluate(&self, values: &ValuesMap) -> Result<Value> {
+        let mut dict = ValuesMap::new();
+        for (key, expression) in self.elems.iter() {
+            dict.insert(key.to_string(), expression.evaluate(values)?);
+        }
+        Ok(Value::ValuesMap(dict))
+    }
+}
+
 pub enum Expression<'a> {
     Constant(Value),
     BinaryExpression(BinaryOperation, Box<Expression<'a>>, Box<Expression<'a>>),
@@ -70,6 +92,7 @@ pub enum Expression<'a> {
     SubscriptExpression(SubscriptExpression<'a>),
     ValueRef(ValueRefExpression),
     Tuple(TupleExpression<'a>),
+    Dict(DictionaryExpression<'a>),
 }
 impl ValueRefExpression {
     pub fn new(identifier: String) -> Self {
@@ -135,6 +158,7 @@ impl<'a> Evaluate for Expression<'a> {
             Expression::SubscriptExpression(sub) => sub.evaluate(values)?,
             Expression::ValueRef(identifier) => identifier.evaluate(values)?,
             Expression::Tuple(tuple) => tuple.evaluate(values)?,
+            Expression::Dict(dict) => dict.evaluate(values)?,
         };
         Ok(result)
     }

@@ -27,7 +27,7 @@ TODO:
   - [x] math operations (+,-,*,/,//,%)
   - [x] string concat
   - [x] unary operators(not,-,+)
-  - [ ] diccionaries
+  - [x] diccionaries
   - [x] tuples
   - [ ] left associative order in operations
   - [x] logical operators (and,or)

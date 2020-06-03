@@ -33,7 +33,20 @@ impl fmt::Display for Value {
                 }
                 write!(f, "]")
             }
-            _ => todo!(),
+            Value::ValuesMap(dict) => {
+                write!(f, "{{")?;
+                for (idx, (key, value)) in dict.iter().enumerate() {
+                    if idx == 0 {
+                        write!(f, "\"{}\": {}", key, value)?;
+                    } else {
+                        write!(f, " \"{}\": {}", key, value)?;
+                    }
+                    if idx < dict.len() - 1 {
+                        write!(f, ",")?;
+                    }
+                }
+                write!(f, "}}")
+            }
         }
     }
 }
