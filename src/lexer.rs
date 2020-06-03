@@ -55,6 +55,7 @@ pub enum Token<'a> {
     #[regex("[0-9]+\\.[0-9]+", |lex| lex.slice().parse())]
     FloatNum(f64),
     #[regex(r#""(?:[^"]|\\")*""#, |lex| Cow::Borrowed(&lex.slice()[1..lex.slice().len()-1]))]
+    #[regex(r#"'(?:[^']|\\')*'"#, |lex| Cow::Borrowed(&lex.slice()[1..lex.slice().len()-1]))]
     String(Cow<'a, str>),
 
     // Operators
