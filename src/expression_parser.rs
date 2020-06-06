@@ -160,11 +160,11 @@ impl ExpressionParser {
         lexer.next();
         let right = ExpressionParser::parse_math_mul_div(&mut lexer)?;
 
-        return Ok(Expression::BinaryExpression(
+        Ok(Expression::BinaryExpression(
             binary_op,
             Box::new(left),
             Box::new(right),
-        ));
+        ))
     }
 
     fn parse_unary_plus_min<'a>(
@@ -200,7 +200,7 @@ impl ExpressionParser {
         Ok(result)
     }
     fn parse_filter_expression<'a>(
-        mut lexer: &mut Peekable<Lexer<'a, Token<'a>>>,
+        lexer: &mut Peekable<Lexer<'a, Token<'a>>>,
     ) -> Result<Expression<'a>> {
         let mut result: Option<Expression<'a>> = None;
         loop {
@@ -273,7 +273,7 @@ impl ExpressionParser {
             _ => value,
         };
 
-        return Ok(value);
+        Ok(value)
     }
 
     fn parse_braced_expression_or_tuple<'a>(
@@ -290,7 +290,7 @@ impl ExpressionParser {
             match expr {
                 Ok(expr) => exprs.push(expr),
                 Err(err) => {
-                    if exprs.len() > 0 {
+                    if !exprs.is_empty() {
                         return Err(Error::from(ErrorKind::ExpectedRoundBracket(
                             SourceLocation::new(1, 2),
                         )));
@@ -311,7 +311,7 @@ impl ExpressionParser {
             }
             Ok(Expression::Tuple(tuple))
         } else {
-            return Ok(exprs.remove(0));
+            Ok(exprs.remove(0))
         }
     }
     fn parse_subscript<'a>(
@@ -319,39 +319,36 @@ impl ExpressionParser {
         expression: Expression<'a>,
     ) -> Result<Expression<'a>> {
         let mut subscript = SubscriptExpression::new(Box::new(expression));
-        loop {
-            if let Some(token) = lexer.peek() {
-                match token {
-                    Token::LSqBracket => {
-                        lexer.next();
-                        let expr = ExpressionParser::full_expresion_parser(&mut lexer)?;
-                        if let Some(Token::RSqBracket) = lexer.next() {
-                            subscript.add_index(Box::new(expr));
-                        } else {
-                            return Err(Error::from(ErrorKind::ExpectedSquareBracket(
-                                SourceLocation::new(1, 2),
-                            )));
-                        }
+        while let Some(token) = lexer.peek() {
+            match token {
+                Token::LSqBracket => {
+                    lexer.next();
+                    let expr = ExpressionParser::full_expresion_parser(&mut lexer)?;
+                    if let Some(Token::RSqBracket) = lexer.next() {
+                        subscript.add_index(Box::new(expr));
+                    } else {
+                        return Err(Error::from(ErrorKind::ExpectedSquareBracket(
+                            SourceLocation::new(1, 2),
+                        )));
                     }
-                    Token::Point => {
-                        lexer.next();
-                        let token = lexer.next();
-                        if let Some(Token::Identifier(identifier)) = token {
-                            subscript.add_index(Box::new(Expression::Constant(Value::String(
-                                identifier.to_string(),
-                            ))));
-                        } else {
-                            return Err(Error::from(ErrorKind::ExpectedIdentifier(
-                                SourceLocation::new(1, 2),
-                            )));
-                        }
+                }
+                Token::Point => {
+                    lexer.next();
+                    let token = lexer.next();
+                    if let Some(Token::Identifier(identifier)) = token {
+                        subscript.add_index(Box::new(Expression::Constant(Value::String(
+                            identifier.to_string(),
+                        ))));
+                    } else {
+                        return Err(Error::from(ErrorKind::ExpectedIdentifier(
+                            SourceLocation::new(1, 2),
+                        )));
                     }
-                    _ => break,
-                };
-            } else {
-                break;
-            }
+                }
+                _ => break,
+            };
         }
+
         Ok(Expression::SubscriptExpression(subscript))
     }
     fn parse_tuple<'a>(mut lexer: &mut Peekable<Lexer<'a, Token<'a>>>) -> Result<Expression<'a>> {

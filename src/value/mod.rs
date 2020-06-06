@@ -22,7 +22,7 @@ impl fmt::Display for Value {
             Value::String(string) => write!(f, "{}", string),
             Value::ValuesList(tuple) => {
                 write!(f, "[")?;
-                for (idx, value) in tuple.into_iter().enumerate() {
+                for (idx, value) in tuple.iter().enumerate() {
                     if idx == 0 {
                         write!(f, "{}", value)?;
                     } else {
@@ -60,32 +60,44 @@ impl Value {
         }
     }
     pub fn first(self) -> Result<Self> {
+        if self.is_empty()? {
+            Ok(Value::Empty)
+        } else {
+            match self {
+                Value::String(s) => Ok(Value::String(s.chars().next().unwrap().to_string())),
+                Value::ValuesList(values_list) => Ok(values_list.first().unwrap().clone()),
+                _ => todo!(),
+            }
+        }
+    }
+    pub fn int(self) -> Result<i64> {
         match self {
-            Value::String(s) => Ok(Value::String(s.chars().next().unwrap().to_string())),
-            Value::ValuesMap(values_map) => todo!(),
-            Value::ValuesList(values_list) => Ok(values_list.first().unwrap().clone()),
+            Value::Integer(number) => Ok(number),
+            Value::Double(number) => Ok(number as i64),
             _ => todo!(),
         }
     }
-    pub fn int(self) -> Result<Self> {
+    pub fn len(self) -> Result<usize> {
         match self {
-            Value::Integer(number) => Ok(Value::Integer(number)),
-            Value::Double(number) => Ok(Value::Integer(number as i64)),
+            Value::String(s) => Ok(s.len()),
+            Value::ValuesMap(values_map) => Ok(values_map.len()),
+            Value::ValuesList(values_list) => Ok(values_list.len()),
             _ => todo!(),
         }
     }
-    pub fn len(self) -> Result<Self> {
+    pub fn is_empty(&self) -> Result<bool> {
         match self {
-            Value::String(s) => Ok(Value::Integer(s.len() as i64)),
-            Value::ValuesMap(values_map) => Ok(Value::Integer(values_map.len() as i64)),
-            Value::ValuesList(values_list) => Ok(Value::Integer(values_list.len() as i64)),
+            Value::Empty => Ok(true),
+            Value::String(s) => Ok(s.is_empty()),
+            Value::ValuesMap(values_map) => Ok(values_map.is_empty()),
+            Value::ValuesList(values_list) => Ok(values_list.is_empty()),
+
             _ => todo!(),
         }
     }
     pub fn last(self) -> Result<Self> {
         match self {
             Value::String(s) => Ok(Value::String(s.chars().last().unwrap().to_string())),
-            Value::ValuesMap(values_map) => todo!(),
             Value::ValuesList(values_list) => Ok(values_list.last().unwrap().clone()),
             _ => todo!(),
         }

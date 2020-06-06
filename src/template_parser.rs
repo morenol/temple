@@ -419,12 +419,10 @@ impl<'a, 'b> TemplateParser<'a, 'b> {
                         .unwrap();
                     do_trim = if ctrl_char == '-' {
                         true
+                    } else if ctrl_char == '+' {
+                        false
                     } else {
-                        if ctrl_char == '+' {
-                            false
-                        } else {
-                            do_trim
-                        }
+                        do_trim
                     }
                 }
             }

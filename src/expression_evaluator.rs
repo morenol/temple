@@ -200,8 +200,11 @@ pub struct FullExpressionEvaluator<'a> {
 impl<'a> Render for FullExpressionEvaluator<'a> {
     fn render(&self, out: &mut dyn Write, params: &ValuesMap) -> Result<()> {
         let value = self.evaluate(params)?;
-        out.write(value.to_string().as_bytes());
-        Ok(())
+        if let Err(err) = out.write(value.to_string().as_bytes()) {
+            Err(Error::Io(err))
+        } else {
+            Ok(())
+        }
     }
 }
 

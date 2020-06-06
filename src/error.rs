@@ -54,7 +54,7 @@ impl ErrorKind {
             ErrorKind::InvalidValueType => "Invalid type of the value in the particular context",
             ErrorKind::InvalidTemplateName => "Invalid name of the template",
             //           ErrorKind::MetadataParseError => "Metadata Parse Error ", // TODO: Solve in jinja2cpp
-            ErrorKind::UndefinedValue(_location, identifier) => "Value is not defined",
+            ErrorKind::UndefinedValue(_location, _identifier) => "Value is not defined",
             ErrorKind::ExpectedStringLiteral(_location) => "String literal expected",
             ErrorKind::ExpectedIdentifier(_location) => "Identifier expected",
             ErrorKind::ExpectedSquareBracket(_location) => "']' expected",

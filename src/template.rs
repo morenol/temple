@@ -8,15 +8,15 @@ use std::rc::Rc;
 
 #[derive(Debug)]
 pub struct Template<'a> {
-    template_env: Rc<&'a TemplateEnv>,
+    template_env: Rc<TemplateEnv>,
     template_body: Option<&'a str>,
     renderer: Option<ComposedRenderer<'a>>,
 }
 
 impl<'a> Template<'a> {
-    pub fn new(template_env: &Rc<&'a TemplateEnv>) -> Result<Self> {
+    pub fn new(template_env: Rc<TemplateEnv>) -> Result<Self> {
         Ok(Self {
-            template_env: template_env.clone(),
+            template_env,
             template_body: None,
             renderer: None,
         })

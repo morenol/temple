@@ -1,4 +1,4 @@
-use crate::error::Result;
+use crate::error::{Error, Result};
 use crate::expression_evaluator::FullExpressionEvaluator;
 use crate::value::ValuesMap;
 use std::fmt;
@@ -51,8 +51,11 @@ impl<'a> RawTextRenderer<'a> {
 
 impl<'a> Render for RawTextRenderer<'a> {
     fn render(&self, out: &mut dyn Write, _params: &ValuesMap) -> Result<()> {
-        out.write(self.content.as_bytes());
-        Ok(())
+        if let Err(err) = out.write(self.content.as_bytes()) {
+            Err(Error::Io(err))
+        } else {
+            Ok(())
+        }
     }
 }
 

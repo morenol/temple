@@ -9,8 +9,8 @@ pub fn assert_render_template_eq(
     params: Option<&ValuesMap>,
 ) -> Result<()> {
     let temp_env = TemplateEnv::default();
-    let template_env = Rc::new(&temp_env);
-    let mut template = Template::new(&template_env)?;
+    let template_env = Rc::new(temp_env);
+    let mut template = Template::new(template_env)?;
     template.load(input)?;
     let default_context = &ValuesMap::default();
     let context = params.unwrap_or(&default_context);

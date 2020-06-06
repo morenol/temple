@@ -11,7 +11,7 @@ pub struct StatementParser;
 use std::rc::Rc;
 
 impl StatementParser {
-    pub fn parse<'a, 'b>(
+    pub fn parse<'a>(
         text: &'a str,
         mut statementinfo_list: &mut StatementInfoList<'a>,
     ) -> Result<()> {
@@ -19,15 +19,13 @@ impl StatementParser {
         let mut lexer: Peekable<Lexer<Token<'a>>> = lexer.peekable();
         let tok = lexer.next();
 
-        let result = match tok {
+        match tok {
             Some(Token::If) => StatementParser::parse_if(&mut lexer, &mut statementinfo_list),
             Some(Token::Else) => StatementParser::parse_else(&mut statementinfo_list),
             Some(Token::EndIf) => StatementParser::parse_endif(&mut statementinfo_list),
             Some(Token::ElIf) => StatementParser::parse_elif(&mut lexer, &mut statementinfo_list),
             _ => todo!(),
-        };
-
-        result
+        }
     }
     fn parse_if<'a>(
         lexer: &mut Peekable<Lexer<'a, Token<'a>>>,
@@ -60,7 +58,7 @@ impl StatementParser {
         Ok(())
     }
 
-    fn parse_else<'a>(statementinfo_list: &mut StatementInfoList) -> Result<()> {
+    fn parse_else(statementinfo_list: &mut StatementInfoList) -> Result<()> {
         let composed_renderer = Rc::new(ComposedRenderer::new());
         let renderer = Statement::Else(ElseStatement::new(None));
         let mut statement_info = StatementInfo::new(

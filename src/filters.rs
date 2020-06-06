@@ -22,13 +22,13 @@ impl Filter {
             _ => todo!(),
         }
     }
-    pub fn filter(&self, base_value: Value, context: &ValuesMap) -> Result<Value> {
+    pub fn filter(&self, base_value: Value, _context: &ValuesMap) -> Result<Value> {
         match &self {
             Filter::Abs => base_value.abs(),
             Filter::First => base_value.first(),
-            Filter::Int => base_value.int(),
+            Filter::Int => Ok(Value::Integer(base_value.int()?)),
             Filter::Last => base_value.last(),
-            Filter::Length => base_value.len(),
+            Filter::Length => Ok(Value::Integer(base_value.len()? as i64)),
             Filter::Lower => base_value.lower(),
             Filter::Upper => base_value.upper(),
         }
