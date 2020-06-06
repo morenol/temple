@@ -119,15 +119,6 @@ pub enum StatementInfoType {
     TemplateRoot,
     IfStatement,
     ElseIfStatement,
-    ForStatement,
-    SetStatement,
-    ExtendsStatement,
-    BlockStatement,
-    ParentBlockStatement,
-    MacroStatement,
-    MacroCallStatement,
-    WithStatement,
-    FilterStatement,
 }
 
 impl<'a> StatementInfo<'a> {
