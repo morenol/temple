@@ -32,14 +32,14 @@ TODO:
   - [ ] left associative order in operations
   - [x] logical operators (and,or)
   - [x] logical comparisons (<,<=,==,!=,>,>=)
-  - [ ] filters (|)
+  - [x] filters (|)
   - [ ] if expressions
   - [ ] Accessors
     - [x] Square brackets ([])
     - [ ] Points (.) 
   - [x] Identifiers 
 - [ ] Filters
-  - [ ] abs
+  - [x] abs
   - [ ] attr
   - [ ] batch
   - [ ] capitalize
@@ -54,12 +54,11 @@ TODO:
   - [ ] format
   - [ ] groupby
   - [ ] indent
-  - [ ] int
+  - [x] int
   - [ ] last
   - [ ] length
   - [ ] list
-  - [ ] lower
-  - [ ] lower
+  - [x] lower
   - [ ] map
   - [ ] max
   - [ ] min
@@ -82,7 +81,7 @@ TODO:
   - [ ] tojson
   - [ ] truncate
   - [ ] unique
-  - [ ] upper
+  - [x] upper
   - [ ] urlencode
   - [ ] urlize
   - [ ] wordcount

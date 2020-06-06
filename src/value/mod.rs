@@ -1,3 +1,4 @@
+use crate::error::Result;
 use std::fmt;
 
 #[derive(Clone, Debug)]
@@ -50,7 +51,58 @@ impl fmt::Display for Value {
         }
     }
 }
-
+impl Value {
+    pub fn abs(self) -> Result<Self> {
+        match self {
+            Value::Integer(number) => Ok(Value::Integer(number.abs())),
+            Value::Double(number) => Ok(Value::Double(number.abs())),
+            _ => todo!(),
+        }
+    }
+    pub fn first(self) -> Result<Self> {
+        match self {
+            Value::String(s) => Ok(Value::String(s.chars().next().unwrap().to_string())),
+            Value::ValuesMap(values_map) => todo!(),
+            Value::ValuesList(values_list) => Ok(values_list.first().unwrap().clone()),
+            _ => todo!(),
+        }
+    }
+    pub fn int(self) -> Result<Self> {
+        match self {
+            Value::Integer(number) => Ok(Value::Integer(number)),
+            Value::Double(number) => Ok(Value::Integer(number as i64)),
+            _ => todo!(),
+        }
+    }
+    pub fn len(self) -> Result<Self> {
+        match self {
+            Value::String(s) => Ok(Value::Integer(s.len() as i64)),
+            Value::ValuesMap(values_map) => Ok(Value::Integer(values_map.len() as i64)),
+            Value::ValuesList(values_list) => Ok(Value::Integer(values_list.len() as i64)),
+            _ => todo!(),
+        }
+    }
+    pub fn last(self) -> Result<Self> {
+        match self {
+            Value::String(s) => Ok(Value::String(s.chars().last().unwrap().to_string())),
+            Value::ValuesMap(values_map) => todo!(),
+            Value::ValuesList(values_list) => Ok(values_list.last().unwrap().clone()),
+            _ => todo!(),
+        }
+    }
+    pub fn lower(self) -> Result<Self> {
+        match self {
+            Value::String(s) => Ok(Value::String(s.to_lowercase())),
+            _ => todo!(),
+        }
+    }
+    pub fn upper(self) -> Result<Self> {
+        match self {
+            Value::String(s) => Ok(Value::String(s.to_uppercase())),
+            _ => todo!(),
+        }
+    }
+}
 pub type ValuesMap = std::collections::HashMap<String, Value>;
 
 pub type ValuesList = Vec<Value>;

@@ -3,6 +3,7 @@ pub mod value;
 
 mod expression_evaluator;
 mod expression_parser;
+mod filters;
 mod keyword;
 mod lexer;
 mod renderer;

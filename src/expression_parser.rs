@@ -1,6 +1,6 @@
 use crate::error::{Error, ErrorKind, Result, SourceLocation};
 use crate::expression_evaluator::{
-    BinaryOperation, DictionaryExpression, Expression, FullExpressionEvaluator,
+    BinaryOperation, DictionaryExpression, Expression, FilterExpression, FullExpressionEvaluator,
     SubscriptExpression, TupleExpression, UnaryOperation, ValueRefExpression,
 };
 use crate::lexer::Token;
@@ -168,7 +168,7 @@ impl ExpressionParser {
     }
 
     fn parse_unary_plus_min<'a>(
-        lexer: &mut Peekable<Lexer<'a, Token<'a>>>,
+        mut lexer: &mut Peekable<Lexer<'a, Token<'a>>>,
     ) -> Result<Expression<'a>> {
         let unary_op = match lexer.peek() {
             Some(Token::Plus) => Some(UnaryOperation::Plus),
@@ -182,17 +182,56 @@ impl ExpressionParser {
 
         let sub_expr = ExpressionParser::parse_value_expression(lexer)?;
 
-        let result = match unary_op {
+        let mut result = match unary_op {
             Some(op) => Expression::UnaryExpression(op, Box::new(sub_expr)),
             None => sub_expr,
         };
 
         if let Some(Token::Pipe) = lexer.peek() {
-            todo!()
+            lexer.next();
+            let filter_expression = ExpressionParser::parse_filter_expression(&mut lexer)?;
+            if let Expression::Filter(mut filter) = filter_expression {
+                filter.set_parent_filter(result);
+                result = Expression::Filter(filter);
+            } else {
+                todo!()
+            }
         }
         Ok(result)
     }
-
+    fn parse_filter_expression<'a>(
+        mut lexer: &mut Peekable<Lexer<'a, Token<'a>>>,
+    ) -> Result<Expression<'a>> {
+        let mut result: Option<Expression<'a>> = None;
+        loop {
+            match lexer.next() {
+                Some(token) => {
+                    if let Token::Identifier(identifier) = token {
+                        let mut filter = FilterExpression::new(&identifier)?;
+                        if let Some(expression) = result.take() {
+                            filter.set_parent_filter(expression);
+                        }
+                        result = Some(Expression::Filter(filter));
+                    } else {
+                        return Err(Error::from(ErrorKind::ExpectedIdentifier(
+                            SourceLocation::new(1, 2),
+                        )));
+                    }
+                    if let Some(Token::Pipe) = lexer.peek() {
+                        lexer.next();
+                    } else {
+                        break;
+                    }
+                }
+                None => {
+                    return Err(Error::from(ErrorKind::ExpectedIdentifier(
+                        SourceLocation::new(1, 2),
+                    )));
+                }
+            }
+        }
+        Ok(result.unwrap())
+    }
     fn parse_value_expression<'a>(
         mut lexer: &mut Peekable<Lexer<'a, Token<'a>>>,
     ) -> Result<Expression<'a>> {

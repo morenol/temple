@@ -92,3 +92,23 @@ fn accessors() -> Result<()> {
     assert_render_template_eq("{{ (0, 1, 2)[2] }}", "2", None)?;
     assert_render_template_eq("{{ {\"one\": 1, \"two\":2}[\"two\"] }}", "2", None)
 }
+
+#[test]
+fn filters() -> Result<()> {
+    let mut context = ValuesMap::default();
+    context.insert("intValue".to_string(), Value::Integer(-1));
+    context.insert(
+        "stringValue".to_string(),
+        Value::String("Hello World!".to_string()),
+    );
+    assert_render_template_eq("{{ intValue | abs }}", "1", Some(&context))?;
+    assert_render_template_eq("{{ stringValue | length }}", "12", Some(&context))?;
+    assert_render_template_eq("{{ [0, 1, 2, 3] | length }}", "4", Some(&context))?;
+    assert_render_template_eq("{{ [0, 1, 2, 3] | first }}", "0", Some(&context))?;
+    assert_render_template_eq("{{ stringValue | first }}", "H", Some(&context))?;
+    assert_render_template_eq("{{ [0, 1, 2, 3] | last }}", "3", Some(&context))?;
+    assert_render_template_eq("{{ stringValue | last }}", "!", Some(&context))?;
+    assert_render_template_eq("{{ 3.14 | int }}", "3", Some(&context))?;
+    assert_render_template_eq("{{ stringValue | lower }}", "hello world!", Some(&context))?;
+    assert_render_template_eq("{{ stringValue | upper }}", "HELLO WORLD!", Some(&context))
+}
