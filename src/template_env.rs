@@ -3,7 +3,7 @@ use crate::value::{Value, ValuesMap};
 #[derive(Clone, Debug, PartialEq)]
 enum Jinja2CompatMode {
     None,
-    Version2_10, // Fix in jinja2cpp
+    // Version2_10, // Fix in jinja2cpp
 }
 impl Default for Jinja2CompatMode {
     fn default() -> Jinja2CompatMode {
