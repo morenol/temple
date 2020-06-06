@@ -1,6 +1,6 @@
 use crate::error::{Error, ErrorKind, Result, SourceLocation};
 use crate::expression_parser::ExpressionParser;
-use crate::keyword::{RegexEnum, KEYWORDS, ROUGH_TOKENIZER};
+use crate::keyword::{RegexEnum, ROUGH_TOKENIZER};
 use crate::lexer::Token;
 use crate::renderer::{ComposedRenderer, RawTextRenderer};
 use crate::statement::parser::StatementParser;
@@ -15,7 +15,6 @@ pub struct TemplateParser<'a, 'b> {
     template_body: RwLock<&'a str>,
     env: RwLock<&'b TemplateEnv>,
     rough_tokenizer: Regex,
-    keywords: Regex,
     text_blocks: RwLock<Vec<TextBlockInfo>>,
     current_block_info: RwLock<TextBlockInfo>,
     lines: RwLock<Vec<LineInfo>>,
@@ -25,13 +24,11 @@ pub struct TemplateParser<'a, 'b> {
 impl<'a, 'b> TemplateParser<'a, 'b> {
     pub fn new(body: &'a str, env: &'b TemplateEnv) -> Result<Self> {
         let rough_tokenizer = Regex::new(&ROUGH_TOKENIZER[..ROUGH_TOKENIZER.len() - 1]).unwrap();
-        let keywords = Regex::new(&KEYWORDS[..KEYWORDS.len() - 1]).unwrap();
 
         Ok(Self {
             template_body: RwLock::new(body),
             env: RwLock::new(env),
             rough_tokenizer,
-            keywords,
             text_blocks: RwLock::new(vec![]),
             current_block_info: RwLock::new(TextBlockInfo::default()),
             lines: RwLock::new(vec![]),
