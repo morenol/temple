@@ -3,6 +3,7 @@ use crate::value::{Value, ValuesMap};
 pub enum Filter {
     Abs,
     Capitalize,
+    Escape,
     First,
     Float,
     Int,
@@ -20,6 +21,7 @@ impl Filter {
         match name {
             "abs" => Ok(Filter::Abs),
             "capitalize" => Ok(Filter::Capitalize),
+            "escape" => Ok(Filter::Escape),
             "first" => Ok(Filter::First),
             "float" => Ok(Filter::Float),
             "int" => Ok(Filter::Int),
@@ -38,6 +40,7 @@ impl Filter {
         match &self {
             Filter::Abs => base_value.abs(),
             Filter::Capitalize => base_value.capitalize(),
+            Filter::Escape => base_value.escape(),
             Filter::First => base_value.first(),
             Filter::Int => Ok(Value::Integer(base_value.int()?)),
             Filter::Float => Ok(Value::Double(base_value.float()?)),

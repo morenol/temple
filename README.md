@@ -46,7 +46,7 @@ TODO:
   - [ ] center
   - [ ] default
   - [ ] dictsort
-  - [ ] escape
+  - [x] escape
   - [ ] filesizeformat
   - [x] first
   - [x] float
@@ -74,7 +74,7 @@ TODO:
   - [ ] selectattr
   - [ ] slice
   - [ ] sort
-  - [ ] string
+  - [x] string
   - [ ] striptags
   - [x] sum
   - [ ] title

@@ -1,4 +1,5 @@
 use crate::error::{Error, ErrorKind, Result};
+use regex::Regex;
 use std::fmt;
 
 #[derive(Clone, Debug)]
@@ -69,6 +70,36 @@ impl Value {
                 &s[1..],
             ))),
             _ => Err(Error::from(ErrorKind::InvalidOperation)),
+        }
+    }
+    pub fn escape(self) -> Result<Self> {
+        if let Value::String(s) = self {
+            lazy_static! {
+                static ref ESCAPED_REGEX: Regex = Regex::new("[<>&\"\']").unwrap();
+            }
+            let s_input = &s[..];
+            if ESCAPED_REGEX.is_match(s_input) {
+                let mut last_match = 0;
+                let matches = ESCAPED_REGEX.find_iter(s_input);
+                let mut output = String::with_capacity(s_input.len());
+                for mat in matches {
+                    output.push_str(&s_input[last_match..mat.start()]);
+                    match &s_input[mat.range()] {
+                        "<" => output.push_str("&lt;"),
+                        ">" => output.push_str("&gt;"),
+                        "&" => output.push_str("&amp;"),
+                        "\"" => output.push_str("&#34;"),
+                        "\'" => output.push_str("&#39;"),
+                        _ => unreachable!(),
+                    }
+                    last_match = mat.end();
+                }
+                Ok(Value::String(output))
+            } else {
+                Ok(Value::String(s))
+            }
+        } else {
+            Err(Error::from(ErrorKind::InvalidOperation))
         }
     }
 

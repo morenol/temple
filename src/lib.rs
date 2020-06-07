@@ -14,3 +14,6 @@ mod template_parser;
 
 pub use template::Template;
 pub use template_env::TemplateEnv;
+
+#[macro_use]
+extern crate lazy_static;

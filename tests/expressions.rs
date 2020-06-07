@@ -188,3 +188,14 @@ fn multiple_filters() -> Result<()> {
 fn filter_to_string() -> Result<()> {
     assert_render_template_eq("{{ 1000 | string | length }}", "4", None)
 }
+
+#[test]
+fn filter_escape() -> Result<()> {
+    let mut context = ValuesMap::default();
+    context.insert("br_tag".to_string(), Value::String("</br>".to_string()));
+    context.insert("ampersand".to_string(), Value::String("&".to_string()));
+    context.insert("quotes".to_string(), Value::String("\"\'".to_string()));
+    assert_render_template_eq("{{ br_tag | escape }}", "&lt;/br&gt;", Some(&context))?;
+    assert_render_template_eq("{{ ampersand | escape }}", "&amp;", Some(&context))?;
+    assert_render_template_eq("{{ quotes | escape }}", "&#34;&#39;", Some(&context))
+}
