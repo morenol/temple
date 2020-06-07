@@ -183,3 +183,8 @@ fn filter_sum() -> Result<()> {
 fn multiple_filters() -> Result<()> {
     assert_render_template_eq("{{ \"foobar\" | upper | first }}", "F", None)
 }
+
+#[test]
+fn filter_to_string() -> Result<()> {
+    assert_render_template_eq("{{ 1000 | string | length }}", "4", None)
+}

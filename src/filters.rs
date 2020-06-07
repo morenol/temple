@@ -11,6 +11,7 @@ pub enum Filter {
     Lower,
     Max,
     Min,
+    String,
     Sum,
     Upper,
 }
@@ -27,6 +28,7 @@ impl Filter {
             "lower" => Ok(Filter::Lower),
             "max" => Ok(Filter::Max),
             "min" => Ok(Filter::Min),
+            "string" => Ok(Filter::String),
             "sum" => Ok(Filter::Sum),
             "upper" => Ok(Filter::Upper),
             _ => todo!(),
@@ -44,6 +46,7 @@ impl Filter {
             Filter::Lower => base_value.lower(),
             Filter::Max => base_value.max(),
             Filter::Min => base_value.min(),
+            Filter::String => Ok(Value::String(base_value.to_string())),
             Filter::Sum => base_value.sum(),
             Filter::Upper => base_value.upper(),
         }
