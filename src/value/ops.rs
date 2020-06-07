@@ -1,5 +1,5 @@
 use super::Value;
-use std::cmp::{Ordering, PartialEq, PartialOrd};
+use std::cmp::{Eq, Ord, Ordering, PartialEq, PartialOrd};
 use std::ops::{Add, BitAnd, BitOr, Div, Mul, Neg, Not, Rem, Sub};
 
 impl Add for Value {
@@ -11,10 +11,18 @@ impl Add for Value {
             (Value::Double(left), Value::Integer(right)) => Value::Double(left + right as f64),
             (Value::Integer(left), Value::Double(right)) => Value::Double(left as f64 + right),
             (Value::Double(left), Value::Double(right)) => Value::Double(left + right),
+            (Value::Integer(left), Value::Boolean(true)) => Value::Integer(left + 1),
+            (Value::Integer(left), Value::Boolean(false)) => Value::Integer(left),
+            (Value::Double(left), Value::Boolean(true)) => Value::Double(left + 1_f64),
+            (Value::Double(left), Value::Boolean(false)) => Value::Double(left),
+            (Value::Boolean(true), Value::Integer(right)) => Value::Integer(right + 1),
+            (Value::Boolean(false), Value::Integer(right)) => Value::Integer(right),
+            (Value::Boolean(true), Value::Double(right)) => Value::Double(right + 1_f64),
+            (Value::Boolean(false), Value::Double(right)) => Value::Double(right),
             (Value::String(left), Value::String(right)) => {
                 Value::String(format!("{}{}", left, right))
             }
-            _ => todo!(),
+            _ => Value::Error,
         }
     }
 }
@@ -28,13 +36,23 @@ impl Mul for Value {
             (Value::Double(left), Value::Integer(right)) => Value::Double(left * right as f64),
             (Value::Integer(left), Value::Double(right)) => Value::Double(left as f64 * right),
             (Value::Double(left), Value::Double(right)) => Value::Double(left * right),
+            (Value::Integer(left), Value::Boolean(true)) => Value::Integer(left),
+            (Value::Integer(_), Value::Boolean(false)) => Value::Integer(0),
+            (Value::Double(left), Value::Boolean(true)) => Value::Double(left),
+            (Value::Double(_), Value::Boolean(false)) => Value::Double(0.0),
+            (Value::Boolean(true), Value::Integer(right)) => Value::Integer(right),
+            (Value::Boolean(false), Value::Integer(_)) => Value::Integer(0),
+            (Value::Boolean(true), Value::Double(right)) => Value::Double(right),
+            (Value::Boolean(false), Value::Double(_)) => Value::Double(0.0),
             (Value::String(left), Value::Integer(right)) => {
                 Value::String(left.repeat(right as usize))
             }
             (Value::String(left), Value::Double(right)) => {
                 Value::String(left.repeat(right as usize))
             }
-            _ => todo!(),
+            (Value::String(left), Value::Boolean(true)) => Value::String(left),
+            (Value::String(_), Value::Boolean(false)) => Value::String("".to_string()),
+            _ => Value::Error,
         }
     }
 }
@@ -50,7 +68,7 @@ impl Div for Value {
             (Value::Double(left), Value::Integer(right)) => Value::Double(left / right as f64),
             (Value::Integer(left), Value::Double(right)) => Value::Double(left as f64 / right),
             (Value::Double(left), Value::Double(right)) => Value::Double(left / right),
-            _ => todo!(),
+            _ => Value::Error,
         }
     }
 }
@@ -64,7 +82,7 @@ impl Sub for Value {
             (Value::Double(left), Value::Integer(right)) => Value::Double(left - right as f64),
             (Value::Integer(left), Value::Double(right)) => Value::Double(left as f64 - right),
             (Value::Double(left), Value::Double(right)) => Value::Double(left - right),
-            _ => todo!(),
+            _ => Value::Error,
         }
     }
 }
@@ -78,7 +96,7 @@ impl Rem for Value {
             (Value::Double(left), Value::Integer(right)) => Value::Double(left % right as f64),
             (Value::Integer(left), Value::Double(right)) => Value::Double(left as f64 % right),
             (Value::Double(left), Value::Double(right)) => Value::Double(left % right),
-            _ => todo!(),
+            _ => Value::Error,
         }
     }
 }
@@ -90,7 +108,7 @@ impl Neg for Value {
         match self {
             Value::Integer(value) => Value::Integer(-value),
             Value::Double(value) => Value::Double(-value),
-            _ => todo!(),
+            _ => Value::Error,
         }
     }
 }
@@ -101,7 +119,7 @@ impl Not for Value {
     fn not(self) -> Self {
         match self {
             Value::Boolean(boolean) => Value::Boolean(!boolean),
-            _ => todo!(),
+            _ => Value::Error,
         }
     }
 }
@@ -115,7 +133,7 @@ impl Value {
                 Value::Double(left.powf(right))
             }
             (Value::Double(left), Value::Double(right)) => Value::Double(left.powf(right)),
-            _ => todo!(),
+            _ => Value::Error,
         }
     }
 }
@@ -131,6 +149,46 @@ impl PartialOrd for Value {
     }
 }
 
+impl Ord for Value {
+    // Currently implemented using python2 order
+    // Python3 does not allow the ordering between
+    // certain kind of types.
+    fn cmp(&self, other: &Self) -> Ordering {
+        match (self, other) {
+            (Value::Integer(left), Value::Integer(right)) => left.cmp(right),
+            (Value::Integer(left), Value::Double(right)) => {
+                (*left as f64).partial_cmp(&right).unwrap()
+            }
+            (Value::Double(left), Value::Integer(right)) => {
+                left.partial_cmp(&(*right as f64)).unwrap()
+            }
+            (Value::Double(left), Value::Double(right)) => left.partial_cmp(right).unwrap(),
+            (Value::Integer(left), Value::Boolean(true)) => left.cmp(&(1_i64)),
+            (Value::Integer(left), Value::Boolean(false)) => left.cmp(&(1_i64)),
+            (Value::Double(left), Value::Boolean(true)) => left.partial_cmp(&(1_f64)).unwrap(),
+            (Value::Double(left), Value::Boolean(false)) => left.partial_cmp(&(0_f64)).unwrap(),
+            (Value::Boolean(left), Value::Boolean(right)) => left.cmp(right),
+            (Value::Boolean(true), Value::Integer(right)) => 1_i64.cmp(right),
+            (Value::Boolean(false), Value::Integer(right)) => 0i64.cmp(right),
+            (Value::Boolean(true), Value::Double(right)) => 1_f64.partial_cmp(right).unwrap(),
+            (Value::Boolean(false), Value::Double(right)) => 0_f64.partial_cmp(right).unwrap(),
+            (Value::ValuesList(left), Value::ValuesList(right)) => left.cmp(right),
+            (Value::ValuesMap(left), Value::ValuesMap(right)) => left.cmp(right),
+            (Value::String(left), Value::String(right)) => left.cmp(right),
+            (Value::String(_), _) => Ordering::Greater,
+            (_, Value::String(_)) => Ordering::Less,
+            (Value::ValuesList(_), _) => Ordering::Greater,
+            (_, Value::ValuesList(_)) => Ordering::Less,
+            (_, Value::Empty) => Ordering::Greater,
+            (_, Value::Error) => Ordering::Greater,
+            (Value::Empty, _) => Ordering::Less,
+            (Value::Error, _) => Ordering::Less,
+            (Value::ValuesMap(_), _) => Ordering::Greater,
+            (_, Value::ValuesMap(_)) => Ordering::Less,
+        }
+    }
+}
+
 impl PartialEq for Value {
     fn eq(&self, other: &Self) -> bool {
         match (self, other) {
@@ -140,17 +198,18 @@ impl PartialEq for Value {
             (Value::Double(left), Value::Double(right)) => left == right,
             (Value::Boolean(left), Value::Boolean(right)) => left == right,
             (Value::String(left), Value::String(right)) => left == right,
-            _ => todo!(),
+            _ => false,
         }
     }
 }
+impl Eq for Value {}
 
 impl BitAnd for Value {
     type Output = Self;
     fn bitand(self, other: Self) -> Self::Output {
         match (self, other) {
             (Value::Boolean(left), Value::Boolean(right)) => Value::Boolean(left & right),
-            _ => todo!(),
+            _ => Value::Error,
         }
     }
 }
@@ -160,7 +219,7 @@ impl BitOr for Value {
     fn bitor(self, other: Self) -> Self::Output {
         match (self, other) {
             (Value::Boolean(left), Value::Boolean(right)) => Value::Boolean(left || right),
-            _ => todo!(),
+            _ => Value::Error,
         }
     }
 }

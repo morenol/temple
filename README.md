@@ -42,26 +42,26 @@ TODO:
   - [x] abs
   - [ ] attr
   - [ ] batch
-  - [ ] capitalize
+  - [x] capitalize
   - [ ] center
   - [ ] default
   - [ ] dictsort
   - [ ] escape
   - [ ] filesizeformat
-  - [ ] first
-  - [ ] float
+  - [x] first
+  - [x] float
   - [ ] forceescape
   - [ ] format
   - [ ] groupby
   - [ ] indent
   - [x] int
-  - [ ] last
-  - [ ] length
+  - [x] last
+  - [x] length
   - [ ] list
   - [x] lower
   - [ ] map
-  - [ ] max
-  - [ ] min
+  - [x] max
+  - [x] min
   - [ ] pprint
   - [ ] random
   - [ ] reject
@@ -71,12 +71,12 @@ TODO:
   - [ ] round
   - [ ] safe
   - [ ] select
-  - [ ]  selectattr
+  - [ ] selectattr
   - [ ] slice
   - [ ] sort
   - [ ] string
   - [ ] striptags
-  - [ ] sum
+  - [x] sum
   - [ ] title
   - [ ] tojson
   - [ ] truncate

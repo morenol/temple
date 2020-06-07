@@ -1,8 +1,9 @@
 use crate::error::{Error, ErrorKind, Result, SourceLocation};
 use crate::expression_evaluator::{
-    BinaryOperation, DictionaryExpression, Expression, FilterExpression, FullExpressionEvaluator,
+    BinaryOperation, DictionaryExpression, Expression, FilteredExpression, FullExpressionEvaluator,
     SubscriptExpression, TupleExpression, UnaryOperation, ValueRefExpression,
 };
+use crate::filters::FilterExpression;
 use crate::lexer::Token;
 use crate::value::Value;
 
@@ -182,7 +183,7 @@ impl ExpressionParser {
 
         let sub_expr = ExpressionParser::parse_value_expression(lexer)?;
 
-        let mut result = match unary_op {
+        let result = match unary_op {
             Some(op) => Expression::UnaryExpression(op, Box::new(sub_expr)),
             None => sub_expr,
         };
@@ -190,19 +191,18 @@ impl ExpressionParser {
         if let Some(Token::Pipe) = lexer.peek() {
             lexer.next();
             let filter_expression = ExpressionParser::parse_filter_expression(&mut lexer)?;
-            if let Expression::Filter(mut filter) = filter_expression {
-                filter.set_parent_filter(result);
-                result = Expression::Filter(filter);
-            } else {
-                todo!()
-            }
+            Ok(Expression::FilteredExpression(FilteredExpression::new(
+                Box::new(result),
+                filter_expression,
+            )))
+        } else {
+            Ok(result)
         }
-        Ok(result)
     }
     fn parse_filter_expression<'a>(
         lexer: &mut Peekable<Lexer<'a, Token<'a>>>,
-    ) -> Result<Expression<'a>> {
-        let mut result: Option<Expression<'a>> = None;
+    ) -> Result<FilterExpression> {
+        let mut result: Option<FilterExpression> = None;
         loop {
             match lexer.next() {
                 Some(token) => {
@@ -211,7 +211,7 @@ impl ExpressionParser {
                         if let Some(expression) = result.take() {
                             filter.set_parent_filter(expression);
                         }
-                        result = Some(Expression::Filter(filter));
+                        result = Some(filter);
                     } else {
                         return Err(Error::from(ErrorKind::ExpectedIdentifier(
                             SourceLocation::new(1, 2),

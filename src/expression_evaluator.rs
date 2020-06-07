@@ -1,5 +1,5 @@
 use crate::error::{Error, ErrorKind, Result, SourceLocation};
-use crate::filters::*;
+use crate::filters::FilterExpression;
 use crate::renderer::Render;
 use crate::value::visitors;
 use crate::value::{Value, ValuesList, ValuesMap};
@@ -86,40 +86,30 @@ impl<'a> Evaluate for DictionaryExpression<'a> {
     }
 }
 
-pub struct FilterExpression<'a> {
-    filter: Filter,
-    parent: Option<Box<Expression<'a>>>,
+pub struct FilteredExpression<'a> {
+    expression: Box<dyn Evaluate + 'a>,
+    filter: FilterExpression,
 }
-impl<'a> Evaluate for FilterExpression<'a> {
-    fn evaluate(&self, values: &ValuesMap) -> Result<Value> {
-        if self.parent.is_some() {
-            self.filter
-                .filter(self.parent.as_ref().unwrap().evaluate(values)?, values)
-        } else {
-            todo!()
-        }
+impl<'a> FilteredExpression<'a> {
+    pub fn new(expression: Box<dyn Evaluate + 'a>, filter: FilterExpression) -> Self {
+        Self { expression, filter }
     }
 }
 
-impl<'a> FilterExpression<'a> {
-    pub fn new(identifier: &str) -> Result<Self> {
-        let filter = Filter::new(identifier)?;
-        Ok(Self {
-            filter,
-            parent: None,
-        })
-    }
-    pub fn set_parent_filter(&mut self, parent: Expression<'a>) {
-        self.parent = Some(Box::new(parent));
+impl<'a> Evaluate for FilteredExpression<'a> {
+    fn evaluate(&self, values: &ValuesMap) -> Result<Value> {
+        let base_value = self.expression.evaluate(values)?;
+        self.filter.filter(base_value, values)
     }
 }
+
 pub enum Expression<'a> {
     Constant(Value),
     BinaryExpression(BinaryOperation, Box<Expression<'a>>, Box<Expression<'a>>),
     UnaryExpression(UnaryOperation, Box<Expression<'a>>),
     SubscriptExpression(SubscriptExpression<'a>),
     ValueRef(ValueRefExpression),
-    Filter(FilterExpression<'a>),
+    FilteredExpression(FilteredExpression<'a>),
     Tuple(TupleExpression<'a>),
     Dict(DictionaryExpression<'a>),
 }
@@ -188,7 +178,7 @@ impl<'a> Evaluate for Expression<'a> {
             Expression::ValueRef(identifier) => identifier.evaluate(values)?,
             Expression::Tuple(tuple) => tuple.evaluate(values)?,
             Expression::Dict(dict) => dict.evaluate(values)?,
-            Expression::Filter(filter) => filter.evaluate(values)?,
+            Expression::FilteredExpression(filter) => filter.evaluate(values)?,
         };
         Ok(result)
     }
