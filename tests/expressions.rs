@@ -186,7 +186,15 @@ fn multiple_filters() -> Result<()> {
 
 #[test]
 fn filter_to_string() -> Result<()> {
-    assert_render_template_eq("{{ 1000 | string | length }}", "4", None)
+    assert_render_template_eq("{{ 1000 | string | length }}", "4", None)?;
+    assert_render_template_eq("{{ [10, 100] | string | first }}", "[", None)
+}
+
+#[test]
+fn filter_word_count() -> Result<()> {
+    assert_render_template_eq("{{ \"Hello, world!\" | wordcount }}", "2", None)?;
+    assert_render_template_eq("{{ \"    \" | wordcount }}", "0", None)?;
+    assert_render_template_eq("{{ \" hello   \" | wordcount }}", "1", None)
 }
 
 #[test]

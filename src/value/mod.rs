@@ -213,6 +213,22 @@ impl Value {
             _ => Err(Error::from(ErrorKind::InvalidOperation)),
         }
     }
+    pub fn wordcount(self) -> Result<Self> {
+        if let Value::String(s) = self {
+            let mut is_delim = true;
+            let mut count = 0;
+            for c in s.chars() {
+                if c.is_alphanumeric() & is_delim {
+                    count += 1;
+                }
+
+                is_delim = !c.is_alphanumeric();
+            }
+            Ok(Value::Integer(count))
+        } else {
+            Err(Error::from(ErrorKind::InvalidOperation))
+        }
+    }
 }
 pub type ValuesMap = std::collections::BTreeMap<String, Value>;
 

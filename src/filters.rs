@@ -15,6 +15,7 @@ pub enum Filter {
     String,
     Sum,
     Upper,
+    WordCount,
 }
 impl Filter {
     pub fn new(name: &str) -> Result<Self> {
@@ -33,6 +34,7 @@ impl Filter {
             "string" => Ok(Filter::String),
             "sum" => Ok(Filter::Sum),
             "upper" => Ok(Filter::Upper),
+            "wordcount" => Ok(Filter::WordCount),
             _ => todo!(),
         }
     }
@@ -52,6 +54,7 @@ impl Filter {
             Filter::String => Ok(Value::String(base_value.to_string())),
             Filter::Sum => base_value.sum(),
             Filter::Upper => base_value.upper(),
+            Filter::WordCount => base_value.wordcount(),
         }
     }
 }
