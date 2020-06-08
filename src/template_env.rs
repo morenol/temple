@@ -1,5 +1,5 @@
 use crate::value::{Value, ValuesMap};
-
+use std::sync::{Arc, RwLock};
 #[derive(Clone, Debug, PartialEq)]
 enum Jinja2CompatMode {
     None,
@@ -57,19 +57,22 @@ impl Default for Extensions {
     }
 }
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug)]
 pub struct TemplateEnv {
     settings: Settings,
-    global_values: ValuesMap,
+    global_values: Arc<RwLock<ValuesMap>>,
 }
 
 impl TemplateEnv {
-    pub fn add_global(&mut self, _name: String, _val: Value) {
-        todo!()
+    pub fn add_global(&mut self, name: String, val: Value) {
+        self.global_values.write().unwrap().insert(name, val);
     }
 
-    pub fn remove_global(&mut self, _name: String, _val: Value) {
-        todo!()
+    pub fn remove_global(&mut self, name: String) {
+        self.global_values.write().unwrap().remove(&name);
+    }
+    pub fn globals(&self) -> Arc<RwLock<ValuesMap>> {
+        self.global_values.clone()
     }
 
     pub fn set_settings(&mut self, settings: Settings) {
@@ -89,7 +92,7 @@ impl Default for TemplateEnv {
     fn default() -> TemplateEnv {
         TemplateEnv {
             settings: Settings::default(),
-            global_values: ValuesMap::default(),
+            global_values: Arc::new(RwLock::new(ValuesMap::default())),
         }
     }
 }

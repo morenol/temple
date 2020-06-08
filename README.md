@@ -6,7 +6,7 @@
 
 **TEMPL**ate **E**ngine. 
 
-A port of *[Jinja2Cpp]* written in [rust].
+A jinja2-like template engine in [rust] inspired by  *[Jinja2Cpp]*.
 
 [Jinja2Cpp]: https://github.com/jinja2cpp/jinja2cpp
 [rust]: https://www.rust-lang.org
@@ -90,8 +90,8 @@ TODO:
 - [ ] Custom filters
 - [x] Raw-blocks
 - [x] Comments
-- [ ] Use of context
+- [x] Use of context
   - [x] Basic context
-  - [ ] Several levels of context (Global and Local variables)
+  - [x] Several levels of context (Global and Local variables)
 - [x] Whitespace control
 - [ ] Use of settings

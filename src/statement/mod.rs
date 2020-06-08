@@ -5,11 +5,11 @@ use crate::renderer::ComposedRenderer;
 use crate::renderer::Render;
 use crate::value::{Value, ValuesMap};
 use std::io::Write;
-use std::rc::Rc;
+use std::sync::Arc;
 pub mod parser;
 pub struct IfStatement<'a> {
     expression: Box<dyn Evaluate + 'a>,
-    body: Option<Rc<ComposedRenderer<'a>>>,
+    body: Option<Arc<ComposedRenderer<'a>>>,
     else_branches: Vec<Statement<'a>>,
 }
 impl<'a> IfStatement<'a> {
@@ -20,7 +20,7 @@ impl<'a> IfStatement<'a> {
             else_branches: vec![],
         }
     }
-    fn set_main_body(&mut self, body: Rc<ComposedRenderer<'a>>) {
+    fn set_main_body(&mut self, body: Arc<ComposedRenderer<'a>>) {
         let if_body = body.clone();
         self.body = Some(if_body);
     }
@@ -29,14 +29,14 @@ impl<'a> IfStatement<'a> {
     }
 }
 impl<'a> Render for IfStatement<'a> {
-    fn render(&self, out: &mut dyn Write, params: &ValuesMap) -> Result<()> {
-        let value = self.expression.evaluate(params)?;
+    fn render(&self, out: &mut dyn Write, params: Arc<ValuesMap>) -> Result<()> {
+        let value = self.expression.evaluate(params.clone())?;
         if let Value::Boolean(true) = value {
             self.body.as_ref().unwrap().render(out, params)?
         } else {
             for branch in &self.else_branches {
                 if let Statement::Else(else_branch) = branch {
-                    if else_branch.should_render(params) {
+                    if else_branch.should_render(params.clone()) {
                         branch.render(out, params)?;
                         break;
                     }
@@ -51,7 +51,7 @@ impl<'a> Render for IfStatement<'a> {
 
 pub struct ElseStatement<'a> {
     expression: Option<Box<dyn Evaluate + 'a>>,
-    body: Option<Rc<ComposedRenderer<'a>>>,
+    body: Option<Arc<ComposedRenderer<'a>>>,
 }
 
 impl<'a> ElseStatement<'a> {
@@ -61,12 +61,12 @@ impl<'a> ElseStatement<'a> {
             body: None,
         }
     }
-    fn set_main_body(&mut self, body: Rc<ComposedRenderer<'a>>) {
+    fn set_main_body(&mut self, body: Arc<ComposedRenderer<'a>>) {
         let else_body = body.clone();
         self.body = Some(else_body);
     }
 
-    fn should_render(&self, values: &ValuesMap) -> bool {
+    fn should_render(&self, values: Arc<ValuesMap>) -> bool {
         self.expression.is_none()
             || match self.expression.as_ref().unwrap().evaluate(values) {
                 Ok(Value::Boolean(boolean)) => boolean,
@@ -75,7 +75,7 @@ impl<'a> ElseStatement<'a> {
     }
 }
 impl<'a> Render for ElseStatement<'a> {
-    fn render(&self, out: &mut dyn Write, params: &ValuesMap) -> Result<()> {
+    fn render(&self, out: &mut dyn Write, params: Arc<ValuesMap>) -> Result<()> {
         self.body.as_ref().unwrap().render(out, params)
     }
 }
@@ -85,7 +85,7 @@ pub enum Statement<'a> {
     Else(ElseStatement<'a>),
 }
 impl<'a> Statement<'a> {
-    pub fn set_main_body(&mut self, body: Rc<ComposedRenderer<'a>>) {
+    pub fn set_main_body(&mut self, body: Arc<ComposedRenderer<'a>>) {
         match self {
             Statement::If(statement) => statement.set_main_body(body),
             Statement::Else(statement) => statement.set_main_body(body),
@@ -99,7 +99,7 @@ impl<'a> Statement<'a> {
     }
 }
 impl<'a> Render for Statement<'a> {
-    fn render(&self, out: &mut dyn Write, params: &ValuesMap) -> Result<()> {
+    fn render(&self, out: &mut dyn Write, params: Arc<ValuesMap>) -> Result<()> {
         match self {
             Statement::If(statement) => statement.render(out, params),
             Statement::Else(statement) => statement.render(out, params),
@@ -109,8 +109,8 @@ impl<'a> Render for Statement<'a> {
 
 pub struct StatementInfo<'a> {
     mode: StatementInfoType,
-    pub current_composition: Rc<ComposedRenderer<'a>>,
-    compositions: Vec<Rc<ComposedRenderer<'a>>>,
+    pub current_composition: Arc<ComposedRenderer<'a>>,
+    compositions: Vec<Arc<ComposedRenderer<'a>>>,
     _token: Token<'a>,
     renderer: Option<Statement<'a>>,
 }
@@ -125,7 +125,7 @@ impl<'a> StatementInfo<'a> {
     pub fn new(
         mode: StatementInfoType,
         _token: Token<'a>,
-        renderers: Rc<ComposedRenderer<'a>>,
+        renderers: Arc<ComposedRenderer<'a>>,
     ) -> Self {
         let current_composition = renderers.clone();
         let compositions = vec![renderers];

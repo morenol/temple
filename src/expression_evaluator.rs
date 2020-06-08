@@ -4,9 +4,10 @@ use crate::renderer::Render;
 use crate::value::visitors;
 use crate::value::{Value, ValuesList, ValuesMap};
 use std::io::Write;
+use std::sync::Arc;
 
 pub trait Evaluate {
-    fn evaluate(&self, values: &ValuesMap) -> Result<Value>;
+    fn evaluate(&self, values: Arc<ValuesMap>) -> Result<Value>;
 }
 #[derive(Debug)]
 pub enum BinaryOperation {
@@ -51,11 +52,11 @@ impl<'a> TupleExpression<'a> {
     }
 }
 impl<'a> Evaluate for TupleExpression<'a> {
-    fn evaluate(&self, values: &ValuesMap) -> Result<Value> {
+    fn evaluate(&self, values: Arc<ValuesMap>) -> Result<Value> {
         let tuple: ValuesList = self
             .expressions
             .iter()
-            .map(|expr| expr.evaluate(values).unwrap())
+            .map(|expr| expr.evaluate(values.clone()).unwrap())
             .collect();
         Ok(Value::ValuesList(tuple))
     }
@@ -77,10 +78,10 @@ impl<'a> DictionaryExpression<'a> {
     }
 }
 impl<'a> Evaluate for DictionaryExpression<'a> {
-    fn evaluate(&self, values: &ValuesMap) -> Result<Value> {
+    fn evaluate(&self, values: Arc<ValuesMap>) -> Result<Value> {
         let mut dict = ValuesMap::new();
         for (key, expression) in self.elems.iter() {
-            dict.insert(key.to_string(), expression.evaluate(values)?);
+            dict.insert(key.to_string(), expression.evaluate(values.clone())?);
         }
         Ok(Value::ValuesMap(dict))
     }
@@ -97,8 +98,8 @@ impl<'a> FilteredExpression<'a> {
 }
 
 impl<'a> Evaluate for FilteredExpression<'a> {
-    fn evaluate(&self, values: &ValuesMap) -> Result<Value> {
-        let base_value = self.expression.evaluate(values)?;
+    fn evaluate(&self, values: Arc<ValuesMap>) -> Result<Value> {
+        let base_value = self.expression.evaluate(values.clone())?;
         self.filter.filter(base_value, values)
     }
 }
@@ -119,7 +120,7 @@ impl ValueRefExpression {
     }
 }
 impl Evaluate for ValueRefExpression {
-    fn evaluate(&self, values: &ValuesMap) -> Result<Value> {
+    fn evaluate(&self, values: Arc<ValuesMap>) -> Result<Value> {
         let val = values.get(&self.identifier);
         let result = match val {
             Some(value) => value.clone(),
@@ -147,10 +148,10 @@ impl<'a> SubscriptExpression<'a> {
     }
 }
 impl<'a> Evaluate for SubscriptExpression<'a> {
-    fn evaluate(&self, values: &ValuesMap) -> Result<Value> {
-        let mut cur = self.expression.evaluate(values)?;
+    fn evaluate(&self, values: Arc<ValuesMap>) -> Result<Value> {
+        let mut cur = self.expression.evaluate(values.clone())?;
         for idx in &self.subscript_expression {
-            let subscript = idx.evaluate(values)?;
+            let subscript = idx.evaluate(values.clone())?;
             cur = visitors::Subscription::apply(cur, subscript);
         }
 
@@ -158,11 +159,11 @@ impl<'a> Evaluate for SubscriptExpression<'a> {
     }
 }
 impl<'a> Evaluate for Expression<'a> {
-    fn evaluate(&self, values: &ValuesMap) -> Result<Value> {
+    fn evaluate(&self, values: Arc<ValuesMap>) -> Result<Value> {
         let result = match &self {
             Expression::Constant(value) => value.clone(),
             Expression::BinaryExpression(op, left, right) => {
-                let left_val = left.evaluate(values)?;
+                let left_val = left.evaluate(values.clone())?;
                 let right_val = right.evaluate(values)?;
                 visitors::BinaryMathOperation::apply(op, left_val, right_val)
             }
@@ -188,7 +189,7 @@ pub struct FullExpressionEvaluator<'a> {
 }
 
 impl<'a> Render for FullExpressionEvaluator<'a> {
-    fn render(&self, out: &mut dyn Write, params: &ValuesMap) -> Result<()> {
+    fn render(&self, out: &mut dyn Write, params: Arc<ValuesMap>) -> Result<()> {
         let value = self.evaluate(params)?;
         if let Err(err) = out.write(value.to_string().as_bytes()) {
             Err(Error::Io(err))
@@ -209,7 +210,7 @@ impl<'a> FullExpressionEvaluator<'a> {
 }
 
 impl<'a> Evaluate for FullExpressionEvaluator<'a> {
-    fn evaluate(&self, values: &ValuesMap) -> Result<Value> {
+    fn evaluate(&self, values: Arc<ValuesMap>) -> Result<Value> {
         let result = match &self.expression {
             Some(expression) => expression.evaluate(values)?,
             None => Value::default(),

@@ -1,4 +1,5 @@
 use super::utils::assert_render_template_eq;
+use std::sync::Arc;
 use temple::error::Result;
 use temple::value::{Value, ValuesMap};
 
@@ -29,11 +30,12 @@ Some text
 fn render_statement_with_whitespace_control() -> Result<()> {
     let mut context = ValuesMap::default();
     context.insert("trueValue".to_string(), Value::Boolean(true));
+    let context = Arc::new(context);
 
     assert_render_template_eq(
         "  {%- if trueValue -%}    Text striped
     {%- endif %}",
         "Text striped",
-        Some(&context),
+        Some(context),
     )
 }

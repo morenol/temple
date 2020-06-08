@@ -7,8 +7,7 @@ use crate::statement::parser::StatementParser;
 use crate::statement::{StatementInfo, StatementInfoList, StatementInfoType};
 use crate::template_env::TemplateEnv;
 use regex::Regex;
-use std::rc::Rc;
-use std::sync::RwLock;
+use std::sync::{Arc, RwLock};
 
 #[derive(Debug)]
 pub struct TemplateParser<'a, 'b> {
@@ -36,7 +35,7 @@ impl<'a, 'b> TemplateParser<'a, 'b> {
         })
     }
 
-    fn fine_parsing(&self, renderer: Rc<ComposedRenderer<'a>>) -> Result<()> {
+    fn fine_parsing(&self, renderer: Arc<ComposedRenderer<'a>>) -> Result<()> {
         let mut statements_stack: StatementInfoList = vec![];
         let root = StatementInfo::new(StatementInfoType::TemplateRoot, Token::Unknown, renderer);
         statements_stack.push(root);
@@ -82,9 +81,9 @@ impl<'a, 'b> TemplateParser<'a, 'b> {
     pub fn parse(&mut self) -> Result<ComposedRenderer<'a>> {
         match self.rough_parsing() {
             Ok(_) => {
-                let renderer = Rc::new(ComposedRenderer::new());
+                let renderer = Arc::new(ComposedRenderer::new());
                 self.fine_parsing(renderer.clone())?;
-                Ok(Rc::try_unwrap(renderer).unwrap())
+                Ok(Arc::try_unwrap(renderer).unwrap())
             }
             Err(error) => Err(error),
         }

@@ -8,7 +8,7 @@ use crate::renderer::ComposedRenderer;
 use logos::{Lexer, Logos};
 use std::iter::Peekable;
 pub struct StatementParser;
-use std::rc::Rc;
+use std::sync::Arc;
 
 impl StatementParser {
     pub fn parse<'a>(
@@ -32,7 +32,7 @@ impl StatementParser {
         statementinfo_list: &mut StatementInfoList<'a>,
     ) -> Result<()> {
         let value = ExpressionParser::full_expresion_parser(lexer)?;
-        let composed_renderer = Rc::new(ComposedRenderer::new());
+        let composed_renderer = Arc::new(ComposedRenderer::new());
         let renderer = Statement::If(IfStatement::new(Box::new(value)));
         let mut statement_info =
             StatementInfo::new(StatementInfoType::IfStatement, Token::If, composed_renderer);
@@ -46,7 +46,7 @@ impl StatementParser {
         statementinfo_list: &mut StatementInfoList<'a>,
     ) -> Result<()> {
         let value = ExpressionParser::full_expresion_parser(lexer)?;
-        let composed_renderer = Rc::new(ComposedRenderer::new());
+        let composed_renderer = Arc::new(ComposedRenderer::new());
         let renderer = Statement::Else(ElseStatement::new(Some(Box::new(value))));
         let mut statement_info = StatementInfo::new(
             StatementInfoType::ElseIfStatement,
@@ -59,7 +59,7 @@ impl StatementParser {
     }
 
     fn parse_else(statementinfo_list: &mut StatementInfoList) -> Result<()> {
-        let composed_renderer = Rc::new(ComposedRenderer::new());
+        let composed_renderer = Arc::new(ComposedRenderer::new());
         let renderer = Statement::Else(ElseStatement::new(None));
         let mut statement_info = StatementInfo::new(
             StatementInfoType::ElseIfStatement,

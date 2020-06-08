@@ -1,20 +1,21 @@
+use crate::context::Context;
 use crate::error::Result;
 use crate::renderer::{ComposedRenderer, Render};
 use crate::template_env::TemplateEnv;
 use crate::template_parser::TemplateParser;
 use crate::value::ValuesMap;
 use std::io::Write;
-use std::rc::Rc;
+use std::sync::Arc;
 
 #[derive(Debug)]
 pub struct Template<'a> {
-    template_env: Rc<TemplateEnv>,
+    template_env: Arc<TemplateEnv>,
     template_body: Option<&'a str>,
     renderer: Option<ComposedRenderer<'a>>,
 }
 
 impl<'a> Template<'a> {
-    pub fn new(template_env: Rc<TemplateEnv>) -> Result<Self> {
+    pub fn new(template_env: Arc<TemplateEnv>) -> Result<Self> {
         Ok(Self {
             template_env,
             template_body: None,
@@ -31,7 +32,7 @@ impl<'a> Template<'a> {
         Ok(())
     }
 
-    pub fn render_as_string(&self, params: &ValuesMap) -> Result<String> {
+    pub fn render_as_string(&self, params: Arc<ValuesMap>) -> Result<String> {
         let mut b: Vec<u8> = Vec::new();
         self.render(&mut b, params)?;
         Ok(String::from_utf8(b).expect("Found invalid UTF-8"))
@@ -39,9 +40,12 @@ impl<'a> Template<'a> {
 }
 
 impl<'a> Render for Template<'a> {
-    fn render(&self, out: &mut dyn Write, params: &ValuesMap) -> Result<()> {
+    fn render(&self, out: &mut dyn Write, params: Arc<ValuesMap>) -> Result<()> {
         if let Some(ref renderer) = self.renderer {
-            renderer.render(out, params)
+            let int_params = self.template_env.globals();
+            let ext_params = params;
+            let context = Context::new(int_params, ext_params.clone());
+            renderer.render(out, Arc::new(context.values()))
         } else {
             todo!()
         }

@@ -1,6 +1,7 @@
 pub mod error;
 pub mod value;
 
+mod context;
 mod expression_evaluator;
 mod expression_parser;
 mod filters;

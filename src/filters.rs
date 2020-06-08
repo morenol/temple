@@ -1,5 +1,6 @@
 use crate::error::Result;
 use crate::value::{Value, ValuesMap};
+use std::sync::Arc;
 pub enum Filter {
     Abs,
     Capitalize,
@@ -38,7 +39,7 @@ impl Filter {
             _ => todo!(),
         }
     }
-    pub fn filter(&self, base_value: Value, _context: &ValuesMap) -> Result<Value> {
+    pub fn filter(&self, base_value: Value, _context: Arc<ValuesMap>) -> Result<Value> {
         match &self {
             Filter::Abs => base_value.abs(),
             Filter::Capitalize => base_value.capitalize(),
@@ -76,10 +77,13 @@ impl FilterExpression {
         self.parent = Some(Box::new(parent));
     }
 
-    pub fn filter(&self, base_value: Value, context: &ValuesMap) -> Result<Value> {
+    pub fn filter(&self, base_value: Value, context: Arc<ValuesMap>) -> Result<Value> {
         if self.parent.is_some() {
             self.filter.filter(
-                self.parent.as_ref().unwrap().filter(base_value, context)?,
+                self.parent
+                    .as_ref()
+                    .unwrap()
+                    .filter(base_value, context.clone())?,
                 context,
             )
         } else {

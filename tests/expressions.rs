@@ -1,4 +1,5 @@
 use super::utils::assert_render_template_eq;
+use std::sync::Arc;
 use temple::error::Result;
 use temple::value::{Value, ValuesMap};
 
@@ -84,14 +85,17 @@ fn render_with_context() -> Result<()> {
     let mut context = ValuesMap::default();
     context.insert("foo".to_string(), Value::Integer(42));
     context.insert("bar".to_string(), Value::Double(3.5));
-    assert_render_template_eq("{{ foo }}", "42", Some(&context))?;
-    assert_render_template_eq("{{ foo + bar }}", "45.5", Some(&context))
+    let context = Arc::new(context);
+    assert_render_template_eq("{{ foo }}", "42", Some(context.clone()))?;
+    assert_render_template_eq("{{ foo + bar }}", "45.5", Some(context.clone()))
 }
 #[test]
 fn accessors() -> Result<()> {
     let mut context = ValuesMap::default();
     context.insert("text".to_string(), Value::String("hello".to_string()));
-    assert_render_template_eq("{{ text[2] }}", "l", Some(&context))?;
+    let context = Arc::new(context);
+
+    assert_render_template_eq("{{ text[2] }}", "l", Some(context))?;
     assert_render_template_eq("{{ [0, 1, 2][2] }}", "2", None)?;
     assert_render_template_eq("{{ (0, 1, 2)[2] }}", "2", None)?;
     assert_render_template_eq("{{ {\"one\": 1, \"two\":2}[\"two\"] }}", "2", None)
@@ -105,16 +109,17 @@ fn filter_basic() -> Result<()> {
         "stringValue".to_string(),
         Value::String("Hello World!".to_string()),
     );
-    assert_render_template_eq("{{ intValue | abs }}", "1", Some(&context))?;
-    assert_render_template_eq("{{ intValue | float }}", "-1.0", Some(&context))?;
-    assert_render_template_eq("{{ stringValue | length }}", "12", Some(&context))?;
-    assert_render_template_eq("{{ [0, 1, 2, 3] | length }}", "4", Some(&context))?;
+    let context = Arc::new(context);
+    assert_render_template_eq("{{ intValue | abs }}", "1", Some(context.clone()))?;
+    assert_render_template_eq("{{ intValue | float }}", "-1.0", Some(context.clone()))?;
+    assert_render_template_eq("{{ stringValue | length }}", "12", Some(context.clone()))?;
+    assert_render_template_eq("{{ [0, 1, 2, 3] | length }}", "4", Some(context.clone()))?;
     assert_render_template_eq(
         "{{ {\"key1\": intValue, \"key2\": stringValue, \"key3\": false} | length }}",
         "3",
-        Some(&context),
+        Some(context.clone()),
     )?;
-    assert_render_template_eq("{{ 3.14 | int }}", "3", Some(&context))
+    assert_render_template_eq("{{ 3.14 | int }}", "3", Some(context))
 }
 
 #[test]
@@ -125,19 +130,21 @@ fn filter_last_first() -> Result<()> {
         "stringValue".to_string(),
         Value::String("Hello World!".to_string()),
     );
-    assert_render_template_eq("{{ [0, 1, 2, 3] | first }}", "0", Some(&context))?;
-    assert_render_template_eq("{{ stringValue | first }}", "H", Some(&context))?;
+    let context = Arc::new(context);
+
+    assert_render_template_eq("{{ [0, 1, 2, 3] | first }}", "0", Some(context.clone()))?;
+    assert_render_template_eq("{{ stringValue | first }}", "H", Some(context.clone()))?;
     assert_render_template_eq(
         "{{ {\"key1\": intValue, \"key2\": stringValue, \"key3\": false} | first }}",
         "-1",
-        Some(&context),
+        Some(context.clone()),
     )?;
-    assert_render_template_eq("{{ [0, 1, 2, 3] | last }}", "3", Some(&context))?;
-    assert_render_template_eq("{{ stringValue | last }}", "!", Some(&context))?;
+    assert_render_template_eq("{{ [0, 1, 2, 3] | last }}", "3", Some(context.clone()))?;
+    assert_render_template_eq("{{ stringValue | last }}", "!", Some(context.clone()))?;
     assert_render_template_eq(
         "{{ {\"key1\": intValue, \"key2\": stringValue, \"key3\": false} | last }}",
         "false",
-        Some(&context),
+        Some(context),
     )
 }
 #[test]
@@ -147,14 +154,23 @@ fn filter_lower_upper() -> Result<()> {
         "stringValue".to_string(),
         Value::String("Hello World!".to_string()),
     );
+    let context = Arc::new(context);
 
     assert_render_template_eq(
         "{{ stringValue | lower | capitalize }}",
         "Hello world!",
-        Some(&context),
+        Some(context.clone()),
     )?;
-    assert_render_template_eq("{{ stringValue | lower }}", "hello world!", Some(&context))?;
-    assert_render_template_eq("{{ stringValue | upper }}", "HELLO WORLD!", Some(&context))
+    assert_render_template_eq(
+        "{{ stringValue | lower }}",
+        "hello world!",
+        Some(context.clone()),
+    )?;
+    assert_render_template_eq(
+        "{{ stringValue | upper }}",
+        "HELLO WORLD!",
+        Some(context.clone()),
+    )
 }
 #[test]
 fn filter_minmax() -> Result<()> {
@@ -203,7 +219,13 @@ fn filter_escape() -> Result<()> {
     context.insert("br_tag".to_string(), Value::String("</br>".to_string()));
     context.insert("ampersand".to_string(), Value::String("&".to_string()));
     context.insert("quotes".to_string(), Value::String("\"\'".to_string()));
-    assert_render_template_eq("{{ br_tag | escape }}", "&lt;/br&gt;", Some(&context))?;
-    assert_render_template_eq("{{ ampersand | escape }}", "&amp;", Some(&context))?;
-    assert_render_template_eq("{{ quotes | escape }}", "&#34;&#39;", Some(&context))
+    let context = Arc::new(context);
+
+    assert_render_template_eq(
+        "{{ br_tag | escape }}",
+        "&lt;/br&gt;",
+        Some(context.clone()),
+    )?;
+    assert_render_template_eq("{{ ampersand | escape }}", "&amp;", Some(context.clone()))?;
+    assert_render_template_eq("{{ quotes | escape }}", "&#34;&#39;", Some(context.clone()))
 }
