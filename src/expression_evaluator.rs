@@ -40,14 +40,11 @@ pub struct SubscriptExpression<'a> {
     expression: Box<Expression<'a>>,
     subscript_expression: Vec<Box<dyn Evaluate + 'a>>,
 }
+#[derive(Default)]
 pub struct TupleExpression<'a> {
     pub expressions: Vec<Box<dyn Evaluate + 'a>>,
 }
 impl<'a> TupleExpression<'a> {
-    pub fn new() -> Self {
-        let expressions = vec![];
-        Self { expressions }
-    }
     pub fn push(&mut self, expression: Box<dyn Evaluate + 'a>) {
         self.expressions.push(expression)
     }
@@ -66,14 +63,11 @@ impl<'a> Evaluate for TupleExpression<'a> {
 pub struct ValueRefExpression {
     identifier: String,
 }
+#[derive(Default)]
 pub struct DictionaryExpression<'a> {
     elems: std::collections::HashMap<String, Box<dyn Evaluate + 'a>>,
 }
 impl<'a> DictionaryExpression<'a> {
-    pub fn new() -> Self {
-        let elems = std::collections::HashMap::new();
-        Self { elems }
-    }
     pub fn push(&mut self, key: String, value: Box<dyn Evaluate + 'a>) {
         self.elems.insert(key, value);
     }
@@ -185,6 +179,8 @@ impl<'a> Evaluate for Expression<'a> {
         Ok(result)
     }
 }
+
+#[derive(Default)]
 pub struct FullExpressionEvaluator<'a> {
     expression: Option<Expression<'a>>,
 }
@@ -201,10 +197,6 @@ impl<'a> Render for FullExpressionEvaluator<'a> {
 }
 
 impl<'a> FullExpressionEvaluator<'a> {
-    pub fn new() -> Self {
-        Self { expression: None }
-    }
-
     pub fn set_expression(&mut self, expression: Expression<'a>) {
         self.expression = Some(expression)
     }
@@ -220,16 +212,8 @@ impl<'a> Evaluate for FullExpressionEvaluator<'a> {
     }
 }
 
+#[derive(Default)]
 pub struct CallParams<'a> {
     pub kw_params: HashMap<String, FullExpressionEvaluator<'a>>,
     pub pos_params: Vec<FullExpressionEvaluator<'a>>,
-}
-
-impl<'a> CallParams<'a> {
-    pub fn new() -> Self {
-        Self {
-            kw_params: HashMap::new(),
-            pos_params: vec![],
-        }
-    }
 }

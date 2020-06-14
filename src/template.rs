@@ -44,7 +44,7 @@ impl<'a> Render for Template<'a> {
         if let Some(ref renderer) = self.renderer {
             let int_params = self.template_env.globals();
             let ext_params = params;
-            let context = Context::new(int_params, ext_params.clone());
+            let context = Context::new(int_params, ext_params);
             renderer.render(out, Arc::new(context.values()))
         } else {
             todo!()

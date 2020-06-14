@@ -30,7 +30,7 @@ impl ExpressionParser {
     pub fn full_expresion_parser<'a>(
         mut lexer: &mut Peekable<Lexer<'a, Token<'a>>>,
     ) -> Result<FullExpressionEvaluator<'a>> {
-        let mut evaluator = FullExpressionEvaluator::new();
+        let mut evaluator = FullExpressionEvaluator::default();
 
         let value = ExpressionParser::parse_logical_or(&mut lexer);
         match value {
@@ -243,7 +243,7 @@ impl ExpressionParser {
     fn parse_call_params<'a>(
         lexer: &mut Peekable<Lexer<'a, Token<'a>>>,
     ) -> Result<Option<CallParams<'a>>> {
-        let mut params = CallParams::new();
+        let mut params = CallParams::default();
         if let Some(Token::RBracket) = lexer.peek() {
             lexer.next();
             return Ok(None);
@@ -351,7 +351,7 @@ impl ExpressionParser {
             }
         }
         if is_tuple {
-            let mut tuple = TupleExpression::new();
+            let mut tuple = TupleExpression::default();
             for expr in exprs {
                 tuple.push(Box::new(expr));
             }
@@ -398,7 +398,7 @@ impl ExpressionParser {
         Ok(Expression::SubscriptExpression(subscript))
     }
     fn parse_tuple<'a>(mut lexer: &mut Peekable<Lexer<'a, Token<'a>>>) -> Result<Expression<'a>> {
-        let mut tuple = TupleExpression::new();
+        let mut tuple = TupleExpression::default();
         if let Some(Token::RSqBracket) = lexer.peek() {
             lexer.next();
             return Ok(Expression::Tuple(tuple));
@@ -423,7 +423,7 @@ impl ExpressionParser {
         }
     }
     fn parse_dict<'a>(mut lexer: &mut Peekable<Lexer<'a, Token<'a>>>) -> Result<Expression<'a>> {
-        let mut dict = DictionaryExpression::new();
+        let mut dict = DictionaryExpression::default();
         if let Some(Token::RCrlBracket) = lexer.peek() {
             lexer.next();
             return Ok(Expression::Dict(dict));
