@@ -3,6 +3,7 @@ use crate::filters::FilterExpression;
 use crate::renderer::Render;
 use crate::value::visitors;
 use crate::value::{Value, ValuesList, ValuesMap};
+use std::collections::HashMap;
 use std::io::Write;
 use std::sync::Arc;
 
@@ -89,10 +90,10 @@ impl<'a> Evaluate for DictionaryExpression<'a> {
 
 pub struct FilteredExpression<'a> {
     expression: Box<dyn Evaluate + 'a>,
-    filter: FilterExpression,
+    filter: FilterExpression<'a>,
 }
 impl<'a> FilteredExpression<'a> {
-    pub fn new(expression: Box<dyn Evaluate + 'a>, filter: FilterExpression) -> Self {
+    pub fn new(expression: Box<dyn Evaluate + 'a>, filter: FilterExpression<'a>) -> Self {
         Self { expression, filter }
     }
 }
@@ -216,5 +217,19 @@ impl<'a> Evaluate for FullExpressionEvaluator<'a> {
             None => Value::default(),
         };
         Ok(result)
+    }
+}
+
+pub struct CallParams<'a> {
+    pub kw_params: HashMap<String, FullExpressionEvaluator<'a>>,
+    pub pos_params: Vec<FullExpressionEvaluator<'a>>,
+}
+
+impl<'a> CallParams<'a> {
+    pub fn new() -> Self {
+        Self {
+            kw_params: HashMap::new(),
+            pos_params: vec![],
+        }
     }
 }

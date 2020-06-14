@@ -1,9 +1,11 @@
 use crate::error::Result;
+use crate::expression_evaluator::CallParams;
 use crate::value::{Value, ValuesMap};
 use std::sync::Arc;
 pub enum Filter {
     Abs,
     Capitalize,
+    Default,
     Escape,
     First,
     Float,
@@ -23,12 +25,13 @@ impl Filter {
         match name {
             "abs" => Ok(Filter::Abs),
             "capitalize" => Ok(Filter::Capitalize),
-            "escape" => Ok(Filter::Escape),
+            "default" | "d" => Ok(Filter::Default),
+            "escape" | "e" => Ok(Filter::Escape),
             "first" => Ok(Filter::First),
             "float" => Ok(Filter::Float),
             "int" => Ok(Filter::Int),
             "last" => Ok(Filter::Last),
-            "length" => Ok(Filter::Length),
+            "length" | "count" => Ok(Filter::Length),
             "lower" => Ok(Filter::Lower),
             "max" => Ok(Filter::Max),
             "min" => Ok(Filter::Min),
@@ -39,41 +42,50 @@ impl Filter {
             _ => todo!(),
         }
     }
-    pub fn filter(&self, base_value: Value, _context: Arc<ValuesMap>) -> Result<Value> {
+    pub fn filter<'a>(
+        &self,
+        base_value: Value,
+        params: &Option<CallParams<'a>>,
+        context: Arc<ValuesMap>,
+    ) -> Result<Value> {
         match &self {
             Filter::Abs => base_value.abs(),
             Filter::Capitalize => base_value.capitalize(),
+            Filter::Default => base_value.default_filter(params, context),
             Filter::Escape => base_value.escape(),
             Filter::First => base_value.first(),
-            Filter::Int => Ok(Value::Integer(base_value.int()?)),
-            Filter::Float => Ok(Value::Double(base_value.float()?)),
+            Filter::Int => Ok(Value::Integer(base_value.int()?)), // TODO change to accept parameters
+
+            Filter::Float => Ok(Value::Double(base_value.float()?)), // TODO change to accept parameters
             Filter::Last => base_value.last(),
             Filter::Length => Ok(Value::Integer(base_value.len()? as i64)),
             Filter::Lower => base_value.lower(),
-            Filter::Max => base_value.max(),
-            Filter::Min => base_value.min(),
+            Filter::Max => base_value.max(), // TODO Accept params
+            Filter::Min => base_value.min(), // TODO Accept params
             Filter::String => Ok(Value::String(base_value.to_string())),
-            Filter::Sum => base_value.sum(),
+            Filter::Sum => base_value.sum(), // TODO: ACcept params
             Filter::Upper => base_value.upper(),
             Filter::WordCount => base_value.wordcount(),
         }
     }
 }
 
-pub struct FilterExpression {
+pub struct FilterExpression<'a> {
     filter: Filter,
-    parent: Option<Box<FilterExpression>>,
+    params: Option<CallParams<'a>>,
+    parent: Option<Box<FilterExpression<'a>>>,
 }
 
-impl FilterExpression {
-    pub fn new(identifier: &str) -> Result<Self> {
+impl<'a> FilterExpression<'a> {
+    pub fn new(identifier: &str, params: Option<CallParams<'a>>) -> Result<Self> {
         let filter = Filter::new(identifier)?;
         Ok(Self {
             filter,
+            params,
             parent: None,
         })
     }
-    pub fn set_parent_filter(&mut self, parent: FilterExpression) {
+    pub fn set_parent_filter(&mut self, parent: FilterExpression<'a>) {
         self.parent = Some(Box::new(parent));
     }
 
@@ -84,10 +96,11 @@ impl FilterExpression {
                     .as_ref()
                     .unwrap()
                     .filter(base_value, context.clone())?,
+                &self.params,
                 context,
             )
         } else {
-            self.filter.filter(base_value, context)
+            self.filter.filter(base_value, &self.params, context)
         }
     }
 }

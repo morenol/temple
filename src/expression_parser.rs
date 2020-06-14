@@ -1,7 +1,8 @@
 use crate::error::{Error, ErrorKind, Result, SourceLocation};
 use crate::expression_evaluator::{
-    BinaryOperation, DictionaryExpression, Expression, FilteredExpression, FullExpressionEvaluator,
-    SubscriptExpression, TupleExpression, UnaryOperation, ValueRefExpression,
+    BinaryOperation, CallParams, DictionaryExpression, Expression, FilteredExpression,
+    FullExpressionEvaluator, SubscriptExpression, TupleExpression, UnaryOperation,
+    ValueRefExpression,
 };
 use crate::filters::FilterExpression;
 use crate::lexer::Token;
@@ -201,13 +202,20 @@ impl ExpressionParser {
     }
     fn parse_filter_expression<'a>(
         lexer: &mut Peekable<Lexer<'a, Token<'a>>>,
-    ) -> Result<FilterExpression> {
+    ) -> Result<FilterExpression<'a>> {
         let mut result: Option<FilterExpression> = None;
         loop {
             match lexer.next() {
                 Some(token) => {
                     if let Token::Identifier(identifier) = token {
-                        let mut filter = FilterExpression::new(&identifier)?;
+                        let params = if let Some(Token::LBracket) = lexer.peek() {
+                            lexer.next();
+                            ExpressionParser::parse_call_params(lexer)?
+                        } else {
+                            None
+                        };
+
+                        let mut filter = FilterExpression::new(&identifier, params)?;
                         if let Some(expression) = result.take() {
                             filter.set_parent_filter(expression);
                         }
@@ -231,6 +239,44 @@ impl ExpressionParser {
             }
         }
         Ok(result.unwrap())
+    }
+    fn parse_call_params<'a>(
+        lexer: &mut Peekable<Lexer<'a, Token<'a>>>,
+    ) -> Result<Option<CallParams<'a>>> {
+        let mut params = CallParams::new();
+        if let Some(Token::RBracket) = lexer.peek() {
+            lexer.next();
+            return Ok(None);
+        }
+
+        loop {
+            let mut params_name: Option<String> = None;
+            if let Some(Token::Identifier(keyword)) = lexer.peek() {
+                params_name = Some(keyword.to_string());
+                lexer.next();
+                if let Some(Token::Assign) = lexer.peek() {
+                    lexer.next();
+                }
+            }
+            let value = ExpressionParser::full_expresion_parser(lexer)?;
+            if let Some(keyword) = params_name {
+                params.kw_params.insert(keyword, value);
+            } else {
+                params.pos_params.push(value);
+            }
+            if let Some(Token::Comma) = lexer.peek() {
+                lexer.next();
+            } else {
+                break;
+            }
+        }
+        if let Some(Token::RBracket) = lexer.next() {
+            Ok(Some(params))
+        } else {
+            Err(Error::from(ErrorKind::ExpectedCurlyBracket(
+                SourceLocation::new(1, 2),
+            )))
+        }
     }
     fn parse_value_expression<'a>(
         mut lexer: &mut Peekable<Lexer<'a, Token<'a>>>,
