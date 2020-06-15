@@ -44,7 +44,7 @@ TODO:
   - [ ] batch
   - [x] capitalize
   - [ ] center
-  - [ ] default
+  - [x] default
   - [ ] dictsort
   - [x] escape
   - [ ] filesizeformat
@@ -84,14 +84,11 @@ TODO:
   - [x] upper
   - [ ] urlencode
   - [ ] urlize
-  - [ ] wordcount
+  - [x] wordcount
   - [ ] wordwrap
   - [ ] xmlattr
 - [ ] Custom filters
-- [x] Raw-blocks
-- [x] Comments
 - [x] Use of context
   - [x] Basic context
   - [x] Several levels of context (Global and Local variables)
-- [x] Whitespace control
 - [ ] Use of settings
