@@ -20,7 +20,7 @@ pub enum ErrorKind {
     InvalidValueType,
     InvalidTemplateName,
     InvalidOperation,
-    UndefinedValue(SourceLocation, String),
+    UndefinedValue(SourceLocation),
     ExpectedStringLiteral(SourceLocation),
     ExpectedIdentifier(SourceLocation),
     ExpectedSquareBracket(SourceLocation),
@@ -56,7 +56,7 @@ impl ErrorKind {
             ErrorKind::InvalidTemplateName => "Invalid name of the template",
             ErrorKind::InvalidOperation => "Invalid operation",
             //           ErrorKind::MetadataParseError => "Metadata Parse Error ", // TODO: Solve in jinja2cpp
-            ErrorKind::UndefinedValue(_location, _identifier) => "Value is not defined",
+            ErrorKind::UndefinedValue(_location) => "Value is not defined",
             ErrorKind::ExpectedStringLiteral(_location) => "String literal expected",
             ErrorKind::ExpectedIdentifier(_location) => "Identifier expected",
             ErrorKind::ExpectedSquareBracket(_location) => "']' expected",

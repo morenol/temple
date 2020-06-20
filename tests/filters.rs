@@ -1,7 +1,7 @@
 use super::utils::assert_render_template_eq;
-use std::sync::Arc;
 use temple::error::Result;
 use temple::value::{Value, ValuesMap};
+use temple::Context;
 
 #[test]
 fn filter_basic() -> Result<()> {
@@ -11,7 +11,7 @@ fn filter_basic() -> Result<()> {
         "stringValue".to_string(),
         Value::String("Hello World!".to_string()),
     );
-    let context = Arc::new(context);
+    let context = Context::new(context);
     assert_render_template_eq("{{ intValue | abs }}", "1", Some(context.clone()))?;
     assert_render_template_eq("{{ intValue | float }}", "-1.0", Some(context.clone()))?;
     assert_render_template_eq("{{ stringValue | length }}", "12", Some(context.clone()))?;
@@ -32,7 +32,7 @@ fn filter_last_first() -> Result<()> {
         "stringValue".to_string(),
         Value::String("Hello World!".to_string()),
     );
-    let context = Arc::new(context);
+    let context = Context::new(context);
 
     assert_render_template_eq("{{ [0, 1, 2, 3] | first }}", "0", Some(context.clone()))?;
     assert_render_template_eq("{{ stringValue | first }}", "H", Some(context.clone()))?;
@@ -56,7 +56,7 @@ fn filter_lower_upper() -> Result<()> {
         "stringValue".to_string(),
         Value::String("Hello World!".to_string()),
     );
-    let context = Arc::new(context);
+    let context = Context::new(context);
 
     assert_render_template_eq(
         "{{ stringValue | lower | capitalize }}",
@@ -121,7 +121,7 @@ fn filter_escape() -> Result<()> {
     context.insert("br_tag".to_string(), Value::String("</br>".to_string()));
     context.insert("ampersand".to_string(), Value::String("&".to_string()));
     context.insert("quotes".to_string(), Value::String("\"\'".to_string()));
-    let context = Arc::new(context);
+    let context = Context::new(context);
 
     assert_render_template_eq(
         "{{ br_tag | escape }}",
@@ -137,7 +137,7 @@ fn default_filter() -> Result<()> {
     let mut context = ValuesMap::default();
     context.insert("undefined".to_string(), Value::Empty);
     context.insert("value".to_string(), Value::Integer(1000));
-    let context = Arc::new(context);
+    let context = Context::new(context);
     assert_render_template_eq(
         "{{ undefined | default(default_value=\"undefined value\") }}",
         "undefined value",

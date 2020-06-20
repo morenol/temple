@@ -1,7 +1,7 @@
 use std::sync::Arc;
 use temple::error::Result;
 use temple::value::{Value, ValuesMap};
-use temple::{Template, TemplateEnv};
+use temple::{Context, Template, TemplateEnv};
 
 #[test]
 fn test_global_variable() -> Result<()> {
@@ -13,7 +13,7 @@ fn test_global_variable() -> Result<()> {
     let template_env = Arc::new(temp_env);
     let mut template = Template::new(template_env)?;
     template.load("{{ GLOBAL_VAR }}")?;
-    let context = Arc::new(ValuesMap::default());
+    let context = Context::default();
     let result = template.render_as_string(context)?;
     assert_eq!(result, "Global".to_string());
     Ok(())
@@ -37,7 +37,8 @@ external: {{external_variable}}",
         "external_variable".to_string(),
         Value::String("External".to_string()),
     );
-    let context = Arc::new(context);
+
+    let context = Context::new(context);
 
     let result = template.render_as_string(context)?;
     assert_eq!(
@@ -61,8 +62,8 @@ fn test_override_value() -> Result<()> {
         "key".to_string(),
         Value::String("overrided value".to_string()),
     );
-    let context = Arc::new(context);
 
+    let context = Context::new(context);
     let result = template.render_as_string(context)?;
     assert_eq!(result, "overrided value".to_string());
     Ok(())

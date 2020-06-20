@@ -1,9 +1,8 @@
+use crate::context::Context;
 use crate::error::{Error, Result};
 use crate::expression_evaluator::FullExpressionEvaluator;
-use crate::value::ValuesMap;
 use std::fmt;
 use std::io::Write;
-use std::sync::Arc;
 use std::sync::RwLock;
 
 pub struct ComposedRenderer<'a> {
@@ -11,7 +10,7 @@ pub struct ComposedRenderer<'a> {
 }
 
 pub trait Render {
-    fn render(&self, out: &mut dyn Write, params: Arc<ValuesMap>) -> Result<()>;
+    fn render(&self, out: &mut dyn Write, params: Context) -> Result<()>;
 }
 
 impl<'a> ComposedRenderer<'a> {
@@ -25,7 +24,7 @@ impl<'a> ComposedRenderer<'a> {
 }
 
 impl<'a> Render for ComposedRenderer<'a> {
-    fn render(&self, out: &mut dyn Write, params: Arc<ValuesMap>) -> Result<()> {
+    fn render(&self, out: &mut dyn Write, params: Context) -> Result<()> {
         for r in self.renderers.read().unwrap().iter() {
             r.render(out, params.clone())?;
         }
@@ -51,7 +50,7 @@ impl<'a> RawTextRenderer<'a> {
 }
 
 impl<'a> Render for RawTextRenderer<'a> {
-    fn render(&self, out: &mut dyn Write, _params: Arc<ValuesMap>) -> Result<()> {
+    fn render(&self, out: &mut dyn Write, _params: Context) -> Result<()> {
         if let Err(err) = out.write(self.content.as_bytes()) {
             Err(Error::Io(err))
         } else {
@@ -65,7 +64,7 @@ pub struct ExpressionRenderer<'a> {
 }
 
 impl<'a> Render for ExpressionRenderer<'a> {
-    fn render(&self, out: &mut dyn Write, params: Arc<ValuesMap>) -> Result<()> {
+    fn render(&self, out: &mut dyn Write, params: Context) -> Result<()> {
         self.expression.render(out, params)
     }
 }

@@ -3,7 +3,6 @@ use crate::error::Result;
 use crate::renderer::{ComposedRenderer, Render};
 use crate::template_env::TemplateEnv;
 use crate::template_parser::TemplateParser;
-use crate::value::ValuesMap;
 use std::io::Write;
 use std::sync::Arc;
 
@@ -32,7 +31,7 @@ impl<'a> Template<'a> {
         Ok(())
     }
 
-    pub fn render_as_string(&self, params: Arc<ValuesMap>) -> Result<String> {
+    pub fn render_as_string(&self, params: Context) -> Result<String> {
         let mut b: Vec<u8> = Vec::new();
         self.render(&mut b, params)?;
         Ok(String::from_utf8(b).expect("Found invalid UTF-8"))
@@ -40,12 +39,10 @@ impl<'a> Template<'a> {
 }
 
 impl<'a> Render for Template<'a> {
-    fn render(&self, out: &mut dyn Write, params: Arc<ValuesMap>) -> Result<()> {
+    fn render(&self, out: &mut dyn Write, mut params: Context) -> Result<()> {
         if let Some(ref renderer) = self.renderer {
-            let int_params = self.template_env.globals();
-            let ext_params = params;
-            let context = Context::new(int_params, ext_params);
-            renderer.render(out, Arc::new(context.values()))
+            params.set_global(self.template_env.globals());
+            renderer.render(out, params)
         } else {
             todo!()
         }

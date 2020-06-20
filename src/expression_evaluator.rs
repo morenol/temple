@@ -1,3 +1,4 @@
+use crate::context::Context;
 use crate::error::{Error, ErrorKind, Result, SourceLocation};
 use crate::filters::FilterExpression;
 use crate::renderer::Render;
@@ -5,10 +6,9 @@ use crate::value::visitors;
 use crate::value::{Value, ValuesList, ValuesMap};
 use std::collections::HashMap;
 use std::io::Write;
-use std::sync::Arc;
 
 pub trait Evaluate {
-    fn evaluate(&self, values: Arc<ValuesMap>) -> Result<Value>;
+    fn evaluate(&self, values: Context) -> Result<Value>;
 }
 #[derive(Debug)]
 pub enum BinaryOperation {
@@ -50,7 +50,7 @@ impl<'a> TupleExpression<'a> {
     }
 }
 impl<'a> Evaluate for TupleExpression<'a> {
-    fn evaluate(&self, values: Arc<ValuesMap>) -> Result<Value> {
+    fn evaluate(&self, values: Context) -> Result<Value> {
         let tuple: ValuesList = self
             .expressions
             .iter()
@@ -73,7 +73,7 @@ impl<'a> DictionaryExpression<'a> {
     }
 }
 impl<'a> Evaluate for DictionaryExpression<'a> {
-    fn evaluate(&self, values: Arc<ValuesMap>) -> Result<Value> {
+    fn evaluate(&self, values: Context) -> Result<Value> {
         let mut dict = ValuesMap::new();
         for (key, expression) in self.elems.iter() {
             dict.insert(key.to_string(), expression.evaluate(values.clone())?);
@@ -93,7 +93,7 @@ impl<'a> FilteredExpression<'a> {
 }
 
 impl<'a> Evaluate for FilteredExpression<'a> {
-    fn evaluate(&self, values: Arc<ValuesMap>) -> Result<Value> {
+    fn evaluate(&self, values: Context) -> Result<Value> {
         let base_value = self.expression.evaluate(values.clone())?;
         self.filter.filter(base_value, values)
     }
@@ -115,18 +115,8 @@ impl ValueRefExpression {
     }
 }
 impl Evaluate for ValueRefExpression {
-    fn evaluate(&self, values: Arc<ValuesMap>) -> Result<Value> {
-        let val = values.get(&self.identifier);
-        let result = match val {
-            Some(value) => value.clone(),
-            None => {
-                return Err(Error::from(ErrorKind::UndefinedValue(
-                    SourceLocation::new(1, 2),
-                    self.identifier.clone(),
-                )))
-            }
-        };
-        Ok(result)
+    fn evaluate(&self, values: Context) -> Result<Value> {
+        Ok(values.find(&self.identifier))
     }
 }
 
@@ -143,7 +133,7 @@ impl<'a> SubscriptExpression<'a> {
     }
 }
 impl<'a> Evaluate for SubscriptExpression<'a> {
-    fn evaluate(&self, values: Arc<ValuesMap>) -> Result<Value> {
+    fn evaluate(&self, values: Context) -> Result<Value> {
         let mut cur = self.expression.evaluate(values.clone())?;
         for idx in &self.subscript_expression {
             let subscript = idx.evaluate(values.clone())?;
@@ -154,7 +144,7 @@ impl<'a> Evaluate for SubscriptExpression<'a> {
     }
 }
 impl<'a> Evaluate for Expression<'a> {
-    fn evaluate(&self, values: Arc<ValuesMap>) -> Result<Value> {
+    fn evaluate(&self, values: Context) -> Result<Value> {
         let result = match &self {
             Expression::Constant(value) => value.clone(),
             Expression::BinaryExpression(op, left, right) => {
@@ -186,9 +176,13 @@ pub struct FullExpressionEvaluator<'a> {
 }
 
 impl<'a> Render for FullExpressionEvaluator<'a> {
-    fn render(&self, out: &mut dyn Write, params: Arc<ValuesMap>) -> Result<()> {
+    fn render(&self, out: &mut dyn Write, params: Context) -> Result<()> {
         let value = self.evaluate(params)?;
-        if let Err(err) = out.write(value.to_string().as_bytes()) {
+        if let Value::Empty = value {
+            Err(Error::from(ErrorKind::UndefinedValue(SourceLocation::new(
+                1, 2,
+            ))))
+        } else if let Err(err) = out.write(value.to_string().as_bytes()) {
             Err(Error::Io(err))
         } else {
             Ok(())
@@ -203,7 +197,7 @@ impl<'a> FullExpressionEvaluator<'a> {
 }
 
 impl<'a> Evaluate for FullExpressionEvaluator<'a> {
-    fn evaluate(&self, values: Arc<ValuesMap>) -> Result<Value> {
+    fn evaluate(&self, values: Context) -> Result<Value> {
         let result = match &self.expression {
             Some(expression) => expression.evaluate(values)?,
             None => Value::default(),

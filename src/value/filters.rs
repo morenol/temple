@@ -1,10 +1,10 @@
-use super::{Value, ValuesMap};
+use super::Value;
+use crate::context::Context;
 use crate::error::{Error, ErrorKind, Result};
 use crate::expression_evaluator::CallParams;
 use crate::expression_evaluator::Evaluate;
 
 use regex::Regex;
-use std::sync::Arc;
 
 impl Value {
     pub fn abs(self) -> Result<Self> {
@@ -24,11 +24,7 @@ impl Value {
             _ => Err(Error::from(ErrorKind::InvalidOperation)),
         }
     }
-    pub fn default_filter(
-        self,
-        params: &Option<CallParams>,
-        context: Arc<ValuesMap>,
-    ) -> Result<Self> {
+    pub fn default_filter(self, params: &Option<CallParams>, context: Context) -> Result<Self> {
         match self {
             Value::Empty => match params {
                 None => Ok(Value::String("".to_string())),

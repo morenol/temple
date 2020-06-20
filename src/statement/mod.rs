@@ -1,9 +1,10 @@
+use crate::context::Context;
 use crate::error::Result;
 use crate::expression_evaluator::Evaluate;
 use crate::lexer::Token;
 use crate::renderer::ComposedRenderer;
 use crate::renderer::Render;
-use crate::value::{Value, ValuesMap};
+use crate::value::Value;
 use std::io::Write;
 use std::sync::Arc;
 pub mod parser;
@@ -29,7 +30,7 @@ impl<'a> IfStatement<'a> {
     }
 }
 impl<'a> Render for IfStatement<'a> {
-    fn render(&self, out: &mut dyn Write, params: Arc<ValuesMap>) -> Result<()> {
+    fn render(&self, out: &mut dyn Write, params: Context) -> Result<()> {
         let value = self.expression.evaluate(params.clone())?;
         if let Value::Boolean(true) = value {
             self.body.as_ref().unwrap().render(out, params)?
@@ -66,7 +67,7 @@ impl<'a> ElseStatement<'a> {
         self.body = Some(else_body);
     }
 
-    fn should_render(&self, values: Arc<ValuesMap>) -> bool {
+    fn should_render(&self, values: Context) -> bool {
         self.expression.is_none()
             || match self.expression.as_ref().unwrap().evaluate(values) {
                 Ok(Value::Boolean(boolean)) => boolean,
@@ -75,7 +76,7 @@ impl<'a> ElseStatement<'a> {
     }
 }
 impl<'a> Render for ElseStatement<'a> {
-    fn render(&self, out: &mut dyn Write, params: Arc<ValuesMap>) -> Result<()> {
+    fn render(&self, out: &mut dyn Write, params: Context) -> Result<()> {
         self.body.as_ref().unwrap().render(out, params)
     }
 }
@@ -99,7 +100,7 @@ impl<'a> Statement<'a> {
     }
 }
 impl<'a> Render for Statement<'a> {
-    fn render(&self, out: &mut dyn Write, params: Arc<ValuesMap>) -> Result<()> {
+    fn render(&self, out: &mut dyn Write, params: Context) -> Result<()> {
         match self {
             Statement::If(statement) => statement.render(out, params),
             Statement::Else(statement) => statement.render(out, params),

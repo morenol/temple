@@ -1,7 +1,7 @@
 use super::utils::assert_render_template_eq;
-use std::sync::Arc;
 use temple::error::Result;
 use temple::value::{Value, ValuesMap};
+use temple::Context;
 
 #[test]
 fn basic_math_expression() -> Result<()> {
@@ -85,7 +85,8 @@ fn render_with_context() -> Result<()> {
     let mut context = ValuesMap::default();
     context.insert("foo".to_string(), Value::Integer(42));
     context.insert("bar".to_string(), Value::Double(3.5));
-    let context = Arc::new(context);
+    let context = Context::new(context);
+
     assert_render_template_eq("{{ foo }}", "42", Some(context.clone()))?;
     assert_render_template_eq("{{ foo + bar }}", "45.5", Some(context.clone()))
 }
@@ -93,8 +94,7 @@ fn render_with_context() -> Result<()> {
 fn accessors() -> Result<()> {
     let mut context = ValuesMap::default();
     context.insert("text".to_string(), Value::String("hello".to_string()));
-    let context = Arc::new(context);
-
+    let context = Context::new(context);
     assert_render_template_eq("{{ text[2] }}", "l", Some(context))?;
     assert_render_template_eq("{{ [0, 1, 2][2] }}", "2", None)?;
     assert_render_template_eq("{{ (0, 1, 2)[2] }}", "2", None)?;

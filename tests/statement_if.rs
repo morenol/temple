@@ -1,14 +1,13 @@
 use super::utils::assert_render_template_eq;
-use std::sync::Arc;
 use temple::error::Result;
 use temple::value::{Value, ValuesMap};
+use temple::Context;
 
 #[test]
 fn render_if_body() -> Result<()> {
     let mut context = ValuesMap::default();
     context.insert("trueValue".to_string(), Value::Boolean(true));
-    let context = Arc::new(context);
-
+    let context = Context::new(context);
     assert_render_template_eq(
         "{% if trueValue %}
 Hello, world!
@@ -24,7 +23,7 @@ Hello, world!
 fn dont_render_if_body() -> Result<()> {
     let mut context = ValuesMap::default();
     context.insert("falseValue".to_string(), Value::Boolean(false));
-    let context = Arc::new(context);
+    let context = Context::new(context);
 
     assert_render_template_eq(
         "Only render this.{% if falseValue %}
@@ -39,7 +38,7 @@ this not
 fn render_else() -> Result<()> {
     let mut context = ValuesMap::default();
     context.insert("six".to_string(), Value::Double(6.0));
-    let context = Arc::new(context);
+    let context = Context::new(context);
 
     assert_render_template_eq(
         "{% if six < 5 %}
@@ -54,7 +53,7 @@ fn render_else() -> Result<()> {
 fn render_elif() -> Result<()> {
     let mut context = ValuesMap::default();
     context.insert("number".to_string(), Value::Double(42.0));
-    let context = Arc::new(context);
+    let context = Context::new(context);
 
     assert_render_template_eq(
         "{% if number > 50 %}

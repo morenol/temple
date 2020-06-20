@@ -1,7 +1,7 @@
+use crate::context::Context;
 use crate::error::Result;
 use crate::expression_evaluator::CallParams;
-use crate::value::{Value, ValuesMap};
-use std::sync::Arc;
+use crate::value::Value;
 pub enum Filter {
     Abs,
     Capitalize,
@@ -46,7 +46,7 @@ impl Filter {
         &self,
         base_value: Value,
         params: &Option<CallParams<'a>>,
-        context: Arc<ValuesMap>,
+        context: Context,
     ) -> Result<Value> {
         match &self {
             Filter::Abs => base_value.abs(),
@@ -89,7 +89,7 @@ impl<'a> FilterExpression<'a> {
         self.parent = Some(Box::new(parent));
     }
 
-    pub fn filter(&self, base_value: Value, context: Arc<ValuesMap>) -> Result<Value> {
+    pub fn filter(&self, base_value: Value, context: Context) -> Result<Value> {
         if self.parent.is_some() {
             self.filter.filter(
                 self.parent

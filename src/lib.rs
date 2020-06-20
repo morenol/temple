@@ -13,6 +13,7 @@ mod template;
 mod template_env;
 mod template_parser;
 
+pub use context::Context;
 pub use template::Template;
 pub use template_env::TemplateEnv;
 
