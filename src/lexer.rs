@@ -96,7 +96,7 @@ pub enum Token<'a> {
     #[token("for")]
     For,
     #[token("endfor")]
-    Endfor,
+    EndFor,
     #[token("if")]
     If,
     #[token("else")]
