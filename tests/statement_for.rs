@@ -25,3 +25,32 @@ fn for_over_list_of_numbers() -> Result<()> {
         Some(context),
     )
 }
+
+#[test]
+fn nested_for() -> Result<()> {
+    let mut context = ValuesMap::default();
+    context.insert("word".to_string(), Value::String("abc".to_string()));
+    let context = Context::new(context);
+    assert_render_template_eq(
+        "{% for letter in word  -%}
+{%- for num in [1, 2, 3] -%}
+  {{ loop[\"first\"] }}
+{% endfor -%}
+{{ loop[\"first\"] }}
+{% endfor -%}",
+        "  true
+  false
+  false
+true
+  true
+  false
+  false
+false
+  true
+  false
+  false
+false
+",
+        Some(context),
+    )
+}
