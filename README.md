@@ -15,7 +15,7 @@ TODO:
 
 - [ ] Statements:
   - [x] if/else/elif
-  - [ ] for
+  - [x] for (Partial implementation)
   - [ ] with
   - [ ] set
   - [ ] filter

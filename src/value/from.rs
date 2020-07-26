@@ -103,3 +103,20 @@ impl From<ValuesList> for Value {
         Value::ValuesList(f)
     }
 }
+
+impl From<Value> for ValuesList {
+    fn from(f: Value) -> Self {
+        match f {
+            Value::ValuesList(value_list) => value_list,
+            Value::ValuesMap(value_map) => value_map
+                .keys()
+                .map(|key| Value::String(key.to_string()))
+                .collect(),
+            Value::String(value_string) => value_string
+                .chars()
+                .map(|ch| Value::String(ch.to_string()))
+                .collect(),
+            _ => vec![],
+        }
+    }
+}
