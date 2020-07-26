@@ -80,6 +80,34 @@ impl<'a> Render for ElseStatement<'a> {
         self.body.as_ref().unwrap().render(out, params)
     }
 }
+pub struct WithStatement<'a> {
+    scope_vars: Vec<(String, Box<dyn Evaluate + 'a>)>,
+    body: Option<Arc<ComposedRenderer<'a>>>,
+}
+impl<'a> WithStatement<'a> {
+    pub fn new(scope_vars: Vec<(String, Box<dyn Evaluate + 'a>)>) -> Self {
+        Self {
+            scope_vars,
+            body: None,
+        }
+    }
+    fn set_main_body(&mut self, body: Arc<ComposedRenderer<'a>>) {
+        let with_body = body.clone();
+        self.body = Some(with_body);
+    }
+}
+impl<'a> Render for WithStatement<'a> {
+    fn render(&self, out: &mut dyn Write, params: Context) -> Result<()> {
+        let mut inner_values = params.clone();
+        let scope = inner_values.enter_scope();
+        for (name, value) in &self.scope_vars {
+            let mut scope = scope.write().unwrap();
+            scope.insert(name.to_string(), value.evaluate(params.clone())?);
+        }
+        self.body.as_ref().unwrap().render(out, inner_values)
+    }
+}
+
 pub struct ForStatement<'a> {
     vars: Vec<String>,
     value: Box<dyn Evaluate + 'a>,
@@ -148,6 +176,7 @@ pub enum Statement<'a> {
     If(IfStatement<'a>),
     Else(ElseStatement<'a>),
     For(ForStatement<'a>),
+    With(WithStatement<'a>),
 }
 impl<'a> Statement<'a> {
     pub fn set_main_body(&mut self, body: Arc<ComposedRenderer<'a>>) {
@@ -155,6 +184,7 @@ impl<'a> Statement<'a> {
             Statement::If(statement) => statement.set_main_body(body),
             Statement::Else(statement) => statement.set_main_body(body),
             Statement::For(statement) => statement.set_main_body(body),
+            Statement::With(statement) => statement.set_main_body(body),
         }
     }
     pub fn add_else_branch(&mut self, branch: Statement<'a>) {
@@ -171,6 +201,7 @@ impl<'a> Render for Statement<'a> {
             Statement::If(statement) => statement.render(out, params),
             Statement::Else(statement) => statement.render(out, params),
             Statement::For(statement) => statement.render(out, params),
+            Statement::With(statement) => statement.render(out, params),
         }
     }
 }
@@ -188,6 +219,7 @@ pub enum StatementInfoType {
     IfStatement,
     ElseIfStatement,
     ForStatement,
+    WithStatement,
 }
 
 impl<'a> StatementInfo<'a> {

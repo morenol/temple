@@ -15,7 +15,7 @@ TODO:
 
 - [ ] Statements:
   - [x] for (Partial implementation)
-  - [ ] with
+  - [x] with
   - [ ] set
   - [ ] filter
   - [ ] extends

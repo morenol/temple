@@ -1,11 +1,12 @@
 use super::{
     ElseStatement, ForStatement, IfStatement, Statement, StatementInfo, StatementInfoList,
-    StatementInfoType,
+    StatementInfoType, WithStatement,
 };
 use crate::error::{Error, ErrorKind, Result, SourceLocation};
 use crate::expression_parser::ExpressionParser;
 use crate::lexer::Token;
 use crate::renderer::ComposedRenderer;
+use crate::statement::Evaluate;
 use logos::{Lexer, Logos};
 use std::iter::Peekable;
 pub struct StatementParser;
@@ -29,7 +30,10 @@ impl StatementParser {
             Some(Token::EndFor) => {
                 StatementParser::parse_endfor(&mut lexer, &mut statementinfo_list)
             }
-
+            Some(Token::With) => StatementParser::parse_with(&mut lexer, &mut statementinfo_list),
+            Some(Token::EndWith) => {
+                StatementParser::parse_endwith(&mut lexer, &mut statementinfo_list)
+            }
             _ => todo!(),
         }
     }
@@ -165,6 +169,74 @@ impl StatementParser {
         }
         let mut info = statementinfo_list.pop().unwrap();
         if let StatementInfoType::ForStatement = info.mode {
+            let mut renderer = info.renderer.unwrap();
+            let body = info.compositions.remove(0);
+            renderer.set_main_body(body);
+            statementinfo_list
+                .last_mut()
+                .unwrap()
+                .current_composition
+                .add_renderer(Box::new(renderer));
+            Ok(())
+        } else {
+            Err(Error::from(ErrorKind::UnexpectedStatement(
+                SourceLocation::new(1, 2),
+            )))
+        }
+    }
+    fn parse_with<'a>(
+        lexer: &mut Peekable<Lexer<'a, Token<'a>>>,
+        statementinfo_list: &mut StatementInfoList<'a>,
+    ) -> Result<()> {
+        let mut vars: Vec<(String, Box<dyn Evaluate + 'a>)> = vec![];
+        while let Some(Token::Identifier(identifier)) = lexer.next() {
+            let value = if let Some(Token::Assign) = lexer.peek() {
+                lexer.next();
+                ExpressionParser::full_expresion_parser(lexer)?
+            } else {
+                return Err(Error::from(ErrorKind::ExpectedToken(SourceLocation::new(
+                    1, 2,
+                ))));
+            };
+            vars.push((identifier.to_string(), Box::new(value)));
+            if let Some(Token::Comma) = lexer.peek() {
+                lexer.next();
+            } else {
+                break;
+            }
+        }
+        if vars.is_empty() {
+            return Err(Error::from(ErrorKind::ExpectedIdentifier(
+                SourceLocation::new(1, 2),
+            )));
+        }
+        if lexer.peek().is_some() {
+            return Err(Error::from(ErrorKind::ExpectedToken(SourceLocation::new(
+                1, 2,
+            ))));
+        }
+        let composed_renderer = Arc::new(ComposedRenderer::new());
+        let renderer = Statement::With(WithStatement::new(vars));
+        let mut statement_info = StatementInfo::new(
+            StatementInfoType::WithStatement,
+            Token::With,
+            composed_renderer,
+        );
+        statement_info.renderer = Some(renderer);
+        statementinfo_list.push(statement_info);
+        Ok(())
+    }
+    fn parse_endwith<'a>(
+        _lexer: &mut Peekable<Lexer<'a, Token<'a>>>,
+        statementinfo_list: &mut StatementInfoList<'a>,
+    ) -> Result<()> {
+        if statementinfo_list.len() <= 1 {
+            return Err(Error::from(ErrorKind::UnexpectedStatement(
+                SourceLocation::new(1, 2),
+            )));
+        }
+        let mut info = statementinfo_list.pop().unwrap();
+        if let StatementInfoType::WithStatement = info.mode {
             let mut renderer = info.renderer.unwrap();
             let body = info.compositions.remove(0);
             renderer.set_main_body(body);
