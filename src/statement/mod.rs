@@ -4,7 +4,7 @@ use crate::expression_evaluator::Evaluate;
 use crate::lexer::Token;
 use crate::renderer::ComposedRenderer;
 use crate::renderer::Render;
-use crate::value::Value;
+use crate::value::{Value, ValuesList, ValuesMap};
 use std::io::Write;
 use std::sync::Arc;
 pub mod parser;
@@ -80,22 +80,88 @@ impl<'a> Render for ElseStatement<'a> {
         self.body.as_ref().unwrap().render(out, params)
     }
 }
+pub struct ForStatement<'a> {
+    vars: Vec<String>,
+    value: Box<dyn Evaluate + 'a>,
+    body: Option<Arc<ComposedRenderer<'a>>>,
+}
+
+impl<'a> ForStatement<'a> {
+    pub fn new(vars: Vec<String>, value: Box<dyn Evaluate + 'a>) -> Self {
+        Self {
+            vars,
+            value,
+            body: None,
+        }
+    }
+    fn set_main_body(&mut self, body: Arc<ComposedRenderer<'a>>) {
+        let for_body = body.clone();
+        self.body = Some(for_body);
+    }
+    fn render_loop(
+        &self,
+        loop_value: Value,
+        out: &mut dyn Write,
+        mut params: Context,
+        _level: usize,
+    ) -> Result<()> {
+        let loop_items: ValuesList = loop_value.into();
+        let items_size = loop_items.len();
+        let context = params.enter_scope();
+        for (item_idx, item) in loop_items.iter().enumerate() {
+            let mut loop_map = ValuesMap::default();
+            loop_map.insert("index".to_string(), Value::Integer((item_idx + 1) as i64));
+            loop_map.insert("index0".to_string(), Value::Integer(item_idx as i64));
+            loop_map.insert("first".to_string(), Value::Boolean(item_idx == 0));
+            loop_map.insert(
+                "last".to_string(),
+                Value::Boolean(item_idx == items_size - 1),
+            );
+
+            {
+                let mut context = context.write().unwrap();
+                if self.vars.len() > 1 {
+                    todo!();
+                } else {
+                    context.insert(self.vars[0].clone(), item.clone());
+                }
+                context.insert("loop".to_string(), Value::ValuesMap(loop_map));
+            }
+            params.enter_scope();
+            self.body.as_ref().unwrap().render(out, params.clone())?;
+            params.exit_scope();
+        }
+
+        params.exit_scope();
+        Ok(())
+    }
+}
+impl<'a> Render for ForStatement<'a> {
+    fn render(&self, out: &mut dyn Write, params: Context) -> Result<()> {
+        let loop_value = self.value.evaluate(params.clone())?;
+        self.render_loop(loop_value, out, params, 0)?;
+        Ok(())
+    }
+}
 
 pub enum Statement<'a> {
     If(IfStatement<'a>),
     Else(ElseStatement<'a>),
+    For(ForStatement<'a>),
 }
 impl<'a> Statement<'a> {
     pub fn set_main_body(&mut self, body: Arc<ComposedRenderer<'a>>) {
         match self {
             Statement::If(statement) => statement.set_main_body(body),
             Statement::Else(statement) => statement.set_main_body(body),
+            Statement::For(statement) => statement.set_main_body(body),
         }
     }
     pub fn add_else_branch(&mut self, branch: Statement<'a>) {
         match self {
             Statement::If(statement) => statement.add_else_branch(branch),
             Statement::Else(_statement) => todo!(),
+            _ => unreachable!(),
         }
     }
 }
@@ -104,6 +170,7 @@ impl<'a> Render for Statement<'a> {
         match self {
             Statement::If(statement) => statement.render(out, params),
             Statement::Else(statement) => statement.render(out, params),
+            Statement::For(statement) => statement.render(out, params),
         }
     }
 }
@@ -120,6 +187,7 @@ pub enum StatementInfoType {
     TemplateRoot,
     IfStatement,
     ElseIfStatement,
+    ForStatement,
 }
 
 impl<'a> StatementInfo<'a> {
