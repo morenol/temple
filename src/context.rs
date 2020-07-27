@@ -39,16 +39,6 @@ impl Context {
             Value::Empty
         }
     }
-    pub fn values(&self) -> ValuesMap {
-        let mut value_map = ValuesMap::new();
-        for (key, value) in &*self.global_scope.read().unwrap() {
-            value_map.insert(key.to_string(), value.clone());
-        }
-        for (key, value) in &self.external_scope {
-            value_map.insert(key.to_string(), value.clone());
-        }
-        value_map
-    }
     pub fn set_global(&mut self, global_scope: Arc<RwLock<ValuesMap>>) {
         self.global_scope = global_scope;
     }
