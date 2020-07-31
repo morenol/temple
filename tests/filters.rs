@@ -150,7 +150,10 @@ fn filter_escape() -> Result<()> {
     assert_render_template_eq("{{ ampersand | escape }}", "&amp;", Some(context.clone()))?;
     assert_render_template_eq("{{ quotes | escape }}", "&#34;&#39;", Some(context.clone()))
 }
-
+#[test]
+fn filter_order() -> Result<()> {
+    assert_render_template_eq("{{ -5 * 4 | abs}}", "20", None)
+}
 #[test]
 fn default_filter() -> Result<()> {
     let mut context = ValuesMap::default();

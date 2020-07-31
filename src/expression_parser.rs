@@ -45,16 +45,28 @@ impl ExpressionParser {
         mut lexer: &mut PeekableLexer<'a, Token<'a>>,
     ) -> Result<Expression<'a>> {
         let left = ExpressionParser::parse_logical_and(&mut lexer)?;
-        if let Some(Token::LogicalOr) = lexer.peek() {
+        let result = if let Some(Token::LogicalOr) = lexer.peek() {
             lexer.next();
             let right = ExpressionParser::parse_logical_or(lexer)?;
-            return Ok(Expression::BinaryExpression(
+            Expression::BinaryExpression(
                 BinaryOperation::LogicalOr,
                 Box::new(left),
                 Box::new(right),
-            ));
+            )
+        } else {
+            left
+        };
+
+        if let Some(Token::Pipe) = lexer.peek() {
+            lexer.next();
+            let filter_expression = ExpressionParser::parse_filter_expression(&mut lexer)?;
+            Ok(Expression::FilteredExpression(FilteredExpression::new(
+                Box::new(result),
+                filter_expression,
+            )))
+        } else {
+            Ok(result)
         }
-        Ok(left)
     }
 
     fn parse_logical_and<'a>(
@@ -168,7 +180,7 @@ impl ExpressionParser {
     }
 
     fn parse_unary_plus_min<'a>(
-        mut lexer: &mut PeekableLexer<'a, Token<'a>>,
+        lexer: &mut PeekableLexer<'a, Token<'a>>,
     ) -> Result<Expression<'a>> {
         let unary_op = match lexer.peek() {
             Some(Token::Plus) => Some(UnaryOperation::Plus),
@@ -186,17 +198,7 @@ impl ExpressionParser {
             Some(op) => Expression::UnaryExpression(op, Box::new(sub_expr)),
             None => sub_expr,
         };
-
-        if let Some(Token::Pipe) = lexer.peek() {
-            lexer.next();
-            let filter_expression = ExpressionParser::parse_filter_expression(&mut lexer)?;
-            Ok(Expression::FilteredExpression(FilteredExpression::new(
-                Box::new(result),
-                filter_expression,
-            )))
-        } else {
-            Ok(result)
-        }
+        Ok(result)
     }
     fn parse_filter_expression<'a>(
         lexer: &mut PeekableLexer<'a, Token<'a>>,
