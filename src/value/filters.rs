@@ -30,7 +30,7 @@ impl Value {
             Value::Empty => {
                 let default_value = params
                     .remove("default_value")
-                    .unwrap_or(Value::String("".to_string()));
+                    .unwrap_or_else(|| Value::String("".to_string()));
                 Ok(default_value)
             }
 

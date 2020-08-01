@@ -226,14 +226,13 @@ impl<'a> CallParams<'a> {
                     let value = expression.evaluate(context.clone())?;
                     parameters.insert(name, value);
                 }
-                None => match self.pos_params.get(idx) {
-                    Some(expression) => {
+                None => {
+                    if let Some(expression) = self.pos_params.get(idx) {
                         idx += 1;
                         let value = expression.evaluate(context.clone())?;
                         parameters.insert(name, value);
                     }
-                    None => {}
-                },
+                }
             }
         }
         Ok(parameters)
