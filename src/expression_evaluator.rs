@@ -211,3 +211,31 @@ pub struct CallParams<'a> {
     pub kw_params: HashMap<String, FullExpressionEvaluator<'a>>,
     pub pos_params: Vec<FullExpressionEvaluator<'a>>,
 }
+
+impl<'a> CallParams<'a> {
+    pub fn parse<'b>(
+        &self,
+        param_names: Vec<&'b str>,
+        context: Context,
+    ) -> Result<HashMap<&'b str, Value>> {
+        let mut parameters = HashMap::default();
+        let mut idx = 0;
+        for name in param_names {
+            match self.kw_params.get(name) {
+                Some(expression) => {
+                    let value = expression.evaluate(context.clone())?;
+                    parameters.insert(name, value);
+                }
+                None => match self.pos_params.get(idx) {
+                    Some(expression) => {
+                        idx += 1;
+                        let value = expression.evaluate(context.clone())?;
+                        parameters.insert(name, value);
+                    }
+                    None => {}
+                },
+            }
+        }
+        Ok(parameters)
+    }
+}
