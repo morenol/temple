@@ -150,3 +150,9 @@ fn default_filter() -> Result<()> {
     )?;
     assert_render_template_eq("{{ undefined | default }}", "", Some(context.clone()))
 }
+#[test]
+fn truncate_filter() -> Result<()> {
+    assert_render_template_eq("{{ ('a' * 20) | truncate(10) }}", "aaaaaaa...", None)?;
+    assert_render_template_eq("{{ ('a' * 20) | truncate(length=10) }}", "aaaaaaa...", None)?;
+    assert_render_template_eq("{{ ('a' * 20) | truncate }}", "aaaaaaaaaaaaaaaaaaaa", None)
+}

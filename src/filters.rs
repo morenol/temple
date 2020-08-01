@@ -17,6 +17,7 @@ pub enum Filter {
     Min,
     String,
     Sum,
+    Truncate,
     Upper,
     WordCount,
 }
@@ -37,6 +38,7 @@ impl Filter {
             "min" => Ok(Filter::Min),
             "string" => Ok(Filter::String),
             "sum" => Ok(Filter::Sum),
+            "truncate" => Ok(Filter::Truncate),
             "upper" => Ok(Filter::Upper),
             "wordcount" => Ok(Filter::WordCount),
             _ => todo!(),
@@ -55,7 +57,6 @@ impl Filter {
             Filter::Escape => base_value.escape(),
             Filter::First => base_value.first(),
             Filter::Int => Ok(Value::Integer(base_value.int()?)), // TODO change to accept parameters
-
             Filter::Float => Ok(Value::Double(base_value.float()?)), // TODO change to accept parameters
             Filter::Last => base_value.last(),
             Filter::Length => Ok(Value::Integer(base_value.len()? as i64)),
@@ -64,6 +65,7 @@ impl Filter {
             Filter::Min => base_value.min(), // TODO Accept params
             Filter::String => Ok(Value::String(base_value.to_string())),
             Filter::Sum => base_value.sum(), // TODO: ACcept params
+            Filter::Truncate => base_value.truncate(params, context),
             Filter::Upper => base_value.upper(),
             Filter::WordCount => base_value.wordcount(),
         }

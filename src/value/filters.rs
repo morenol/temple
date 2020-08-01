@@ -3,6 +3,7 @@ use crate::context::Context;
 use crate::error::{Error, ErrorKind, Result};
 use crate::expression_evaluator::CallParams;
 use crate::expression_evaluator::Evaluate;
+use std::convert::TryInto;
 
 use regex::Regex;
 
@@ -176,6 +177,31 @@ impl Value {
             Err(Error::from(ErrorKind::InvalidOperation))
         }
     }
+    pub fn truncate(self, params: &Option<CallParams>, context: Context) -> Result<Self> {
+        let mut string_value = self.to_string();
+
+        let size = match params {
+            None => 150,
+            Some(call_params) => {
+                if let Some(value) = call_params.kw_params.get("length") {
+                    value.evaluate(context)?.int()?.try_into().unwrap()
+                } else if let Some(value) = call_params.pos_params.first() {
+                    value.evaluate(context)?.int()?.try_into().unwrap()
+                } else {
+                    150
+                }
+            }
+        };
+        let value = if string_value.len() > size {
+            string_value.truncate(size - 3);
+            string_value.push_str("...");
+            string_value
+        } else {
+            string_value
+        };
+        Ok(Value::String(value))
+    }
+
     pub fn upper(self) -> Result<Self> {
         match self {
             Value::String(s) => Ok(Value::String(s.to_uppercase())),
