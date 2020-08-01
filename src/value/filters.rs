@@ -3,6 +3,7 @@ use crate::context::Context;
 use crate::error::{Error, ErrorKind, Result};
 use crate::expression_evaluator::CallParams;
 use crate::expression_evaluator::Evaluate;
+use std::collections::HashMap;
 use std::convert::TryInto;
 
 use regex::Regex;
@@ -25,20 +26,15 @@ impl Value {
             _ => Err(Error::from(ErrorKind::InvalidOperation)),
         }
     }
-    pub fn default_filter(self, params: &Option<CallParams>, context: Context) -> Result<Self> {
+    pub fn default_filter(self, mut params: HashMap<&str, Value>) -> Result<Self> {
         match self {
-            Value::Empty => match params {
-                None => Ok(Value::String("".to_string())),
-                Some(call_params) => {
-                    if let Some(value) = call_params.kw_params.get("default_value") {
-                        Ok(value.evaluate(context)?)
-                    } else if let Some(value) = call_params.pos_params.first() {
-                        Ok(value.evaluate(context)?)
-                    } else {
-                        Ok(Value::String("".to_string()))
-                    }
-                }
-            },
+            Value::Empty => {
+                let default_value = params
+                    .remove("default_value")
+                    .unwrap_or(Value::String("".to_string()));
+                Ok(default_value)
+            }
+
             value => Ok(value),
         }
     }

@@ -2,6 +2,8 @@ use crate::context::Context;
 use crate::error::Result;
 use crate::expression_evaluator::CallParams;
 use crate::value::Value;
+use std::collections::HashMap;
+
 pub enum Filter {
     Abs,
     Capitalize,
@@ -53,7 +55,18 @@ impl Filter {
         match &self {
             Filter::Abs => base_value.abs(),
             Filter::Capitalize => base_value.capitalize(),
-            Filter::Default => base_value.default_filter(params, context),
+            Filter::Default => {
+                let parameters = if params.is_some() {
+                    params
+                        .as_ref()
+                        .unwrap()
+                        .parse(vec!["default_value"], context)?
+                } else {
+                    HashMap::default()
+                };
+
+                base_value.default_filter(parameters)
+            }
             Filter::Escape => base_value.escape(),
             Filter::First => base_value.first(),
             Filter::Int => Ok(Value::Integer(base_value.int()?)), // TODO change to accept parameters
