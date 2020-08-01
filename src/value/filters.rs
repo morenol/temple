@@ -4,7 +4,6 @@ use crate::error::{Error, ErrorKind, Result};
 use crate::expression_evaluator::CallParams;
 use crate::expression_evaluator::Evaluate;
 use std::collections::HashMap;
-use std::convert::TryInto;
 
 use regex::Regex;
 
@@ -92,13 +91,20 @@ impl Value {
         }
     }
 
-    pub fn int(self) -> Result<i64> {
+    pub fn int(self, mut params: HashMap<&str, Value>) -> Result<i64> {
         match self {
             Value::Integer(number) => Ok(number),
             Value::Double(number) => Ok(number as i64),
             Value::Boolean(true) => Ok(1_i64),
             Value::Boolean(false) => Ok(0_i64),
-            _ => Err(Error::from(ErrorKind::InvalidOperation)),
+            _ => {
+                let default_value = params.remove("default").unwrap_or(Value::Integer(0));
+                if let Value::Integer(number) = default_value {
+                    Ok(number)
+                } else {
+                    Err(Error::from(ErrorKind::InvalidOperation))
+                }
+            }
         }
     }
     pub fn is_empty(&self) -> Result<bool> {
@@ -180,9 +186,19 @@ impl Value {
             None => 150,
             Some(call_params) => {
                 if let Some(value) = call_params.kw_params.get("length") {
-                    value.evaluate(context)?.int()?.try_into().unwrap()
+                    let result = value.evaluate(context)?;
+                    if let Value::Integer(length) = result {
+                        length as usize
+                    } else {
+                        return Err(Error::from(ErrorKind::InvalidValueType));
+                    }
                 } else if let Some(value) = call_params.pos_params.first() {
-                    value.evaluate(context)?.int()?.try_into().unwrap()
+                    let result = value.evaluate(context)?;
+                    if let Value::Integer(length) = result {
+                        length as usize
+                    } else {
+                        return Err(Error::from(ErrorKind::InvalidValueType));
+                    }
                 } else {
                     150
                 }

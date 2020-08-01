@@ -20,10 +20,15 @@ fn filter_basic() -> Result<()> {
         "{{ {\"key1\": intValue, \"key2\": stringValue, \"key3\": false} | length }}",
         "3",
         Some(context.clone()),
-    )?;
-    assert_render_template_eq("{{ 3.14 | int }}", "3", Some(context))
+    )
 }
 
+#[test]
+fn filter_int() -> Result<()> {
+    assert_render_template_eq("{{ 3.14 | int }}", "3", None)?;
+    assert_render_template_eq("{{ undefined | int(default=100) }}", "100", None)?;
+    assert_render_template_eq("{{ undefined | int }}", "0", None)
+}
 #[test]
 fn filter_last_first() -> Result<()> {
     let mut context = ValuesMap::default();

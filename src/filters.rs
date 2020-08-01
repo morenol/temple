@@ -69,7 +69,17 @@ impl Filter {
             }
             Filter::Escape => base_value.escape(),
             Filter::First => base_value.first(),
-            Filter::Int => Ok(Value::Integer(base_value.int()?)), // TODO change to accept parameters
+            Filter::Int => {
+                let parameters = if params.is_some() {
+                    params
+                        .as_ref()
+                        .unwrap()
+                        .parse(vec!["default", "base"], context)?
+                } else {
+                    HashMap::default()
+                };
+                Ok(Value::Integer(base_value.int(parameters)?))
+            }
             Filter::Float => Ok(Value::Double(base_value.float()?)), // TODO change to accept parameters
             Filter::Last => base_value.last(),
             Filter::Length => Ok(Value::Integer(base_value.len()? as i64)),
