@@ -54,7 +54,7 @@ TODO:
   - [ ] striptags
   - [ ] title
   - [ ] tojson
-  - [ ] truncate
+  - [x] truncate
   - [ ] unique
   - [ ] urlencode
   - [ ] urlize
@@ -62,3 +62,4 @@ TODO:
   - [ ] xmlattr
 - [ ] Custom filters
 - [ ] Use of settings
+- [ ] Filesystem templates
