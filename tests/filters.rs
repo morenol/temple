@@ -29,6 +29,14 @@ fn filter_int() -> Result<()> {
     assert_render_template_eq("{{ undefined | int(default=100) }}", "100", None)?;
     assert_render_template_eq("{{ undefined | int }}", "0", None)
 }
+
+#[test]
+fn filter_float() -> Result<()> {
+    assert_render_template_eq("{{ 3 | float }}", "3.0", None)?;
+    assert_render_template_eq("{{ undefined | float(40) }}", "40.0", None)?;
+    assert_render_template_eq("{{ undefined | float }}", "0.0", None)?;
+    assert_render_template_eq("{{ pi | float(default=3.14) }}", "3.14", None)
+}
 #[test]
 fn filter_last_first() -> Result<()> {
     let mut context = ValuesMap::default();

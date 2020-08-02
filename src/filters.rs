@@ -80,7 +80,15 @@ impl Filter {
                 };
                 Ok(Value::Integer(base_value.int(parameters)?))
             }
-            Filter::Float => Ok(Value::Double(base_value.float()?)), // TODO change to accept parameters
+            Filter::Float => {
+                let parameters = if params.is_some() {
+                    params.as_ref().unwrap().parse(vec!["default"], context)?
+                } else {
+                    HashMap::default()
+                };
+
+                Ok(Value::Double(base_value.float(parameters)?))
+            }
             Filter::Last => base_value.last(),
             Filter::Length => Ok(Value::Integer(base_value.len()? as i64)),
             Filter::Lower => base_value.lower(),

@@ -80,14 +80,23 @@ impl Value {
             }
         }
     }
-    pub fn float(self) -> Result<f64> {
+    pub fn float(self, mut params: HashMap<&str, Value>) -> Result<f64> {
         match self {
             Value::Integer(number) => Ok(number as f64),
             Value::Double(number) => Ok(number),
             Value::Boolean(true) => Ok(1_f64),
             Value::Boolean(false) => Ok(0_f64),
 
-            _ => Err(Error::from(ErrorKind::InvalidOperation)),
+            _ => {
+                let default_value = params.remove("default").unwrap_or(Value::Double(0.0));
+                if let Value::Double(number) = default_value {
+                    Ok(number)
+                } else if let Value::Integer(number) = default_value {
+                    Ok(number as f64)
+                } else {
+                    Err(Error::from(ErrorKind::InvalidOperation))
+                }
+            }
         }
     }
 
@@ -172,7 +181,7 @@ impl Value {
         if let Value::ValuesList(values_list) = self {
             let value: f64 = values_list
                 .iter()
-                .map(|value| value.clone().float().unwrap())
+                .map(|value| value.clone().float(HashMap::default()).unwrap())
                 .sum();
             Ok(Value::Double(value))
         } else {
