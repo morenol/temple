@@ -7,6 +7,7 @@ use std::collections::HashMap;
 pub enum Filter {
     Abs,
     Capitalize,
+    Center,
     Default,
     Escape,
     First,
@@ -28,6 +29,7 @@ impl Filter {
         match name {
             "abs" => Ok(Filter::Abs),
             "capitalize" => Ok(Filter::Capitalize),
+            "center" => Ok(Filter::Center),
             "default" | "d" => Ok(Filter::Default),
             "escape" | "e" => Ok(Filter::Escape),
             "first" => Ok(Filter::First),
@@ -55,6 +57,15 @@ impl Filter {
         match &self {
             Filter::Abs => base_value.abs(),
             Filter::Capitalize => base_value.capitalize(),
+            Filter::Center => {
+                let parameters = if params.is_some() {
+                    params.as_ref().unwrap().parse(vec!["width"], context)?
+                } else {
+                    HashMap::default()
+                };
+
+                base_value.center(parameters)
+            }
             Filter::Default => {
                 let parameters = if params.is_some() {
                     params

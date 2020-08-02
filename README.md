@@ -30,7 +30,7 @@ TODO:
 - [ ] Filters
   - [ ] attr
   - [ ] batch
-  - [ ] center
+  - [x] center
   - [ ] dictsort
   - [ ] filesizeformat
   - [ ] forceescape

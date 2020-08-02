@@ -25,6 +25,24 @@ impl Value {
             _ => Err(Error::from(ErrorKind::InvalidOperation)),
         }
     }
+    pub fn center(self, mut params: HashMap<&str, Value>) -> Result<Self> {
+        let string_value = self.to_string();
+        let width = params.remove("width").unwrap_or(Value::Integer(80));
+        let width = width.int(HashMap::default())? as usize;
+        let string_length = string_value.len();
+        if string_length > width {
+            Ok(self)
+        } else {
+            let whitespaces = width - string_length;
+            let result = format!(
+                "{}{}{}",
+                " ".repeat((whitespaces + 1) / 2),
+                string_value,
+                " ".repeat(whitespaces / 2)
+            );
+            Ok(Value::String(result))
+        }
+    }
     pub fn default_filter(self, mut params: HashMap<&str, Value>) -> Result<Self> {
         match self {
             Value::Empty => {

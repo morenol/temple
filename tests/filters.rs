@@ -22,6 +22,17 @@ fn filter_basic() -> Result<()> {
         Some(context.clone()),
     )
 }
+#[test]
+fn filter_center() -> Result<()> {
+    assert_render_template_eq(
+        "{{ 'x' | center }}",
+        "                                        x                                       ",
+        None,
+    )?;
+    assert_render_template_eq("{{ 'x' | center(width=5)", "  x  ", None)?;
+    assert_render_template_eq("{{ 'x' | center(width=0)", "x", None)?;
+    assert_render_template_eq("{{ '  x' | center(5) }}", "   x ", None)
+}
 
 #[test]
 fn filter_int() -> Result<()> {
