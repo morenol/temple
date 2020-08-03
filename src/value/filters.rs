@@ -209,7 +209,7 @@ impl Value {
         let length = length.int(HashMap::default())? as usize;
         let end = params
             .remove("end")
-            .unwrap_or(Value::String("...".to_string()));
+            .unwrap_or_else(|| Value::String("...".to_string()));
         let end = end.to_string();
 
         let value = if string_value.len() > length {
