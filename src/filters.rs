@@ -107,7 +107,18 @@ impl Filter {
             Filter::Min => base_value.min(), // TODO Accept params
             Filter::String => Ok(Value::String(base_value.to_string())),
             Filter::Sum => base_value.sum(), // TODO: ACcept params
-            Filter::Truncate => base_value.truncate(params, context),
+            Filter::Truncate => {
+                let parameters = if params.is_some() {
+                    params
+                        .as_ref()
+                        .unwrap()
+                        .parse(vec!["length", "end"], context)?
+                } else {
+                    HashMap::default()
+                };
+
+                base_value.truncate(parameters)
+            } // TODO: Add additional parameters.,
             Filter::Upper => base_value.upper(),
             Filter::WordCount => base_value.wordcount(),
         }

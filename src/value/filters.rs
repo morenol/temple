@@ -1,8 +1,5 @@
 use super::Value;
-use crate::context::Context;
 use crate::error::{Error, ErrorKind, Result};
-use crate::expression_evaluator::CallParams;
-use crate::expression_evaluator::Evaluate;
 use std::collections::HashMap;
 
 use regex::Regex;
@@ -206,34 +203,18 @@ impl Value {
             Err(Error::from(ErrorKind::InvalidOperation))
         }
     }
-    pub fn truncate(self, params: &Option<CallParams>, context: Context) -> Result<Self> {
+    pub fn truncate(self, mut params: HashMap<&str, Value>) -> Result<Self> {
         let mut string_value = self.to_string();
+        let length = params.remove("length").unwrap_or(Value::Integer(150));
+        let length = length.int(HashMap::default())? as usize;
+        let end = params
+            .remove("end")
+            .unwrap_or(Value::String("...".to_string()));
+        let end = end.to_string();
 
-        let size = match params {
-            None => 150,
-            Some(call_params) => {
-                if let Some(value) = call_params.kw_params.get("length") {
-                    let result = value.evaluate(context)?;
-                    if let Value::Integer(length) = result {
-                        length as usize
-                    } else {
-                        return Err(Error::from(ErrorKind::InvalidValueType));
-                    }
-                } else if let Some(value) = call_params.pos_params.first() {
-                    let result = value.evaluate(context)?;
-                    if let Value::Integer(length) = result {
-                        length as usize
-                    } else {
-                        return Err(Error::from(ErrorKind::InvalidValueType));
-                    }
-                } else {
-                    150
-                }
-            }
-        };
-        let value = if string_value.len() > size {
-            string_value.truncate(size - 3);
-            string_value.push_str("...");
+        let value = if string_value.len() > length {
+            string_value.truncate(length - end.len());
+            string_value.push_str(&end);
             string_value
         } else {
             string_value
