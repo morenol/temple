@@ -20,6 +20,7 @@ pub enum Filter {
     Min,
     String,
     Sum,
+    Title,
     Truncate,
     Upper,
     WordCount,
@@ -42,6 +43,7 @@ impl Filter {
             "min" => Ok(Filter::Min),
             "string" => Ok(Filter::String),
             "sum" => Ok(Filter::Sum),
+            "title" => Ok(Filter::Title),
             "truncate" => Ok(Filter::Truncate),
             "upper" => Ok(Filter::Upper),
             "wordcount" => Ok(Filter::WordCount),
@@ -107,6 +109,7 @@ impl Filter {
             Filter::Min => base_value.min(), // TODO Accept params
             Filter::String => Ok(Value::String(base_value.to_string())),
             Filter::Sum => base_value.sum(), // TODO: ACcept params
+            Filter::Title => base_value.title(),
             Filter::Truncate => {
                 let parameters = if params.is_some() {
                     params

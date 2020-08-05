@@ -52,7 +52,7 @@ TODO:
   - [ ] slice
   - [ ] sort
   - [ ] striptags
-  - [ ] title
+  - [x] title
   - [ ] tojson
   - [x] truncate
   - [ ] unique

@@ -203,6 +203,29 @@ impl Value {
             Err(Error::from(ErrorKind::InvalidOperation))
         }
     }
+    pub fn title(self) -> Result<Self> {
+        if let Value::String(text) = self {
+            let mut is_delim = true;
+            let result = text
+                .chars()
+                .map(|letter| {
+                    if is_delim && letter.is_alphanumeric() {
+                        is_delim = false;
+                        letter.to_uppercase().next().unwrap()
+                    } else if letter.is_alphanumeric() {
+                        is_delim = false;
+                        letter.to_lowercase().next().unwrap()
+                    } else {
+                        is_delim = true;
+                        letter
+                    }
+                })
+                .collect();
+            Ok(Value::String(result))
+        } else {
+            Ok(self)
+        }
+    }
     pub fn truncate(self, mut params: HashMap<&str, Value>) -> Result<Self> {
         let mut string_value = self.to_string();
         let length = params.remove("length").unwrap_or(Value::Integer(150));

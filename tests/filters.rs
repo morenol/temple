@@ -185,3 +185,9 @@ fn truncate_filter() -> Result<()> {
     )?;
     assert_render_template_eq("{{ ('a' * 20) | truncate }}", "aaaaaaaaaaaaaaaaaaaa", None)
 }
+
+#[test]
+fn title_filter() -> Result<()> {
+    assert_render_template_eq("{{ 'hello world!' | title }}", "Hello World!", None)?;
+    assert_render_template_eq("{{ 'HellO wOrlD!' | title }}", "Hello World!", None)
+}
