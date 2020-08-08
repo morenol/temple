@@ -4,6 +4,7 @@ extern crate assert_matches;
 mod basic;
 mod error;
 mod expressions;
+mod filesystem_templates;
 mod filters;
 mod scoped_context;
 mod statement_for;

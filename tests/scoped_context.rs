@@ -10,7 +10,7 @@ fn test_global_variable() -> Result<()> {
         "GLOBAL_VAR".to_string(),
         Value::String("Global".to_string()),
     );
-    let template_env = Arc::new(temp_env);
+    let template_env = Arc::new(&temp_env);
     let mut template = Template::new(template_env)?;
     template.load("{{ GLOBAL_VAR }}")?;
     let context = Context::default();
@@ -26,7 +26,7 @@ fn test_both_global_and_external_variables() -> Result<()> {
         "GLOBAL_VAR".to_string(),
         Value::String("Global".to_string()),
     );
-    let template_env = Arc::new(temp_env);
+    let template_env = Arc::new(&temp_env);
     let mut template = Template::new(template_env)?;
     template.load(
         "global: {{ GLOBAL_VAR }}
@@ -54,7 +54,7 @@ fn test_override_value() -> Result<()> {
     let mut temp_env = TemplateEnv::default();
 
     temp_env.add_global("key".to_string(), Value::String("Global value".to_string()));
-    let template_env = Arc::new(temp_env);
+    let template_env = Arc::new(&temp_env);
     let mut template = Template::new(template_env)?;
     template.load("{{ key }}")?;
     let mut context = ValuesMap::default();

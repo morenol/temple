@@ -9,10 +9,9 @@ use crate::template_env::TemplateEnv;
 use regex::Regex;
 use std::sync::{Arc, RwLock};
 
-#[derive(Debug)]
 pub struct TemplateParser<'a> {
     template_body: &'a str,
-    env: RwLock<Arc<TemplateEnv>>,
+    env: RwLock<Arc<&'a TemplateEnv<'a>>>,
     rough_tokenizer: Regex,
     text_blocks: RwLock<Vec<TextBlockInfo>>,
     current_block_info: RwLock<TextBlockInfo>,
@@ -21,7 +20,7 @@ pub struct TemplateParser<'a> {
 }
 
 impl<'a> TemplateParser<'a> {
-    pub fn new(body: &'a str, env: Arc<TemplateEnv>) -> Result<Self> {
+    pub fn new(body: &'a str, env: Arc<&'a TemplateEnv>) -> Result<Self> {
         let rough_tokenizer = Regex::new(&ROUGH_TOKENIZER[..ROUGH_TOKENIZER.len() - 1]).unwrap();
 
         Ok(Self {
