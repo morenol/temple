@@ -11,7 +11,7 @@ use std::sync::{Arc, RwLock};
 
 #[derive(Debug)]
 pub struct TemplateParser<'a, 'b> {
-    template_body: RwLock<&'a str>,
+    template_body: &'a str,
     env: RwLock<&'b TemplateEnv>,
     rough_tokenizer: Regex,
     text_blocks: RwLock<Vec<TextBlockInfo>>,
@@ -25,7 +25,7 @@ impl<'a, 'b> TemplateParser<'a, 'b> {
         let rough_tokenizer = Regex::new(&ROUGH_TOKENIZER[..ROUGH_TOKENIZER.len() - 1]).unwrap();
 
         Ok(Self {
-            template_body: RwLock::new(body),
+            template_body: body,
             env: RwLock::new(env),
             rough_tokenizer,
             text_blocks: RwLock::new(vec![]),
@@ -45,7 +45,7 @@ impl<'a, 'b> TemplateParser<'a, 'b> {
                     if orig_block.range.size() == 0 {
                         continue;
                     }
-                    let text = self.template_body.read().unwrap();
+                    let text = self.template_body;
                     let new_renderer =
                         RawTextRenderer::new(&text[orig_block.range.start..orig_block.range.end]);
                     statements_stack
@@ -55,7 +55,7 @@ impl<'a, 'b> TemplateParser<'a, 'b> {
                         .add_renderer(Box::new(new_renderer));
                 }
                 TextBlockType::Expression => {
-                    let text = self.template_body.read().unwrap();
+                    let text = self.template_body;
                     let new_renderer = ExpressionParser::parse(
                         &text[orig_block.range.start..orig_block.range.end],
                     )?;
@@ -67,7 +67,7 @@ impl<'a, 'b> TemplateParser<'a, 'b> {
                 }
                 TextBlockType::Comment => {}
                 TextBlockType::Statement | TextBlockType::LineStatement => {
-                    let text = self.template_body.read().unwrap();
+                    let text = self.template_body;
                     StatementParser::parse(
                         &text[orig_block.range.start..orig_block.range.end],
                         &mut statements_stack,
@@ -92,7 +92,7 @@ impl<'a, 'b> TemplateParser<'a, 'b> {
     fn rough_parsing(&mut self) -> Result<()> {
         let match_begin = self
             .rough_tokenizer
-            .captures_iter(&self.template_body.read().unwrap());
+            .captures_iter(&self.template_body);
 
         for capture in match_begin {
             // This does not seem idiomatic to rust
@@ -117,7 +117,7 @@ impl<'a, 'b> TemplateParser<'a, 'b> {
                     self.current_line_info.write().unwrap().range.start = new_line_start;
 
                     if self.current_line_info.read().unwrap().range.start
-                        < self.template_body.read().unwrap().len()
+                        < self.template_body.len()
                     {
                         match self.current_block_info.read().unwrap().mode {
                             TextBlockType::LineStatement => {}
@@ -232,7 +232,7 @@ impl<'a, 'b> TemplateParser<'a, 'b> {
                 }
             };
         }
-        let len_of_temp = self.template_body.read().unwrap().len();
+        let len_of_temp = self.template_body.len();
         self.finish_current_line(len_of_temp);
         if let TextBlockType::RawBlock = self.current_block_info.read().unwrap().mode {
             return Err(Error::from(ErrorKind::ExpectedRawEnd(SourceLocation::new(
@@ -261,11 +261,9 @@ impl<'a, 'b> TemplateParser<'a, 'b> {
         };
         self.finish_current_block(end_offset, mode, None);
 
-        if start_offset < self.template_body.read().unwrap().len() {
+        if start_offset < self.template_body.len() {
             let ctrl_char = self
                 .template_body
-                .read()
-                .unwrap()
                 .chars()
                 .nth(start_offset)
                 .unwrap();
@@ -322,8 +320,6 @@ impl<'a, 'b> TemplateParser<'a, 'b> {
                 if position != 0 {
                     let ctrl_char = self
                         .template_body
-                        .read()
-                        .unwrap()
                         .chars()
                         .nth(position - 1)
                         .unwrap();
@@ -353,11 +349,9 @@ impl<'a, 'b> TemplateParser<'a, 'b> {
         mut do_trim: bool,
     ) -> usize {
         let mut do_total_strip = false;
-        if ctrl_char_pos < self.template_body.read().unwrap().len() {
+        if ctrl_char_pos < self.template_body.len() {
             let ctrl_char = self
                 .template_body
-                .read()
-                .unwrap()
                 .chars()
                 .nth(ctrl_char_pos)
                 .unwrap();
@@ -379,7 +373,7 @@ impl<'a, 'b> TemplateParser<'a, 'b> {
         let original_offset = end_offset;
         let mut same_line = true;
         let start_offset = self.current_block_info.read().unwrap().range.start;
-        let templ = self.template_body.read().unwrap();
+        let templ = self.template_body;
         for ch in templ[start_offset..original_offset].chars().rev() {
             if !ch.is_whitespace() {
                 if !same_line {
@@ -411,8 +405,6 @@ impl<'a, 'b> TemplateParser<'a, 'b> {
                 _ => {
                     let ctrl_char = self
                         .template_body
-                        .read()
-                        .unwrap()
                         .chars()
                         .nth(position - 1)
                         .unwrap();
@@ -428,7 +420,7 @@ impl<'a, 'b> TemplateParser<'a, 'b> {
         }
 
         if do_trim {
-            let templ = self.template_body.read().unwrap();
+            let templ = self.template_body;
 
             for ch in templ[position + 2..].chars() {
                 if ch == '\n' {
