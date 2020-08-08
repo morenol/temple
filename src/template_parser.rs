@@ -90,9 +90,7 @@ impl<'a, 'b> TemplateParser<'a, 'b> {
     }
 
     fn rough_parsing(&mut self) -> Result<()> {
-        let match_begin = self
-            .rough_tokenizer
-            .captures_iter(&self.template_body);
+        let match_begin = self.rough_tokenizer.captures_iter(&self.template_body);
 
         for capture in match_begin {
             // This does not seem idiomatic to rust
@@ -116,8 +114,7 @@ impl<'a, 'b> TemplateParser<'a, 'b> {
                     let new_line_start = self.current_line_info.read().unwrap().range.end + 1;
                     self.current_line_info.write().unwrap().range.start = new_line_start;
 
-                    if self.current_line_info.read().unwrap().range.start
-                        < self.template_body.len()
+                    if self.current_line_info.read().unwrap().range.start < self.template_body.len()
                     {
                         match self.current_block_info.read().unwrap().mode {
                             TextBlockType::LineStatement => {}
@@ -262,11 +259,7 @@ impl<'a, 'b> TemplateParser<'a, 'b> {
         self.finish_current_block(end_offset, mode, None);
 
         if start_offset < self.template_body.len() {
-            let ctrl_char = self
-                .template_body
-                .chars()
-                .nth(start_offset)
-                .unwrap();
+            let ctrl_char = self.template_body.chars().nth(start_offset).unwrap();
 
             if ctrl_char == '+' || ctrl_char == '-' {
                 start_offset += 1;
@@ -318,11 +311,7 @@ impl<'a, 'b> TemplateParser<'a, 'b> {
                 }
 
                 if position != 0 {
-                    let ctrl_char = self
-                        .template_body
-                        .chars()
-                        .nth(position - 1)
-                        .unwrap();
+                    let ctrl_char = self.template_body.chars().nth(position - 1).unwrap();
 
                     if ctrl_char == '+' || ctrl_char == '-' {
                         position -= 1;
@@ -350,11 +339,7 @@ impl<'a, 'b> TemplateParser<'a, 'b> {
     ) -> usize {
         let mut do_total_strip = false;
         if ctrl_char_pos < self.template_body.len() {
-            let ctrl_char = self
-                .template_body
-                .chars()
-                .nth(ctrl_char_pos)
-                .unwrap();
+            let ctrl_char = self.template_body.chars().nth(ctrl_char_pos).unwrap();
             if ctrl_char == '+' {
                 do_trim = false;
             } else {
@@ -403,11 +388,7 @@ impl<'a, 'b> TemplateParser<'a, 'b> {
             match self.current_block_info.read().unwrap().mode {
                 TextBlockType::RawText => {}
                 _ => {
-                    let ctrl_char = self
-                        .template_body
-                        .chars()
-                        .nth(position - 1)
-                        .unwrap();
+                    let ctrl_char = self.template_body.chars().nth(position - 1).unwrap();
                     do_trim = if ctrl_char == '-' {
                         true
                     } else if ctrl_char == '+' {

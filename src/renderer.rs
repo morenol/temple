@@ -1,6 +1,7 @@
 use crate::context::Context;
 use crate::error::{Error, Result};
 use crate::expression_evaluator::FullExpressionEvaluator;
+use std::borrow::Cow;
 use std::fmt;
 use std::io::Write;
 use std::sync::RwLock;
@@ -40,12 +41,17 @@ impl<'a> fmt::Debug for ComposedRenderer<'a> {
 
 #[derive(Debug)]
 pub struct RawTextRenderer<'a> {
-    content: &'a str,
+    content: Cow<'a, str>,
 }
 
 impl<'a> RawTextRenderer<'a> {
-    pub fn new(content: &'a str) -> Self {
-        Self { content }
+    pub fn new<S>(content: S) -> Self
+    where
+        S: Into<Cow<'a, str>>,
+    {
+        Self {
+            content: content.into(),
+        }
     }
 }
 
