@@ -3,11 +3,13 @@ use crate::error::Result;
 use crate::renderer::{ComposedRenderer, Render};
 use crate::template_env::TemplateEnv;
 use crate::template_parser::TemplateParser;
+use std::borrow::Cow;
 use std::io::Write;
 use std::sync::Arc;
 
 #[derive(Debug)]
 pub struct Template<'a> {
+    body: Cow<'a, str>,
     template_env: Arc<TemplateEnv>,
     renderer: Option<ComposedRenderer<'a>>,
 }
@@ -17,12 +19,26 @@ impl<'a> Template<'a> {
         Ok(Self {
             template_env,
             renderer: None,
+            body: Cow::Borrowed(""),
         })
     }
 
-    pub fn load(&mut self, tpl_body: &'a str) -> Result<()> {
-        let mut parser = TemplateParser::new(tpl_body, self.template_env.clone())?;
-        self.renderer = Some(parser.parse()?);
+    pub fn parse(&self) -> Result<ComposedRenderer<'a>> {
+        let mut parser = match &self.body {
+            Cow::Borrowed(template_body) => {
+                TemplateParser::new(template_body, self.template_env.clone())?
+            }
+            Cow::Owned(_template_body_owned) => todo!(),
+        };
+        parser.parse()
+    }
+    pub fn load<S>(&mut self, tpl_body: S) -> Result<()>
+    where
+        S: Into<Cow<'a, str>>,
+    {
+        self.body = tpl_body.into();
+        let renderer = self.parse()?;
+        self.renderer = Some(renderer);
 
         Ok(())
     }

@@ -24,6 +24,12 @@ impl<'a> ComposedRenderer<'a> {
     }
 }
 
+impl<'a> Default for ComposedRenderer<'a> {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl<'a> Render for ComposedRenderer<'a> {
     fn render(&self, out: &mut dyn Write, params: Context) -> Result<()> {
         for r in self.renderers.read().unwrap().iter() {

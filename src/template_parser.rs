@@ -358,7 +358,7 @@ impl<'a> TemplateParser<'a> {
         let original_offset = end_offset;
         let mut same_line = true;
         let start_offset = self.current_block_info.read().unwrap().range.start;
-        let templ = self.template_body;
+        let templ = &self.template_body;
         for ch in templ[start_offset..original_offset].chars().rev() {
             if !ch.is_whitespace() {
                 if !same_line {
@@ -401,7 +401,7 @@ impl<'a> TemplateParser<'a> {
         }
 
         if do_trim {
-            let templ = self.template_body;
+            let templ = &self.template_body;
 
             for ch in templ[position + 2..].chars() {
                 if ch == '\n' {
