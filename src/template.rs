@@ -9,7 +9,6 @@ use std::sync::Arc;
 #[derive(Debug)]
 pub struct Template<'a> {
     template_env: Arc<TemplateEnv>,
-    template_body: Option<&'a str>,
     renderer: Option<ComposedRenderer<'a>>,
 }
 
@@ -17,15 +16,12 @@ impl<'a> Template<'a> {
     pub fn new(template_env: Arc<TemplateEnv>) -> Result<Self> {
         Ok(Self {
             template_env,
-            template_body: None,
             renderer: None,
         })
     }
 
     pub fn load(&mut self, tpl_body: &'a str) -> Result<()> {
-        self.template_body = Some(tpl_body);
-
-        let mut parser = TemplateParser::new(tpl_body, &*self.template_env)?;
+        let mut parser = TemplateParser::new(tpl_body, self.template_env.clone())?;
         self.renderer = Some(parser.parse()?);
 
         Ok(())

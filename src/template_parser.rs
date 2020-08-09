@@ -10,9 +10,9 @@ use regex::Regex;
 use std::sync::{Arc, RwLock};
 
 #[derive(Debug)]
-pub struct TemplateParser<'a, 'b> {
+pub struct TemplateParser<'a> {
     template_body: &'a str,
-    env: RwLock<&'b TemplateEnv>,
+    env: RwLock<Arc<TemplateEnv>>,
     rough_tokenizer: Regex,
     text_blocks: RwLock<Vec<TextBlockInfo>>,
     current_block_info: RwLock<TextBlockInfo>,
@@ -20,8 +20,8 @@ pub struct TemplateParser<'a, 'b> {
     current_line_info: RwLock<LineInfo>,
 }
 
-impl<'a, 'b> TemplateParser<'a, 'b> {
-    pub fn new(body: &'a str, env: &'b TemplateEnv) -> Result<Self> {
+impl<'a> TemplateParser<'a> {
+    pub fn new(body: &'a str, env: Arc<TemplateEnv>) -> Result<Self> {
         let rough_tokenizer = Regex::new(&ROUGH_TOKENIZER[..ROUGH_TOKENIZER.len() - 1]).unwrap();
 
         Ok(Self {
