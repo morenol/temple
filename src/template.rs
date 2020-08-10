@@ -28,7 +28,14 @@ impl<'a> Template<'a> {
             Cow::Borrowed(template_body) => {
                 TemplateParser::new(template_body, self.template_env.clone())?
             }
-            Cow::Owned(_template_body_owned) => todo!(),
+            Cow::Owned(_template_body_owned) => {
+                // This allows the parser to have references to the template body.
+                // This is safe as long as `body` field is never mutated or dropped.
+                let unsafe_source: &'a str = unsafe{
+                &*(&*self.body as *const str)
+                };
+                TemplateParser::new(unsafe_source, self.template_env.clone())?
+            },
         };
         parser.parse()
     }
