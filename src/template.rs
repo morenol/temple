@@ -6,16 +6,14 @@ use crate::template_parser::TemplateParser;
 use std::borrow::Cow;
 use std::io::Write;
 use std::sync::Arc;
-
-#[derive(Debug)]
 pub struct Template<'a> {
     body: Cow<'a, str>,
-    template_env: Arc<TemplateEnv>,
+    template_env: Arc<&'a TemplateEnv<'a>>,
     renderer: Option<ComposedRenderer<'a>>,
 }
 
 impl<'a> Template<'a> {
-    pub fn new(template_env: Arc<TemplateEnv>) -> Result<Self> {
+    pub fn new(template_env: Arc<&'a TemplateEnv>) -> Result<Self> {
         Ok(Self {
             template_env,
             renderer: None,
@@ -31,11 +29,9 @@ impl<'a> Template<'a> {
             Cow::Owned(_template_body_owned) => {
                 // This allows the parser to have references to the template body.
                 // This is safe as long as `body` field is never mutated or dropped.
-                let unsafe_source: &'a str = unsafe{
-                &*(&*self.body as *const str)
-                };
+                let unsafe_source: &'a str = unsafe { &*(&*self.body as *const str) };
                 TemplateParser::new(unsafe_source, self.template_env.clone())?
-            },
+            }
         };
         parser.parse()
     }

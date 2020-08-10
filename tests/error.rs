@@ -5,7 +5,7 @@ use temple::{Context, Template, TemplateEnv};
 #[test]
 fn expected_endraw() -> Result<()> {
     let temp_env = TemplateEnv::default();
-    let template_env = Arc::new(temp_env);
+    let template_env = Arc::new(&temp_env);
     let mut template = Template::new(template_env)?;
     let result = template.load("{% raw %} there is not endraw");
     assert_matches!(
@@ -22,7 +22,7 @@ fn expected_endraw() -> Result<()> {
 #[test]
 fn unexpected_endraw() -> Result<()> {
     let temp_env = TemplateEnv::default();
-    let template_env = Arc::new(temp_env);
+    let template_env = Arc::new(&temp_env);
     let mut template = Template::new(template_env)?;
     let result = template.load("{% raw %} {% endraw %} {% endraw %}");
     assert_matches!(
@@ -40,7 +40,7 @@ fn unexpected_endraw() -> Result<()> {
 #[test]
 fn unexpected_endcomment() -> Result<()> {
     let temp_env = TemplateEnv::default();
-    let template_env = Arc::new(temp_env);
+    let template_env = Arc::new(&temp_env);
     let mut template = Template::new(template_env)?;
     let result = template.load("end of comment #}");
     assert_matches!(
@@ -57,7 +57,7 @@ fn unexpected_endcomment() -> Result<()> {
 #[test]
 fn expected_expression() -> Result<()> {
     let temp_env = TemplateEnv::default();
-    let template_env = Arc::new(temp_env);
+    let template_env = Arc::new(&temp_env);
     let mut template = Template::new(template_env)?;
     let result = template.load("{{            }}");
     assert_matches!(
@@ -84,7 +84,7 @@ fn expected_expression() -> Result<()> {
 #[test]
 fn expected_right_bracket() -> Result<()> {
     let temp_env = TemplateEnv::default();
-    let template_env = Arc::new(temp_env);
+    let template_env = Arc::new(&temp_env);
     let mut template = Template::new(template_env)?;
     let result = template.load("{{ \"text\"[2 }}");
     assert_matches!(
@@ -112,7 +112,7 @@ fn expected_right_bracket() -> Result<()> {
 #[test]
 fn undefined_value() -> Result<()> {
     let temp_env = TemplateEnv::default();
-    let template_env = Arc::new(temp_env);
+    let template_env = Arc::new(&temp_env);
     let mut template = Template::new(template_env)?;
     template.load("{{ undefinedValue }}")?;
     let context = Context::default();

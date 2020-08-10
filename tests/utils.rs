@@ -8,7 +8,7 @@ pub fn assert_render_template_eq(
     params: Option<Context>,
 ) -> Result<()> {
     let temp_env = TemplateEnv::default();
-    let template_env = Arc::new(temp_env);
+    let template_env = Arc::new(&temp_env);
     let mut template = Template::new(template_env)?;
     template.load(input)?;
     let default_context = Context::default();

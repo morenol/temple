@@ -1,5 +1,9 @@
+use crate::error::Result;
 use crate::value::{Value, ValuesMap};
+use crate::FileSystemHandler;
+use crate::Template;
 use std::sync::{Arc, RwLock};
+
 #[derive(Clone, Debug, PartialEq)]
 enum Jinja2CompatMode {
     None,
@@ -57,13 +61,13 @@ impl Default for Extensions {
     }
 }
 
-#[derive(Clone, Debug)]
-pub struct TemplateEnv {
+pub struct TemplateEnv<'a> {
     settings: Settings,
     global_values: Arc<RwLock<ValuesMap>>,
+    filesystem_handlers: Vec<Box<dyn FileSystemHandler + 'a>>,
 }
 
-impl TemplateEnv {
+impl<'a> TemplateEnv<'a> {
     pub fn add_global(&mut self, name: String, val: Value) {
         self.global_values.write().unwrap().insert(name, val);
     }
@@ -86,13 +90,35 @@ impl TemplateEnv {
     pub fn settings_mut(&mut self) -> &mut Settings {
         &mut self.settings
     }
+    pub fn add_filesystem_handler(
+        &mut self,
+        handler: Box<dyn FileSystemHandler + 'a>,
+    ) -> Result<()> {
+        self.filesystem_handlers.push(handler);
+        Ok(())
+    }
+    pub fn load_template(&mut self, filename: &str) -> Result<Template> {
+        let mut template = Template::new(Arc::new(self))?;
+        for handler in &self.filesystem_handlers {
+            let stream = handler.open_stream(filename);
+            let mut content = String::default();
+
+            if let Some(mut reader) = stream {
+                reader.read_to_string(&mut content)?;
+                template.load(content)?;
+                break;
+            }
+        }
+        Ok(template)
+    }
 }
 
-impl Default for TemplateEnv {
-    fn default() -> TemplateEnv {
+impl<'a> Default for TemplateEnv<'a> {
+    fn default() -> TemplateEnv<'a> {
         TemplateEnv {
             settings: Settings::default(),
             global_values: Arc::new(RwLock::new(ValuesMap::default())),
+            filesystem_handlers: vec![],
         }
     }
 }
