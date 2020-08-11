@@ -8,6 +8,22 @@
 
 A jinja2-like template engine in [rust] inspired by  *[Jinja2Cpp]*.
 
+## Goals
+ * Easy-to-use public interface.
+ * Shared template environment.
+ * Conformance to Jinja2 specification.
+ * Rich error reporting.
+ * Shared template environment with templates cache support.
+
+## Current Jinja2 support
+
+* expressions. You can use almost every expression style: simple, filtered, conditional, and so on.
+* filters that can be used  via '|' operator (default, first, last, length, max, min, abs, float, int, string, sum, capitalize, title, upper, wordcount, truncate and center).
+* 'if' statement (with 'elif' and 'else' branches)
+* 'for' statement (without 'else' branch and 'if' part support)
+* 'with' statement
+* space control and 'raw'/'endraw' blocks
+
 [Jinja2Cpp]: https://github.com/jinja2cpp/jinja2cpp
 [rust]: https://www.rust-lang.org
 
@@ -15,7 +31,6 @@ TODO:
 
 - [ ] Statements:
   - [x] for (Partial implementation)
-  - [x] with
   - [ ] set
   - [ ] filter
   - [ ] extends
@@ -30,7 +45,6 @@ TODO:
 - [ ] Filters
   - [ ] attr
   - [ ] batch
-  - [x] center
   - [ ] dictsort
   - [ ] filesizeformat
   - [ ] forceescape
@@ -52,9 +66,7 @@ TODO:
   - [ ] slice
   - [ ] sort
   - [ ] striptags
-  - [x] title
   - [ ] tojson
-  - [x] truncate
   - [ ] unique
   - [ ] urlencode
   - [ ] urlize
@@ -62,4 +74,3 @@ TODO:
   - [ ] xmlattr
 - [ ] Custom filters
 - [ ] Use of settings
-- [ ] Filesystem templates
