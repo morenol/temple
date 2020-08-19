@@ -191,3 +191,10 @@ fn title_filter() -> Result<()> {
     assert_render_template_eq("{{ 'hello world!' | title }}", "Hello World!", None)?;
     assert_render_template_eq("{{ 'HellO wOrlD!' | title }}", "Hello World!", None)
 }
+
+#[test]
+fn round_filter() -> Result<()> {
+    assert_render_template_eq("{{ 5.8 | round }}", "6.0", None)?;
+    assert_render_template_eq("{{ 3.14 | round(method='ceil') }}", "4.0", None)?;
+    assert_render_template_eq("{{ 5.8 | round(method='floor') }}", "5.0", None)
+}

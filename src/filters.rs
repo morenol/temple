@@ -18,6 +18,7 @@ pub enum Filter {
     Lower,
     Max,
     Min,
+    Round,
     String,
     Sum,
     Title,
@@ -41,6 +42,7 @@ impl Filter {
             "lower" => Ok(Filter::Lower),
             "max" => Ok(Filter::Max),
             "min" => Ok(Filter::Min),
+            "round" => Ok(Filter::Round),
             "string" => Ok(Filter::String),
             "sum" => Ok(Filter::Sum),
             "title" => Ok(Filter::Title),
@@ -107,6 +109,14 @@ impl Filter {
             Filter::Lower => base_value.lower(),
             Filter::Max => base_value.max(), // TODO Accept params
             Filter::Min => base_value.min(), // TODO Accept params
+            Filter::Round => {
+                let parameters = if params.is_some() {
+                    params.as_ref().unwrap().parse(vec!["method"], context)?
+                } else {
+                    HashMap::default()
+                };
+                base_value.round(parameters)
+            }
             Filter::String => Ok(Value::String(base_value.to_string())),
             Filter::Sum => base_value.sum(), // TODO: ACcept params
             Filter::Title => base_value.title(),

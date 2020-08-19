@@ -192,6 +192,28 @@ impl Value {
             _ => Err(Error::from(ErrorKind::InvalidOperation)),
         }
     }
+    pub fn round(self, mut params: HashMap<&str, Value>) -> Result<Self> {
+        let method = params
+            .remove("method")
+            .unwrap_or_else(|| Value::String("common".to_string()));
+
+        if let Value::Double(value) = self {
+            if let Value::String(method_str) = method {
+                match method_str.as_str() {
+                    "common" => Ok(Value::Double(value.round())),
+                    "ceil" => Ok(Value::Double(value.ceil())),
+                    "floor" => Ok(Value::Double(value.floor())),
+                    _ => Err(Error::from(ErrorKind::InvalidValueType)),
+                }
+            } else {
+                Err(Error::from(ErrorKind::InvalidValueType))
+            }
+        } else if let Value::Integer(value) = self {
+            Ok(Value::Integer(value))
+        } else {
+            Err(Error::from(ErrorKind::InvalidValueType))
+        }
+    }
     pub fn sum(self) -> Result<Self> {
         if let Value::ValuesList(values_list) = self {
             let value: f64 = values_list
