@@ -196,5 +196,6 @@ fn title_filter() -> Result<()> {
 fn round_filter() -> Result<()> {
     assert_render_template_eq("{{ 5.8 | round }}", "6.0", None)?;
     assert_render_template_eq("{{ 3.14 | round(method='ceil') }}", "4.0", None)?;
-    assert_render_template_eq("{{ 5.8 | round(method='floor') }}", "5.0", None)
+    assert_render_template_eq("{{ 5.8 | round(method='floor') }}", "5.0", None)?;
+    assert_render_template_eq("{{ 4.834 | round(precision=2) }}", "4.83", None)
 }

@@ -18,7 +18,7 @@ A jinja2-like template engine in [rust] inspired by  *[Jinja2Cpp]*.
 ## Current Jinja2 support
 
 * expressions. You can use almost every expression style: simple, filtered, conditional, and so on.
-* filters that can be used  via '|' operator (default, first, last, length, max, min, abs, float, int, string, sum, capitalize, title, upper, wordcount, truncate and center).
+* filters that can be used  via '|' operator (default, first, last, length, max, min, abs, float, int, string, sum, round, capitalize, title, upper, wordcount, truncate and center).
 * 'if' statement (with 'elif' and 'else' branches)
 * 'for' statement (without 'else' branch and 'if' part support)
 * 'with' statement
@@ -59,7 +59,6 @@ TODO:
   - [ ] rejectattr
   - [ ] replace
   - [ ] reverse
-  - [ ] round
   - [ ] safe
   - [ ] select
   - [ ] selectattr

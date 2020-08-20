@@ -111,7 +111,10 @@ impl Filter {
             Filter::Min => base_value.min(), // TODO Accept params
             Filter::Round => {
                 let parameters = if params.is_some() {
-                    params.as_ref().unwrap().parse(vec!["method"], context)?
+                    params
+                        .as_ref()
+                        .unwrap()
+                        .parse(vec!["precision", "method"], context)?
                 } else {
                     HashMap::default()
                 };

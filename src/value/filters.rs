@@ -197,12 +197,15 @@ impl Value {
             .remove("method")
             .unwrap_or_else(|| Value::String("common".to_string()));
 
+        let precision = params.remove("precision").unwrap_or(Value::Double(0.0));
+
+        let pow10 = 10.0_f64.powf(precision.float(HashMap::default())?);
         if let Value::Double(value) = self {
             if let Value::String(method_str) = method {
                 match method_str.as_str() {
-                    "common" => Ok(Value::Double(value.round())),
-                    "ceil" => Ok(Value::Double(value.ceil())),
-                    "floor" => Ok(Value::Double(value.floor())),
+                    "common" => Ok(Value::Double((value * pow10).round() / pow10)),
+                    "ceil" => Ok(Value::Double((value * pow10).ceil() / pow10)),
+                    "floor" => Ok(Value::Double((value * pow10).floor() / pow10)),
                     _ => Err(Error::from(ErrorKind::InvalidValueType)),
                 }
             } else {
