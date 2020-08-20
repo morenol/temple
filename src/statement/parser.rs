@@ -1,6 +1,6 @@
 use super::{
-    ElseStatement, ForStatement, IfStatement, Statement, StatementInfo, StatementInfoList,
-    StatementInfoType, WithStatement,
+    ElseStatement, ForStatement, IfStatement, IncludeStatement, Statement, StatementInfo,
+    StatementInfoList, StatementInfoType, WithStatement,
 };
 use crate::error::{Error, ErrorKind, Result, SourceLocation};
 use crate::expression_parser::ExpressionParser;
@@ -31,8 +31,9 @@ impl StatementParser {
                 StatementParser::parse_endfor(&mut lexer, &mut statementinfo_list)
             }
             Some(Token::With) => StatementParser::parse_with(&mut lexer, &mut statementinfo_list),
-            Some(Token::EndWith) => {
-                StatementParser::parse_endwith(&mut lexer, &mut statementinfo_list)
+            Some(Token::EndWith) => StatementParser::parse_endwith(&mut statementinfo_list),
+            Some(Token::Include) => {
+                StatementParser::parse_include(&mut lexer, &mut statementinfo_list)
             }
             _ => todo!(),
         }
@@ -226,10 +227,7 @@ impl StatementParser {
         statementinfo_list.push(statement_info);
         Ok(())
     }
-    fn parse_endwith<'a>(
-        _lexer: &mut Peekable<Lexer<'a, Token<'a>>>,
-        statementinfo_list: &mut StatementInfoList<'a>,
-    ) -> Result<()> {
+    fn parse_endwith<'a>(statementinfo_list: &mut StatementInfoList<'a>) -> Result<()> {
         if statementinfo_list.len() <= 1 {
             return Err(Error::from(ErrorKind::UnexpectedStatement(
                 SourceLocation::new(1, 2),
@@ -251,5 +249,75 @@ impl StatementParser {
                 SourceLocation::new(1, 2),
             )))
         }
+    }
+    fn parse_include<'a>(
+        lexer: &mut Peekable<Lexer<'a, Token<'a>>>,
+        statementinfo_list: &mut StatementInfoList<'a>,
+    ) -> Result<()> {
+        if statementinfo_list.is_empty() {
+            return Err(Error::from(ErrorKind::UnexpectedStatement(
+                SourceLocation::new(1, 2),
+            )));
+        }
+        let expr = ExpressionParser::full_expresion_parser(lexer)?;
+        let mut is_ignore_missing = false;
+        let mut is_with_context = true;
+
+        if let Some(Token::Ignore) = lexer.peek() {
+            lexer.next();
+            if let Some(Token::Missing) = lexer.peek() {
+                is_ignore_missing = true;
+            } else {
+                return Err(Error::from(ErrorKind::ExpectedToken(SourceLocation::new(
+                    1, 2,
+                ))));
+            }
+            lexer.next();
+        }
+
+        match lexer.next() {
+            Some(Token::With) => {
+                if let Some(Token::Context) = lexer.peek() {
+                    lexer.next();
+                } else {
+                    return Err(Error::from(ErrorKind::ExpectedToken(SourceLocation::new(
+                        1, 2,
+                    ))));
+                }
+            }
+            Some(Token::Without) => {
+                is_with_context = false;
+                if let Some(Token::Context) = lexer.peek() {
+                    lexer.next();
+                } else {
+                    return Err(Error::from(ErrorKind::ExpectedToken(SourceLocation::new(
+                        1, 2,
+                    ))));
+                }
+            }
+            None => {}
+            _ => {
+                return Err(Error::from(ErrorKind::UnexpectedToken(
+                    SourceLocation::new(1, 2),
+                )));
+            }
+        }
+        if lexer.next().is_some() {
+            return Err(Error::from(ErrorKind::UnexpectedToken(
+                SourceLocation::new(1, 2),
+            )));
+        }
+        let renderer = Statement::Include(IncludeStatement::new(
+            is_ignore_missing,
+            is_with_context,
+            Box::new(expr),
+        ));
+        statementinfo_list
+            .last_mut()
+            .unwrap()
+            .current_composition
+            .add_renderer(Box::new(renderer));
+
+        Ok(())
     }
 }

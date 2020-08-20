@@ -22,6 +22,7 @@ A jinja2-like template engine in [rust] inspired by  *[Jinja2Cpp]*.
 * 'if' statement (with 'elif' and 'else' branches)
 * 'for' statement (without 'else' branch and 'if' part support)
 * 'with' statement
+* 'include' statement
 * space control and 'raw'/'endraw' blocks
 
 [Jinja2Cpp]: https://github.com/jinja2cpp/jinja2cpp
@@ -34,7 +35,7 @@ TODO:
   - [ ] set
   - [ ] filter
   - [ ] extends
-  - [ ] include
+  - [x] include
   - [ ] macro
   - [ ] line statements
 - [ ] expressions

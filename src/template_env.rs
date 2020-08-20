@@ -1,4 +1,4 @@
-use crate::error::Result;
+use crate::error::{Error, ErrorKind, Result};
 use crate::value::{Value, ValuesMap};
 use crate::FileSystemHandler;
 use crate::Template;
@@ -97,8 +97,9 @@ impl<'a> TemplateEnv<'a> {
         self.filesystem_handlers.push(handler);
         Ok(())
     }
-    pub fn load_template(&mut self, filename: &str) -> Result<Template> {
+    pub fn load_template(&self, filename: &str) -> Result<Template> {
         let mut template = Template::new(Arc::new(self))?;
+        let mut not_found = true;
         for handler in &self.filesystem_handlers {
             let stream = handler.open_stream(filename);
             let mut content = String::default();
@@ -106,10 +107,15 @@ impl<'a> TemplateEnv<'a> {
             if let Some(mut reader) = stream {
                 reader.read_to_string(&mut content)?;
                 template.load(content)?;
+                not_found = false;
                 break;
             }
         }
-        Ok(template)
+        if not_found {
+            Err(Error::from(ErrorKind::TemplateNotFound))
+        } else {
+            Ok(template)
+        }
     }
 }
 
