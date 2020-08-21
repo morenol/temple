@@ -1,19 +1,22 @@
 use crate::value::{Value, ValuesMap};
+use crate::TemplateEnv;
 use std::sync::{Arc, RwLock};
 
-#[derive(Clone, Debug, Default)]
-pub struct Context {
+#[derive(Clone)]
+pub struct Context<'a> {
     global_scope: Arc<RwLock<ValuesMap>>,
     external_scope: ValuesMap,
     scopes: Vec<Arc<RwLock<ValuesMap>>>,
+    callback_renderer: Arc<&'a TemplateEnv<'a>>,
 }
 
-impl Context {
-    pub fn new(external_scope: ValuesMap) -> Self {
+impl<'a> Context<'a> {
+    pub fn new(external_scope: ValuesMap, callback_renderer: Arc<&'a TemplateEnv>) -> Self {
         Self {
             global_scope: Arc::new(RwLock::new(ValuesMap::default())),
             external_scope,
             scopes: vec![],
+            callback_renderer,
         }
     }
     pub fn enter_scope(&mut self) -> Arc<RwLock<ValuesMap>> {
@@ -41,5 +44,8 @@ impl Context {
     }
     pub fn set_global(&mut self, global_scope: Arc<RwLock<ValuesMap>>) {
         self.global_scope = global_scope;
+    }
+    pub fn get_renderer_callback(&self) -> Arc<&'a TemplateEnv<'a>> {
+        self.callback_renderer.clone()
     }
 }

@@ -1,7 +1,6 @@
 use super::utils::assert_render_template_eq;
 use temple::error::Result;
 use temple::value::{Value, ValuesMap};
-use temple::Context;
 
 #[test]
 fn with_simple() -> Result<()> {
@@ -21,7 +20,6 @@ fn with_multiplee() -> Result<()> {
 fn with_basic() -> Result<()> {
     let mut context = ValuesMap::default();
     context.insert("outer".to_string(), Value::Integer(100));
-    let context = Context::new(context);
     assert_render_template_eq(
         "{{ outer -}}
 {% with outer = 'Hello World', inner = outer %}

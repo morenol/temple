@@ -171,12 +171,57 @@ impl<'a> Render for ForStatement<'a> {
         Ok(())
     }
 }
+pub struct IncludeStatement<'a> {
+    ignore_missing: bool,
+    with_context: bool,
+    expr_name: Box<dyn Evaluate + 'a>,
+}
+
+impl<'a> IncludeStatement<'a> {
+    pub fn new(
+        ignore_missing: bool,
+        with_context: bool,
+        expr_name: Box<dyn Evaluate + 'a>,
+    ) -> Self {
+        Self {
+            ignore_missing,
+            with_context,
+            expr_name,
+        }
+    }
+}
+impl<'a> Render for IncludeStatement<'a> {
+    fn render(&self, out: &mut dyn Write, params: Context) -> Result<()> {
+        let template_env = params.get_renderer_callback();
+        let name = self.expr_name.evaluate(params.clone())?.to_string();
+        let template_result = template_env.load_template(&name);
+
+        let template = match template_result {
+            Ok(tmp) => tmp,
+            Err(err) => {
+                if self.ignore_missing {
+                    return Ok(());
+                } else {
+                    return Err(err);
+                }
+            }
+        };
+        if self.with_context {
+            template.render(out, params)
+        } else {
+            let mut context = Context::new(ValuesMap::default(), template_env.clone());
+            context.set_global(template_env.globals());
+            template.render(out, context)
+        }
+    }
+}
 
 pub enum Statement<'a> {
     If(IfStatement<'a>),
     Else(ElseStatement<'a>),
     For(ForStatement<'a>),
     With(WithStatement<'a>),
+    Include(IncludeStatement<'a>),
 }
 impl<'a> Statement<'a> {
     pub fn set_main_body(&mut self, body: Arc<ComposedRenderer<'a>>) {
@@ -185,6 +230,7 @@ impl<'a> Statement<'a> {
             Statement::Else(statement) => statement.set_main_body(body),
             Statement::For(statement) => statement.set_main_body(body),
             Statement::With(statement) => statement.set_main_body(body),
+            _ => unreachable!(),
         }
     }
     pub fn add_else_branch(&mut self, branch: Statement<'a>) {
@@ -202,6 +248,7 @@ impl<'a> Render for Statement<'a> {
             Statement::Else(statement) => statement.render(out, params),
             Statement::For(statement) => statement.render(out, params),
             Statement::With(statement) => statement.render(out, params),
+            Statement::Include(statement) => statement.render(out, params),
         }
     }
 }

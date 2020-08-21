@@ -1,6 +1,7 @@
 use std::sync::Arc;
 use temple::error::{Error, ErrorKind, Result};
-use temple::{Context, Template, TemplateEnv};
+use temple::value::ValuesMap;
+use temple::{Template, TemplateEnv};
 
 #[test]
 fn expected_endraw() -> Result<()> {
@@ -115,7 +116,7 @@ fn undefined_value() -> Result<()> {
     let template_env = Arc::new(&temp_env);
     let mut template = Template::new(template_env)?;
     template.load("{{ undefinedValue }}")?;
-    let context = Context::default();
+    let context = ValuesMap::default();
     let result = template.render_as_string(context);
     assert_matches!(
         result,
