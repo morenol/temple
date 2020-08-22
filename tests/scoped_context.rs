@@ -6,10 +6,7 @@ use temple::{Template, TemplateEnv};
 #[test]
 fn test_global_variable() -> Result<()> {
     let mut temp_env = TemplateEnv::default();
-    temp_env.add_global(
-        "GLOBAL_VAR".to_string(),
-        Value::String("Global".to_string()),
-    );
+    temp_env.add_global("GLOBAL_VAR".to_string(), "Global");
     let template_env = Arc::new(&temp_env);
     let mut template = Template::new(template_env)?;
     template.load("{{ GLOBAL_VAR }}")?;
@@ -22,10 +19,7 @@ fn test_global_variable() -> Result<()> {
 #[test]
 fn test_both_global_and_external_variables() -> Result<()> {
     let mut temp_env = TemplateEnv::default();
-    temp_env.add_global(
-        "GLOBAL_VAR".to_string(),
-        Value::String("Global".to_string()),
-    );
+    temp_env.add_global("GLOBAL_VAR".to_string(), "Global");
     let template_env = Arc::new(&temp_env);
     let mut template = Template::new(template_env)?;
     template.load(
@@ -51,7 +45,7 @@ external: External"
 fn test_override_value() -> Result<()> {
     let mut temp_env = TemplateEnv::default();
 
-    temp_env.add_global("key".to_string(), Value::String("Global value".to_string()));
+    temp_env.add_global("key".to_string(), "Global value");
     let template_env = Arc::new(&temp_env);
     let mut template = Template::new(template_env)?;
     template.load("{{ key }}")?;

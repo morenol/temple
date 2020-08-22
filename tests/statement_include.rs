@@ -16,8 +16,8 @@ fn assert_render_template_with_includes_eq(
     handler.add_file("o_printer.j2".to_string(), "({{ o }})".to_string());
     temp_env.add_filesystem_handler(Box::new(handler))?;
 
-    temp_env.add_global("bar".to_string(), Value::Integer(23));
-    temp_env.add_global("o".to_string(), Value::Integer(0));
+    temp_env.add_global("bar".to_string(), 23);
+    temp_env.add_global("o".to_string(), 0);
     let template_env = Arc::new(&temp_env);
     let mut template = Template::new(template_env)?;
     template.load(input)?;

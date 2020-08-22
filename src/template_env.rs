@@ -68,8 +68,11 @@ pub struct TemplateEnv<'a> {
 }
 
 impl<'a> TemplateEnv<'a> {
-    pub fn add_global(&mut self, name: String, val: Value) {
-        self.global_values.write().unwrap().insert(name, val);
+    pub fn add_global<V>(&mut self, name: String, val: V)
+    where
+        V: Into<Value>,
+    {
+        self.global_values.write().unwrap().insert(name, val.into());
     }
 
     pub fn remove_global(&mut self, name: String) {

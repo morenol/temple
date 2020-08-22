@@ -1,5 +1,5 @@
 use temple::error::Result;
-use temple::value::{Value, ValuesMap};
+use temple::value::ValuesMap;
 use temple::{MemoryFileSystem, RealFileSystem, TemplateEnv};
 
 #[test]
@@ -17,7 +17,7 @@ pub fn real_filesystem_basic_template() -> Result<()> {
 #[test]
 pub fn memory_filesystem_basic_template() -> Result<()> {
     let mut temp_env = TemplateEnv::default();
-    temp_env.add_global("key".to_string(), Value::String("Global value".to_string()));
+    temp_env.add_global("key".to_string(), "Global value");
     let mut handler = MemoryFileSystem::new();
     handler.add_file("simple2.j2".to_string(), "Hello Rustaceans!".to_string());
     temp_env.add_filesystem_handler(Box::new(handler))?;
