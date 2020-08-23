@@ -1,14 +1,9 @@
-use std::sync::Arc;
+use super::utils::assert_render_template_eq;
 use temple::error::{Error, ErrorKind, Result};
-use temple::value::ValuesMap;
-use temple::{Template, TemplateEnv};
 
 #[test]
 fn expected_endraw() -> Result<()> {
-    let temp_env = TemplateEnv::default();
-    let template_env = Arc::new(&temp_env);
-    let mut template = Template::new(template_env)?;
-    let result = template.load("{% raw %} there is not endraw");
+    let result = assert_render_template_eq("{% raw %} there is not endraw", "", None);
     assert_matches!(
         result,
         Err(Error::ParseRender(ErrorKind::ExpectedRawEnd(_)))
@@ -22,10 +17,7 @@ fn expected_endraw() -> Result<()> {
 
 #[test]
 fn unexpected_endraw() -> Result<()> {
-    let temp_env = TemplateEnv::default();
-    let template_env = Arc::new(&temp_env);
-    let mut template = Template::new(template_env)?;
-    let result = template.load("{% raw %} {% endraw %} {% endraw %}");
+    let result = assert_render_template_eq("{% raw %} {% endraw %} {% endraw %}", "", None);
     assert_matches!(
         result,
         Err(Error::ParseRender(ErrorKind::UnexpectedRawEnd(_)))
@@ -40,10 +32,7 @@ fn unexpected_endraw() -> Result<()> {
 
 #[test]
 fn unexpected_endcomment() -> Result<()> {
-    let temp_env = TemplateEnv::default();
-    let template_env = Arc::new(&temp_env);
-    let mut template = Template::new(template_env)?;
-    let result = template.load("end of comment #}");
+    let result = assert_render_template_eq("end of comment #}", "", None);
     assert_matches!(
         result,
         Err(Error::ParseRender(ErrorKind::UnexpectedCommentEnd(_)))
@@ -57,10 +46,7 @@ fn unexpected_endcomment() -> Result<()> {
 
 #[test]
 fn expected_expression() -> Result<()> {
-    let temp_env = TemplateEnv::default();
-    let template_env = Arc::new(&temp_env);
-    let mut template = Template::new(template_env)?;
-    let result = template.load("{{            }}");
+    let result = assert_render_template_eq("{{          }}", "", None);
     assert_matches!(
         result,
         Err(Error::ParseRender(ErrorKind::ExpectedExpression(_)))
@@ -69,7 +55,7 @@ fn expected_expression() -> Result<()> {
         result.err().unwrap().to_string(),
         "Expression expected".to_string()
     );
-    let result = template.load("{{ \"text\"[] ");
+    let result = assert_render_template_eq("{{ \"text\"[]         }}", "", None);
     assert_matches!(
         result,
         Err(Error::ParseRender(ErrorKind::ExpectedExpression(_)))
@@ -84,10 +70,7 @@ fn expected_expression() -> Result<()> {
 
 #[test]
 fn expected_right_bracket() -> Result<()> {
-    let temp_env = TemplateEnv::default();
-    let template_env = Arc::new(&temp_env);
-    let mut template = Template::new(template_env)?;
-    let result = template.load("{{ \"text\"[2 }}");
+    let result = assert_render_template_eq("{{ \"text\"[2   }}", "", None);
     assert_matches!(
         result,
         Err(Error::ParseRender(ErrorKind::ExpectedSquareBracket(_)))
@@ -96,7 +79,7 @@ fn expected_right_bracket() -> Result<()> {
         result.err().unwrap().to_string(),
         "']' expected".to_string()
     );
-    let result = template.load("{{ (2 + 2   }}");
+    let result = assert_render_template_eq("{{ (2 + 2   }}", "", None);
     assert_matches!(
         result,
         Err(Error::ParseRender(ErrorKind::ExpectedRoundBracket(_)))
@@ -112,12 +95,7 @@ fn expected_right_bracket() -> Result<()> {
 
 #[test]
 fn undefined_value() -> Result<()> {
-    let temp_env = TemplateEnv::default();
-    let template_env = Arc::new(&temp_env);
-    let mut template = Template::new(template_env)?;
-    template.load("{{ undefinedValue }}")?;
-    let context = ValuesMap::default();
-    let result = template.render_as_string(context);
+    let result = assert_render_template_eq("{{ undefinedValue }}", "", None);
     assert_matches!(
         result,
         Err(Error::ParseRender(ErrorKind::UndefinedValue(_)))
