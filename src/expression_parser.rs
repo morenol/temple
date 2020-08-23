@@ -1,4 +1,4 @@
-use crate::error::{Error, ErrorKind, Result, SourceLocation};
+use crate::error::{Error, ErrorKind, Result};
 use crate::expression_evaluator::{
     BinaryOperation, CallParams, DictionaryExpression, Expression, FilteredExpression,
     FullExpressionEvaluator, SubscriptExpression, TupleExpression, UnaryOperation,
@@ -6,6 +6,7 @@ use crate::expression_evaluator::{
 };
 use crate::filters::FilterExpression;
 use crate::lexer::Token;
+use crate::source::SourceLocationInfo;
 use crate::value::Value;
 
 use crate::renderer::ExpressionRenderer;
@@ -222,7 +223,7 @@ impl ExpressionParser {
                         result = Some(filter);
                     } else {
                         return Err(Error::from(ErrorKind::ExpectedIdentifier(
-                            SourceLocation::new(1, 2),
+                            SourceLocationInfo::new(1, 2),
                         )));
                     }
                     if let Some(Token::Pipe) = lexer.peek() {
@@ -233,7 +234,7 @@ impl ExpressionParser {
                 }
                 None => {
                     return Err(Error::from(ErrorKind::ExpectedIdentifier(
-                        SourceLocation::new(1, 2),
+                        SourceLocationInfo::new(1, 2),
                     )));
                 }
             }
@@ -274,7 +275,7 @@ impl ExpressionParser {
             Ok(Some(params))
         } else {
             Err(Error::from(ErrorKind::ExpectedCurlyBracket(
-                SourceLocation::new(1, 2),
+                SourceLocationInfo::new(1, 2),
             )))
         }
     }
@@ -299,13 +300,13 @@ impl ExpressionParser {
 
                 _ => {
                     return Err(Error::from(ErrorKind::ExpectedExpression(
-                        SourceLocation::new(1, 2), // TODO: Use actual source locations
+                        SourceLocationInfo::new(1, 2), // TODO: Use actual source locations
                     )));
                 }
             }
         } else {
             return Err(Error::from(ErrorKind::ExpectedExpression(
-                SourceLocation::new(1, 2), // TODO: Use actual source locations
+                SourceLocationInfo::new(1, 2), // TODO: Use actual source locations
             )));
         };
 
@@ -338,7 +339,7 @@ impl ExpressionParser {
                 Err(err) => {
                     if !exprs.is_empty() {
                         return Err(Error::from(ErrorKind::ExpectedRoundBracket(
-                            SourceLocation::new(1, 2),
+                            SourceLocationInfo::new(1, 2),
                         )));
                     } else {
                         return Err(err);
@@ -374,7 +375,7 @@ impl ExpressionParser {
                         subscript.add_index(Box::new(expr));
                     } else {
                         return Err(Error::from(ErrorKind::ExpectedSquareBracket(
-                            SourceLocation::new(1, 2),
+                            SourceLocationInfo::new(1, 2),
                         )));
                     }
                 }
@@ -387,7 +388,7 @@ impl ExpressionParser {
                         ))));
                     } else {
                         return Err(Error::from(ErrorKind::ExpectedIdentifier(
-                            SourceLocation::new(1, 2),
+                            SourceLocationInfo::new(1, 2),
                         )));
                     }
                 }
@@ -418,7 +419,7 @@ impl ExpressionParser {
             Ok(Expression::Tuple(tuple))
         } else {
             Err(Error::from(ErrorKind::ExpectedSquareBracket(
-                SourceLocation::new(1, 2),
+                SourceLocationInfo::new(1, 2),
             )))
         }
     }
@@ -441,13 +442,14 @@ impl ExpressionParser {
                         break;
                     }
                 } else {
-                    return Err(Error::from(ErrorKind::ExpectedToken(SourceLocation::new(
-                        1, 2,
-                    ))));
+                    return Err(Error::from(ErrorKind::ExpectedToken(
+                        ":",
+                        SourceLocationInfo::new(1, 2),
+                    )));
                 }
             } else {
                 return Err(Error::from(ErrorKind::ExpectedStringLiteral(
-                    SourceLocation::new(1, 2),
+                    SourceLocationInfo::new(1, 2),
                 )));
             }
         }
@@ -455,7 +457,7 @@ impl ExpressionParser {
             Ok(Expression::Dict(dict))
         } else {
             Err(Error::from(ErrorKind::ExpectedCurlyBracket(
-                SourceLocation::new(1, 2),
+                SourceLocationInfo::new(1, 2),
             )))
         }
     }

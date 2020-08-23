@@ -115,7 +115,9 @@ impl<'a> TemplateEnv<'a> {
             }
         }
         if not_found {
-            Err(Error::from(ErrorKind::TemplateNotFound))
+            Err(Error::from(ErrorKind::TemplateNotFound(
+                filename.to_string(),
+            )))
         } else {
             Ok(template)
         }

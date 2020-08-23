@@ -2,10 +2,11 @@ use super::{
     ElseStatement, ForStatement, IfStatement, IncludeStatement, Statement, StatementInfo,
     StatementInfoList, StatementInfoType, WithStatement,
 };
-use crate::error::{Error, ErrorKind, Result, SourceLocation};
+use crate::error::{Error, ErrorKind, Result};
 use crate::expression_parser::ExpressionParser;
 use crate::lexer::Token;
 use crate::renderer::ComposedRenderer;
+use crate::source::SourceLocationInfo;
 use crate::statement::Evaluate;
 use logos::{Lexer, Logos};
 use std::iter::Peekable;
@@ -35,6 +36,9 @@ impl StatementParser {
             Some(Token::Include) => {
                 StatementParser::parse_include(&mut lexer, &mut statementinfo_list)
             }
+            Some(_) => Err(Error::from(ErrorKind::UnexpectedToken(
+                SourceLocationInfo::new(1, 2),
+            ))),
             _ => todo!(),
         }
     }
@@ -84,7 +88,7 @@ impl StatementParser {
     fn parse_endif<'a>(statementinfo_list: &mut StatementInfoList<'a>) -> Result<()> {
         if statementinfo_list.len() <= 1 {
             return Err(Error::from(ErrorKind::UnexpectedStatement(
-                SourceLocation::new(110, 220),
+                SourceLocationInfo::new(1, 2),
             )));
         }
         let mut info;
@@ -126,7 +130,7 @@ impl StatementParser {
                 vars.push(identifier.to_string());
             } else {
                 return Err(Error::from(ErrorKind::ExpectedIdentifier(
-                    SourceLocation::new(1, 2),
+                    SourceLocationInfo::new(1, 2),
                 )));
             }
             if let Some(Token::Comma) = lexer.peek() {
@@ -138,9 +142,9 @@ impl StatementParser {
         if let Some(Token::In) = lexer.next() {
             let expression = ExpressionParser::full_expresion_parser(lexer)?;
             if lexer.next().is_some() {
-                Err(Error::from(ErrorKind::ExpectedToken(SourceLocation::new(
-                    1, 2,
-                ))))
+                Err(Error::from(ErrorKind::UnexpectedToken(
+                    SourceLocationInfo::new(1, 2),
+                )))
             } else {
                 let composed_renderer = Arc::new(ComposedRenderer::new());
                 let renderer = Statement::For(ForStatement::new(vars, Box::new(expression)));
@@ -154,9 +158,10 @@ impl StatementParser {
                 Ok(())
             }
         } else {
-            Err(Error::from(ErrorKind::ExpectedToken(SourceLocation::new(
-                1, 2,
-            ))))
+            Err(Error::from(ErrorKind::ExpectedToken(
+                "in",
+                SourceLocationInfo::new(1, 2),
+            )))
         }
     }
     fn parse_endfor<'a>(
@@ -165,7 +170,7 @@ impl StatementParser {
     ) -> Result<()> {
         if statementinfo_list.len() <= 1 {
             return Err(Error::from(ErrorKind::UnexpectedStatement(
-                SourceLocation::new(1, 2),
+                SourceLocationInfo::new(1, 2),
             )));
         }
         let mut info = statementinfo_list.pop().unwrap();
@@ -181,7 +186,7 @@ impl StatementParser {
             Ok(())
         } else {
             Err(Error::from(ErrorKind::UnexpectedStatement(
-                SourceLocation::new(1, 2),
+                SourceLocationInfo::new(1, 2),
             )))
         }
     }
@@ -195,9 +200,10 @@ impl StatementParser {
                 lexer.next();
                 ExpressionParser::full_expresion_parser(lexer)?
             } else {
-                return Err(Error::from(ErrorKind::ExpectedToken(SourceLocation::new(
-                    1, 2,
-                ))));
+                return Err(Error::from(ErrorKind::ExpectedToken(
+                    "=",
+                    SourceLocationInfo::new(1, 2),
+                )));
             };
             vars.push((identifier.to_string(), Box::new(value)));
             if let Some(Token::Comma) = lexer.peek() {
@@ -208,13 +214,13 @@ impl StatementParser {
         }
         if vars.is_empty() {
             return Err(Error::from(ErrorKind::ExpectedIdentifier(
-                SourceLocation::new(1, 2),
+                SourceLocationInfo::new(1, 2),
             )));
         }
         if lexer.peek().is_some() {
-            return Err(Error::from(ErrorKind::ExpectedToken(SourceLocation::new(
-                1, 2,
-            ))));
+            return Err(Error::from(ErrorKind::UnexpectedToken(
+                SourceLocationInfo::new(1, 2),
+            )));
         }
         let composed_renderer = Arc::new(ComposedRenderer::new());
         let renderer = Statement::With(WithStatement::new(vars));
@@ -230,7 +236,7 @@ impl StatementParser {
     fn parse_endwith<'a>(statementinfo_list: &mut StatementInfoList<'a>) -> Result<()> {
         if statementinfo_list.len() <= 1 {
             return Err(Error::from(ErrorKind::UnexpectedStatement(
-                SourceLocation::new(1, 2),
+                SourceLocationInfo::new(1, 2),
             )));
         }
         let mut info = statementinfo_list.pop().unwrap();
@@ -246,7 +252,7 @@ impl StatementParser {
             Ok(())
         } else {
             Err(Error::from(ErrorKind::UnexpectedStatement(
-                SourceLocation::new(1, 2),
+                SourceLocationInfo::new(1, 2),
             )))
         }
     }
@@ -256,7 +262,7 @@ impl StatementParser {
     ) -> Result<()> {
         if statementinfo_list.is_empty() {
             return Err(Error::from(ErrorKind::UnexpectedStatement(
-                SourceLocation::new(1, 2),
+                SourceLocationInfo::new(1, 2),
             )));
         }
         let expr = ExpressionParser::full_expresion_parser(lexer)?;
@@ -268,9 +274,10 @@ impl StatementParser {
             if let Some(Token::Missing) = lexer.peek() {
                 is_ignore_missing = true;
             } else {
-                return Err(Error::from(ErrorKind::ExpectedToken(SourceLocation::new(
-                    1, 2,
-                ))));
+                return Err(Error::from(ErrorKind::ExpectedToken(
+                    "missing",
+                    SourceLocationInfo::new(1, 2),
+                )));
             }
             lexer.next();
         }
@@ -280,9 +287,10 @@ impl StatementParser {
                 if let Some(Token::Context) = lexer.peek() {
                     lexer.next();
                 } else {
-                    return Err(Error::from(ErrorKind::ExpectedToken(SourceLocation::new(
-                        1, 2,
-                    ))));
+                    return Err(Error::from(ErrorKind::ExpectedToken(
+                        "context",
+                        SourceLocationInfo::new(1, 2),
+                    )));
                 }
             }
             Some(Token::Without) => {
@@ -290,21 +298,22 @@ impl StatementParser {
                 if let Some(Token::Context) = lexer.peek() {
                     lexer.next();
                 } else {
-                    return Err(Error::from(ErrorKind::ExpectedToken(SourceLocation::new(
-                        1, 2,
-                    ))));
+                    return Err(Error::from(ErrorKind::ExpectedToken(
+                        "context",
+                        SourceLocationInfo::new(1, 2),
+                    )));
                 }
             }
             None => {}
             _ => {
                 return Err(Error::from(ErrorKind::UnexpectedToken(
-                    SourceLocation::new(1, 2),
+                    SourceLocationInfo::new(1, 2),
                 )));
             }
         }
         if lexer.next().is_some() {
             return Err(Error::from(ErrorKind::UnexpectedToken(
-                SourceLocation::new(1, 2),
+                SourceLocationInfo::new(1, 2),
             )));
         }
         let renderer = Statement::Include(IncludeStatement::new(

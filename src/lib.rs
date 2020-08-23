@@ -9,6 +9,7 @@ mod filters;
 mod keyword;
 mod lexer;
 mod renderer;
+mod source;
 mod statement;
 mod template;
 mod template_env;
