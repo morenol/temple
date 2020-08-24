@@ -10,7 +10,7 @@ fn expected_endraw() -> Result<()> {
     );
     assert_eq!(
         result.err().unwrap().to_string(),
-        "{{% endraw %}} expected".to_string()
+        "noname.j2tpl:1:29: error: {% endraw %} expected".to_string()
     );
     Ok(())
 }
@@ -24,7 +24,7 @@ fn unexpected_endraw() -> Result<()> {
     );
     assert_eq!(
         result.err().unwrap().to_string(),
-        "Unexpected raw block end {{% endraw %}}".to_string()
+        "noname.j2tpl:1:23: error: Unexpected raw block end {% endraw %}".to_string()
     );
 
     Ok(())
@@ -39,7 +39,7 @@ fn unexpected_endcomment() -> Result<()> {
     );
     assert_eq!(
         result.err().unwrap().to_string(),
-        "Unexpected comment block end ('#}}')".to_string()
+        "noname.j2tpl:1:15: error: Unexpected comment block end ('#}')".to_string()
     );
     Ok(())
 }
@@ -53,7 +53,7 @@ fn expected_expression() -> Result<()> {
     );
     assert_eq!(
         result.err().unwrap().to_string(),
-        "Expression expected".to_string()
+        "noname.j2tpl:1:2: error: Expression expected".to_string()
     );
     let result = assert_render_template_eq("{{ \"text\"[]         }}", "", None);
     assert_matches!(
@@ -62,7 +62,7 @@ fn expected_expression() -> Result<()> {
     );
     assert_eq!(
         result.err().unwrap().to_string(),
-        "Expression expected".to_string()
+        "noname.j2tpl:1:2: error: Expression expected".to_string()
     );
 
     Ok(())
@@ -77,7 +77,7 @@ fn expected_right_bracket() -> Result<()> {
     );
     assert_eq!(
         result.err().unwrap().to_string(),
-        "']' expected".to_string()
+        "noname.j2tpl:1:2: error: ']' expected".to_string()
     );
     let result = assert_render_template_eq("{{ (2 + 2   }}", "", None);
     assert_matches!(
@@ -87,7 +87,7 @@ fn expected_right_bracket() -> Result<()> {
 
     assert_eq!(
         result.err().unwrap().to_string(),
-        "')' expected".to_string()
+        "noname.j2tpl:1:2: error: ')' expected".to_string()
     );
 
     Ok(())
@@ -102,7 +102,61 @@ fn undefined_value() -> Result<()> {
     );
     assert_eq!(
         result.err().unwrap().to_string(),
-        "Value is not defined".to_string()
+        "noname.j2tpl:1:2: error: Value is not defined".to_string()
     );
+    Ok(())
+}
+#[test]
+fn unexpected_expr_end() -> Result<()> {
+    let result = assert_render_template_eq("{%  }}", "", None);
+    assert_matches!(
+        result,
+        Err(Error::ParseRender(ErrorKind::UnexpectedToken(_)))
+    );
+    assert_eq!(
+        result.err().unwrap().to_string(),
+        "noname.j2tpl:1:2: error: Unexpected token".to_string()
+    );
+
+    let result = assert_render_template_eq("   }}", "", None);
+    assert_matches!(
+        result,
+        Err(Error::ParseRender(ErrorKind::UnexpectedExprEnd(_)))
+    );
+    assert_eq!(
+        result.err().unwrap().to_string(),
+        "noname.j2tpl:1:3: error: Unexpected expression block end ('}}')".to_string()
+    );
+
+    Ok(())
+}
+
+#[test]
+fn unexpected_statement_end() -> Result<()> {
+    let result = assert_render_template_eq("   %}", "", None);
+    assert_matches!(
+        result,
+        Err(Error::ParseRender(ErrorKind::UnexpectedStmtEnd(_)))
+    );
+    assert_eq!(
+        result.err().unwrap().to_string(),
+        "noname.j2tpl:1:3: error: Unexpected statement block end ('%}')".to_string()
+    );
+
+    Ok(())
+}
+
+#[test]
+fn unexpected_raw_begin_end() -> Result<()> {
+    let result = assert_render_template_eq("{{ {% raw %} }}", "", None);
+    assert_matches!(
+        result,
+        Err(Error::ParseRender(ErrorKind::UnexpectedRawBegin(_)))
+    );
+    assert_eq!(
+        result.err().unwrap().to_string(),
+        "noname.j2tpl:1:3: error: Unexpected raw block begin ('{% raw %}')".to_string()
+    );
+
     Ok(())
 }

@@ -76,7 +76,15 @@ fn error_include_missing() -> Result<()> {
         "",
         None,
     );
-    assert_matches!(result, Err(Error::ParseRender(ErrorKind::TemplateNotFound)));
+    assert_matches!(
+        result,
+        Err(Error::ParseRender(ErrorKind::TemplateNotFound(_)))
+    );
+    assert_eq!(
+        result.err().unwrap().to_string(),
+        "Template missing_inner_header.j2 not found".to_string()
+    );
+
     Ok(())
 }
 
@@ -87,28 +95,46 @@ fn error_include_ignore_missing() -> Result<()> {
         "",
         None,
     );
-    assert_matches!(result, Err(Error::ParseRender(ErrorKind::ExpectedToken(_))));
+    assert_matches!(
+        result,
+        Err(Error::ParseRender(ErrorKind::ExpectedToken(_, _)))
+    );
+    assert_eq!(
+        result.err().unwrap().to_string(),
+        "noname.j2tpl:1:2: error: Specific token expected (missing)".to_string()
+    );
+
     Ok(())
 }
 
 #[test]
 fn error_include_without_context() -> Result<()> {
-    let result = assert_render_template_with_includes_eq(
-        "{% include \"simple.j2\" without \"context\" %}",
-        "",
-        None,
+    let result =
+        assert_render_template_with_includes_eq("{% include \"simple.j2\" without c %}", "", None);
+    assert_matches!(
+        result,
+        Err(Error::ParseRender(ErrorKind::ExpectedToken(_, _)))
     );
-    assert_matches!(result, Err(Error::ParseRender(ErrorKind::ExpectedToken(_))));
+    assert_eq!(
+        result.err().unwrap().to_string(),
+        "noname.j2tpl:1:2: error: Specific token expected (context)".to_string()
+    );
+
     Ok(())
 }
 
 #[test]
 fn error_include_with_context() -> Result<()> {
-    let result = assert_render_template_with_includes_eq(
-        "{% include \"simple.j2\" with \"context\" %}",
-        "",
-        None,
+    let result =
+        assert_render_template_with_includes_eq("{% include \"simple.j2\" with c %}", "", None);
+    assert_matches!(
+        result,
+        Err(Error::ParseRender(ErrorKind::ExpectedToken(_, _)))
     );
-    assert_matches!(result, Err(Error::ParseRender(ErrorKind::ExpectedToken(_))));
+    assert_eq!(
+        result.err().unwrap().to_string(),
+        "noname.j2tpl:1:2: error: Specific token expected (context)".to_string()
+    );
+
     Ok(())
 }

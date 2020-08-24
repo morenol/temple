@@ -1,8 +1,9 @@
-use crate::error::{Error, ErrorKind, Result, SourceLocation};
+use crate::error::{Error, ErrorKind, Result};
 use crate::expression_parser::ExpressionParser;
 use crate::keyword::{RegexEnum, ROUGH_TOKENIZER};
 use crate::lexer::Token;
 use crate::renderer::{ComposedRenderer, RawTextRenderer};
+use crate::source::{Range, SourceLocationInfo};
 use crate::statement::parser::StatementParser;
 use crate::statement::{StatementInfo, StatementInfoList, StatementInfoType};
 use crate::template_env::TemplateEnv;
@@ -45,8 +46,7 @@ impl<'a> TemplateParser<'a> {
                         continue;
                     }
                     let text = self.template_body;
-                    let new_renderer =
-                        RawTextRenderer::new(&text[orig_block.range.start..orig_block.range.end]);
+                    let new_renderer = RawTextRenderer::new(&text[orig_block.range.span()]);
                     statements_stack
                         .last()
                         .unwrap()
@@ -55,9 +55,7 @@ impl<'a> TemplateParser<'a> {
                 }
                 TextBlockType::Expression => {
                     let text = self.template_body;
-                    let new_renderer = ExpressionParser::parse(
-                        &text[orig_block.range.start..orig_block.range.end],
-                    )?;
+                    let new_renderer = ExpressionParser::parse(&text[orig_block.range.span()])?;
                     statements_stack
                         .last()
                         .unwrap()
@@ -67,10 +65,7 @@ impl<'a> TemplateParser<'a> {
                 TextBlockType::Comment => {}
                 TextBlockType::Statement | TextBlockType::LineStatement => {
                     let text = self.template_body;
-                    StatementParser::parse(
-                        &text[orig_block.range.start..orig_block.range.end],
-                        &mut statements_stack,
-                    )?;
+                    StatementParser::parse(&text[orig_block.range.span()], &mut statements_stack)?;
                 }
             }
         }
@@ -131,7 +126,7 @@ impl<'a> TemplateParser<'a> {
                         _ => {
                             self.finish_current_line(match_end);
                             return Err(Error::from(ErrorKind::UnexpectedCommentBegin(
-                                SourceLocation::new(match_start, match_end),
+                                self.make_source_location(match_start),
                             )));
                         }
                     };
@@ -149,7 +144,7 @@ impl<'a> TemplateParser<'a> {
                         _ => {
                             self.finish_current_line(match_end);
                             return Err(Error::from(ErrorKind::UnexpectedCommentEnd(
-                                SourceLocation::new(match_start, match_end),
+                                self.make_source_location(match_start),
                             )));
                         }
                     };
@@ -165,7 +160,7 @@ impl<'a> TemplateParser<'a> {
                         TextBlockType::RawText => {
                             self.finish_current_line(match_end);
                             return Err(Error::from(ErrorKind::UnexpectedExprEnd(
-                                SourceLocation::new(match_start, match_end),
+                                self.make_source_location(match_start),
                             )));
                         }
                         TextBlockType::Expression => {}
@@ -181,10 +176,10 @@ impl<'a> TemplateParser<'a> {
                 }
                 RegexEnum::StmtEnd => {
                     match self.current_block_info.read().unwrap().mode {
-                        TextBlockType::RawBlock => {
+                        TextBlockType::RawText => {
                             self.finish_current_line(match_end);
                             return Err(Error::from(ErrorKind::UnexpectedStmtEnd(
-                                SourceLocation::new(match_start, match_end),
+                                self.make_source_location(match_start),
                             )));
                         }
                         TextBlockType::Statement => {}
@@ -202,7 +197,7 @@ impl<'a> TemplateParser<'a> {
                         _ => {
                             self.finish_current_line(match_end);
                             return Err(Error::from(ErrorKind::UnexpectedRawBegin(
-                                SourceLocation::new(match_start, match_end),
+                                self.make_source_location(match_start),
                             )));
                         }
                     };
@@ -215,7 +210,7 @@ impl<'a> TemplateParser<'a> {
                         _ => {
                             self.finish_current_line(match_end);
                             return Err(Error::from(ErrorKind::UnexpectedRawEnd(
-                                SourceLocation::new(match_start, match_end),
+                                self.make_source_location(match_start),
                             )));
                         }
                     };
@@ -231,10 +226,9 @@ impl<'a> TemplateParser<'a> {
         let len_of_temp = self.template_body.len();
         self.finish_current_line(len_of_temp);
         if let TextBlockType::RawBlock = self.current_block_info.read().unwrap().mode {
-            return Err(Error::from(ErrorKind::ExpectedRawEnd(SourceLocation::new(
-                len_of_temp,
-                len_of_temp + 2, // TODO: THERE is not handling of expected end of comment????
-            ))));
+            return Err(Error::from(ErrorKind::ExpectedRawEnd(
+                self.make_source_location(len_of_temp), // TODO: THERE is not handling of expected end of comment????
+            )));
         }
         self.finish_current_block(len_of_temp, TextBlockType::RawText, None);
 
@@ -424,6 +418,14 @@ impl<'a> TemplateParser<'a> {
             .push(*self.current_line_info.read().unwrap());
         self.current_line_info.write().unwrap().line_number += 1;
     }
+
+    fn make_source_location(&self, match_begin: usize) -> SourceLocationInfo {
+        let line = self.current_line_info.read().unwrap();
+        let line_number = line.line_number;
+        let col = match_begin - line.range.start;
+
+        SourceLocationInfo::new(line_number, col)
+    }
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -434,21 +436,9 @@ struct TextBlockInfo {
 impl Default for TextBlockInfo {
     fn default() -> Self {
         Self {
-            range: Range { start: 0, end: 0 },
+            range: Range::new(0, 0),
             mode: TextBlockType::RawText,
         }
-    }
-}
-
-#[derive(Debug, Clone, Copy)]
-pub struct Range {
-    start: usize,
-    end: usize,
-}
-
-impl Range {
-    pub fn size(&self) -> usize {
-        self.end - self.start
     }
 }
 
@@ -471,7 +461,7 @@ struct LineInfo {
 impl Default for LineInfo {
     fn default() -> Self {
         Self {
-            range: Range { start: 0, end: 0 },
+            range: Range::new(0, 0),
             line_number: 0,
         }
     }

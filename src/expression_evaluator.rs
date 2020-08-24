@@ -1,7 +1,8 @@
 use crate::context::Context;
-use crate::error::{Error, ErrorKind, Result, SourceLocation};
+use crate::error::{Error, ErrorKind, Result};
 use crate::filters::FilterExpression;
 use crate::renderer::Render;
+use crate::source::SourceLocationInfo;
 use crate::value::visitors;
 use crate::value::{Value, ValuesList, ValuesMap};
 use std::collections::HashMap;
@@ -179,9 +180,9 @@ impl<'a> Render for FullExpressionEvaluator<'a> {
     fn render(&self, out: &mut dyn Write, params: Context) -> Result<()> {
         let value = self.evaluate(params)?;
         if let Value::Empty = value {
-            Err(Error::from(ErrorKind::UndefinedValue(SourceLocation::new(
-                1, 2,
-            ))))
+            Err(Error::from(ErrorKind::UndefinedValue(
+                SourceLocationInfo::new(1, 2),
+            )))
         } else if let Err(err) = out.write(value.to_string().as_bytes()) {
             Err(Error::Io(err))
         } else {
