@@ -1,8 +1,7 @@
 use crate::context::Context;
-use crate::error::{Error, ErrorKind, Result};
+use crate::error::{Error, Result};
 use crate::filters::FilterExpression;
 use crate::renderer::Render;
-use crate::source::SourceLocationInfo;
 use crate::value::visitors;
 use crate::value::{Value, ValuesList, ValuesMap};
 use std::collections::HashMap;
@@ -95,7 +94,11 @@ impl<'a> FilteredExpression<'a> {
 
 impl<'a> Evaluate for FilteredExpression<'a> {
     fn evaluate(&self, values: Context) -> Result<Value> {
-        let base_value = self.expression.evaluate(values.clone())?;
+        let result = self.expression.evaluate(values.clone());
+        let base_value = match result {
+            Ok(value) => value,
+            Err(_err) => Value::Empty,
+        };
         self.filter.filter(base_value, values)
     }
 }
@@ -117,7 +120,7 @@ impl ValueRefExpression {
 }
 impl Evaluate for ValueRefExpression {
     fn evaluate(&self, values: Context) -> Result<Value> {
-        Ok(values.find(&self.identifier))
+        values.find(&self.identifier)
     }
 }
 
@@ -179,11 +182,7 @@ pub struct FullExpressionEvaluator<'a> {
 impl<'a> Render for FullExpressionEvaluator<'a> {
     fn render(&self, out: &mut dyn Write, params: Context) -> Result<()> {
         let value = self.evaluate(params)?;
-        if let Value::Empty = value {
-            Err(Error::from(ErrorKind::UndefinedValue(
-                SourceLocationInfo::new(1, 2),
-            )))
-        } else if let Err(err) = out.write(value.to_string().as_bytes()) {
+        if let Err(err) = out.write(value.to_string().as_bytes()) {
             Err(Error::Io(err))
         } else {
             Ok(())

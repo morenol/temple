@@ -98,11 +98,11 @@ fn undefined_value() -> Result<()> {
     let result = assert_render_template_eq("{{ undefinedValue }}", "", None);
     assert_matches!(
         result,
-        Err(Error::ParseRender(ErrorKind::UndefinedValue(_)))
+        Err(Error::ParseRender(ErrorKind::UndefinedValue(_, _)))
     );
     assert_eq!(
         result.err().unwrap().to_string(),
-        "noname.j2tpl:1:2: error: Value is not defined".to_string()
+        "noname.j2tpl:0:0: error: undefinedValue is not defined".to_string()
     );
     Ok(())
 }

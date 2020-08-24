@@ -1,3 +1,5 @@
+use crate::error::{Error, ErrorKind, Result};
+use crate::source::SourceLocationInfo;
 use crate::value::{Value, ValuesMap};
 use crate::TemplateEnv;
 use std::sync::{Arc, RwLock};
@@ -28,18 +30,21 @@ impl<'a> Context<'a> {
         self.scopes.pop();
         self.scopes.last()
     }
-    pub fn find(&self, key: &str) -> Value {
+    pub fn find(&self, key: &str) -> Result<Value> {
         for scope in self.scopes.iter().rev() {
             if let Some(value) = scope.read().unwrap().get(key) {
-                return value.clone();
+                return Ok(value.clone());
             }
         }
         if let Some(value) = self.external_scope.get(key) {
-            value.clone()
+            Ok(value.clone())
         } else if let Some(value) = self.global_scope.read().unwrap().get(key) {
-            value.clone()
+            Ok(value.clone())
         } else {
-            Value::Empty
+            Err(Error::from(ErrorKind::UndefinedValue(
+                key.to_string(),
+                SourceLocationInfo::new(0, 0),
+            )))
         }
     }
     pub fn set_global(&mut self, global_scope: Arc<RwLock<ValuesMap>>) {
