@@ -1,4 +1,4 @@
-use crate::error::{Error, ErrorKind, Result};
+use crate::error::{Error, ParseErrorKind, Result};
 use crate::source::SourceLocationInfo;
 use crate::value::{Value, ValuesMap};
 use crate::TemplateEnv;
@@ -41,7 +41,7 @@ impl<'a> Context<'a> {
         } else if let Some(value) = self.global_scope.read().unwrap().get(key) {
             Ok(value.clone())
         } else {
-            Err(Error::from(ErrorKind::UndefinedValue(
+            Err(Error::from(ParseErrorKind::UndefinedValue(
                 key.to_string(),
                 SourceLocationInfo::new(0, 0),
             )))

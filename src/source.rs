@@ -58,6 +58,9 @@ impl SourceLocationInfo {
             }
         }
     }
+    pub fn set_filename(&mut self, filename: String) {
+        self.filename = filename;
+    }
 }
 
 #[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]

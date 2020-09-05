@@ -4,30 +4,27 @@ use std::error;
 use std::fmt;
 use std::io;
 
+#[non_exhaustive]
 #[derive(Debug)]
 pub enum Error {
     Io(io::Error),
-    ParseRender(ErrorKind),
+    ParseError(ParseErrorKind),
+    RenderError(RenderErrorKind),
 }
 
+#[non_exhaustive]
 #[derive(Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
-pub enum ErrorKind {
+pub enum ParseErrorKind {
     Unspecified,
     YetUnsupported,
-    FileNotFound,
     ExtensionDisabled,
     TemplateEnvAbsent,
     TemplateNotFound(String),
-    TemplateNotParsed,
-    InvalidValueType,
     InvalidTemplateName,
-    InvalidOperation,
     UndefinedValue(String, SourceLocationInfo),
     ExpectedStringLiteral(SourceLocationInfo),
     ExpectedIdentifier(SourceLocationInfo),
-    ExpectedSquareBracket(SourceLocationInfo),
-    ExpectedRoundBracket(SourceLocationInfo),
-    ExpectedCurlyBracket(SourceLocationInfo),
+    ExpectedBracket(&'static str, SourceLocationInfo),
     ExpectedToken(&'static str, SourceLocationInfo),
     ExpectedExpression(SourceLocationInfo),
     ExpectedEndOfStatement(SourceLocationInfo),
@@ -44,84 +41,74 @@ pub enum ErrorKind {
     UnexpectedRawEnd(SourceLocationInfo),
 }
 
-impl ErrorKind {
+impl ParseErrorKind {
     fn as_cow_str(&self) -> Cow<'_, str> {
         match &*self {
-            ErrorKind::Unspecified => "Unspecified error".into(),
-            ErrorKind::YetUnsupported => "Jinja feature not yet supported".into(),
-            ErrorKind::FileNotFound => "File not found".into(),
-            ErrorKind::ExtensionDisabled => "Extension disabled".into(),
-            ErrorKind::TemplateEnvAbsent => "Expected template environment".into(),
-            ErrorKind::TemplateNotFound(tmp) => format!("Template {} not found", tmp).into(),
-            ErrorKind::TemplateNotParsed => "Template not parsed".into(),
-            ErrorKind::InvalidValueType => {
-                "Invalid type of the value in the particular context".into()
-            }
-            ErrorKind::InvalidTemplateName => "Invalid name of the template".into(),
-            ErrorKind::InvalidOperation => "Invalid operation".into(),
-            //           ErrorKind::MetadataParseError => "Metadata Parse Error ", // TODO: Solve in jinja2cpp
-            ErrorKind::UndefinedValue(value, location) => format!(
+            ParseErrorKind::Unspecified => "Unspecified error".into(),
+            ParseErrorKind::YetUnsupported => "Jinja feature not yet supported".into(),
+            ParseErrorKind::ExtensionDisabled => "Extension disabled".into(),
+            ParseErrorKind::TemplateEnvAbsent => "Expected template environment".into(),
+            ParseErrorKind::TemplateNotFound(tmp) => format!("Template {} not found", tmp).into(),
+            ParseErrorKind::InvalidTemplateName => "Invalid name of the template".into(),
+            //           ParseErrorKind::MetadataParseError => "Metadata Parse Error ", // TODO: Solve in jinja2cpp
+            ParseErrorKind::UndefinedValue(value, location) => format!(
                 "{} error: {} is not defined",
                 location.position_log(),
                 value
             )
             .into(),
-            ErrorKind::ExpectedStringLiteral(_location) => "String literal expected".into(),
-            ErrorKind::ExpectedIdentifier(_location) => "Identifier expected".into(),
-            ErrorKind::ExpectedSquareBracket(location) => {
-                format!("{} error: ']' expected", location.position_log()).into()
+            ParseErrorKind::ExpectedStringLiteral(_location) => "String literal expected".into(),
+            ParseErrorKind::ExpectedIdentifier(_location) => "Identifier expected".into(),
+            ParseErrorKind::ExpectedBracket(bracket, location) => {
+                format!("{} error: '{}' expected", location.position_log(), bracket).into()
             }
-            ErrorKind::ExpectedRoundBracket(location) => {
-                format!("{} error: ')' expected", location.position_log()).into()
-            }
-            ErrorKind::ExpectedCurlyBracket(_location) => "'}}' expected".into(),
-            ErrorKind::ExpectedToken(s, location) => format!(
+            ParseErrorKind::ExpectedToken(s, location) => format!(
                 "{} error: Specific token expected ({})",
                 location.position_log(),
                 s
             )
             .into(),
-            ErrorKind::ExpectedExpression(location) => {
+            ParseErrorKind::ExpectedExpression(location) => {
                 format!("{} error: Expression expected", location.position_log()).into()
             }
-            ErrorKind::ExpectedEndOfStatement(_location) => "End of statement expected".into(),
-            ErrorKind::ExpectedRawEnd(location) => {
+            ParseErrorKind::ExpectedEndOfStatement(_location) => "End of statement expected".into(),
+            ParseErrorKind::ExpectedRawEnd(location) => {
                 format!("{} error: {{% endraw %}} expected", location.position_log()).into()
             }
-            ErrorKind::UnexpectedToken(location) => {
+            ParseErrorKind::UnexpectedToken(location) => {
                 format!("{} error: Unexpected token", location.position_log()).into()
             }
-            ErrorKind::UnexpectedStatement(_location) => "Unexpected statement".into(),
-            ErrorKind::UnexpectedCommentBegin(_location) => {
+            ParseErrorKind::UnexpectedStatement(_location) => "Unexpected statement".into(),
+            ParseErrorKind::UnexpectedCommentBegin(_location) => {
                 "Unexpected comment block begin ('{{#')".into()
             }
-            ErrorKind::UnexpectedCommentEnd(location) => format!(
+            ParseErrorKind::UnexpectedCommentEnd(location) => format!(
                 "{} error: Unexpected comment block end ('#}}')",
                 location.position_log()
             )
             .into(),
-            ErrorKind::UnexpectedExprBegin(_location) => {
+            ParseErrorKind::UnexpectedExprBegin(_location) => {
                 "Unexpected expression block begin ('{{{{}}')".into()
             }
-            ErrorKind::UnexpectedExprEnd(location) => format!(
+            ParseErrorKind::UnexpectedExprEnd(location) => format!(
                 "{} error: Unexpected expression block end ('}}}}')",
                 location.position_log()
             )
             .into(),
-            ErrorKind::UnexpectedStmtBegin(_location) => {
+            ParseErrorKind::UnexpectedStmtBegin(_location) => {
                 "Unexpected statement block begin ('{{%')".into()
             }
-            ErrorKind::UnexpectedStmtEnd(location) => format!(
+            ParseErrorKind::UnexpectedStmtEnd(location) => format!(
                 "{} error: Unexpected statement block end ('%}}')",
                 location.position_log()
             )
             .into(),
-            ErrorKind::UnexpectedRawBegin(location) => format!(
+            ParseErrorKind::UnexpectedRawBegin(location) => format!(
                 "{} error: Unexpected raw block begin ('{{% raw %}}')",
                 location.position_log()
             )
             .into(),
-            ErrorKind::UnexpectedRawEnd(location) => format!(
+            ParseErrorKind::UnexpectedRawEnd(location) => format!(
                 "{} error: Unexpected raw block end {{% endraw %}}",
                 location.position_log()
             )
@@ -130,26 +117,56 @@ impl ErrorKind {
     }
 }
 
+#[non_exhaustive]
+#[derive(Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+pub enum RenderErrorKind {
+    FileNotFound,
+    TemplateNotParsed,
+    InvalidOperation,
+    InvalidValueType,
+}
+
+impl RenderErrorKind {
+    fn as_cow_str(&self) -> Cow<'_, str> {
+        match &*self {
+            RenderErrorKind::FileNotFound => "File not found".into(),
+            RenderErrorKind::TemplateNotParsed => "Template not parsed".into(),
+            RenderErrorKind::InvalidOperation => "Invalid operation".into(),
+            RenderErrorKind::InvalidValueType => {
+                "Invalid type of the value in the particular context".into()
+            }
+        }
+    }
+}
+
 impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
             Error::Io(ref err) => err.fmt(f),
-            Error::ParseRender(ref err) => err.fmt(f),
+            Error::ParseError(ref err) => err.fmt(f),
+            Error::RenderError(ref err) => err.fmt(f),
         }
     }
 }
-impl error::Error for ErrorKind {}
+impl error::Error for ParseErrorKind {}
+impl error::Error for RenderErrorKind {}
 
 impl error::Error for Error {
     fn source(&self) -> Option<&(dyn error::Error + 'static)> {
         match *self {
             Error::Io(ref err) => err.source(),
-            Error::ParseRender(ref err) => Some(err),
+            Error::ParseError(ref err) => Some(err),
+            Error::RenderError(ref err) => Some(err),
         }
     }
 }
 
-impl fmt::Display for ErrorKind {
+impl fmt::Display for ParseErrorKind {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{}", self.as_cow_str())
+    }
+}
+impl fmt::Display for RenderErrorKind {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{}", self.as_cow_str())
     }
@@ -161,9 +178,15 @@ impl From<io::Error> for Error {
     }
 }
 
-impl From<ErrorKind> for Error {
-    fn from(err: ErrorKind) -> Error {
-        Error::ParseRender(err)
+impl From<ParseErrorKind> for Error {
+    fn from(err: ParseErrorKind) -> Error {
+        Error::ParseError(err)
+    }
+}
+
+impl From<RenderErrorKind> for Error {
+    fn from(err: RenderErrorKind) -> Error {
+        Error::RenderError(err)
     }
 }
 

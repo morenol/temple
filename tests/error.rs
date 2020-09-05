@@ -1,12 +1,12 @@
 use super::utils::assert_render_template_eq;
-use temple::error::{Error, ErrorKind, Result};
+use temple::error::{Error, ParseErrorKind, Result};
 
 #[test]
 fn expected_endraw() -> Result<()> {
     let result = assert_render_template_eq("{% raw %} there is not endraw", "", None);
     assert_matches!(
         result,
-        Err(Error::ParseRender(ErrorKind::ExpectedRawEnd(_)))
+        Err(Error::ParseError(ParseErrorKind::ExpectedRawEnd(_)))
     );
     assert_eq!(
         result.err().unwrap().to_string(),
@@ -20,7 +20,7 @@ fn unexpected_endraw() -> Result<()> {
     let result = assert_render_template_eq("{% raw %} {% endraw %} {% endraw %}", "", None);
     assert_matches!(
         result,
-        Err(Error::ParseRender(ErrorKind::UnexpectedRawEnd(_)))
+        Err(Error::ParseError(ParseErrorKind::UnexpectedRawEnd(_)))
     );
     assert_eq!(
         result.err().unwrap().to_string(),
@@ -35,7 +35,7 @@ fn unexpected_endcomment() -> Result<()> {
     let result = assert_render_template_eq("end of comment #}", "", None);
     assert_matches!(
         result,
-        Err(Error::ParseRender(ErrorKind::UnexpectedCommentEnd(_)))
+        Err(Error::ParseError(ParseErrorKind::UnexpectedCommentEnd(_)))
     );
     assert_eq!(
         result.err().unwrap().to_string(),
@@ -49,20 +49,20 @@ fn expected_expression() -> Result<()> {
     let result = assert_render_template_eq("{{          }}", "", None);
     assert_matches!(
         result,
-        Err(Error::ParseRender(ErrorKind::ExpectedExpression(_)))
+        Err(Error::ParseError(ParseErrorKind::ExpectedExpression(_)))
     );
     assert_eq!(
         result.err().unwrap().to_string(),
-        "noname.j2tpl:1:2: error: Expression expected".to_string()
+        "noname.j2tpl:1:12: error: Expression expected".to_string()
     );
     let result = assert_render_template_eq("{{ \"text\"[]         }}", "", None);
     assert_matches!(
         result,
-        Err(Error::ParseRender(ErrorKind::ExpectedExpression(_)))
+        Err(Error::ParseError(ParseErrorKind::ExpectedExpression(_)))
     );
     assert_eq!(
         result.err().unwrap().to_string(),
-        "noname.j2tpl:1:2: error: Expression expected".to_string()
+        "noname.j2tpl:1:10: error: Expression expected".to_string()
     );
 
     Ok(())
@@ -73,21 +73,21 @@ fn expected_right_bracket() -> Result<()> {
     let result = assert_render_template_eq("{{ \"text\"[2   }}", "", None);
     assert_matches!(
         result,
-        Err(Error::ParseRender(ErrorKind::ExpectedSquareBracket(_)))
+        Err(Error::ParseError(ParseErrorKind::ExpectedBracket("]", _)))
     );
     assert_eq!(
         result.err().unwrap().to_string(),
-        "noname.j2tpl:12-12: error: ']' expected".to_string()
+        "noname.j2tpl:1:14: error: ']' expected".to_string()
     );
     let result = assert_render_template_eq("{{ (2 + 2   }}", "", None);
     assert_matches!(
         result,
-        Err(Error::ParseRender(ErrorKind::ExpectedRoundBracket(_)))
+        Err(Error::ParseError(ParseErrorKind::ExpectedBracket(")", _)))
     );
 
     assert_eq!(
         result.err().unwrap().to_string(),
-        "noname.j2tpl:1:2: error: ')' expected".to_string()
+        "noname.j2tpl:1:12: error: ')' expected".to_string()
     );
 
     Ok(())
@@ -98,7 +98,7 @@ fn undefined_value() -> Result<()> {
     let result = assert_render_template_eq("{{ undefinedValue }}", "", None);
     assert_matches!(
         result,
-        Err(Error::ParseRender(ErrorKind::UndefinedValue(_, _)))
+        Err(Error::ParseError(ParseErrorKind::UndefinedValue(_, _)))
     );
     assert_eq!(
         result.err().unwrap().to_string(),
@@ -111,7 +111,7 @@ fn unexpected_expr_end() -> Result<()> {
     let result = assert_render_template_eq("{%  }}", "", None);
     assert_matches!(
         result,
-        Err(Error::ParseRender(ErrorKind::UnexpectedToken(_)))
+        Err(Error::ParseError(ParseErrorKind::UnexpectedToken(_)))
     );
     assert_eq!(
         result.err().unwrap().to_string(),
@@ -121,7 +121,7 @@ fn unexpected_expr_end() -> Result<()> {
     let result = assert_render_template_eq("   }}", "", None);
     assert_matches!(
         result,
-        Err(Error::ParseRender(ErrorKind::UnexpectedExprEnd(_)))
+        Err(Error::ParseError(ParseErrorKind::UnexpectedExprEnd(_)))
     );
     assert_eq!(
         result.err().unwrap().to_string(),
@@ -136,7 +136,7 @@ fn unexpected_statement_end() -> Result<()> {
     let result = assert_render_template_eq("   %}", "", None);
     assert_matches!(
         result,
-        Err(Error::ParseRender(ErrorKind::UnexpectedStmtEnd(_)))
+        Err(Error::ParseError(ParseErrorKind::UnexpectedStmtEnd(_)))
     );
     assert_eq!(
         result.err().unwrap().to_string(),
@@ -151,7 +151,7 @@ fn unexpected_raw_begin_end() -> Result<()> {
     let result = assert_render_template_eq("{{ {% raw %} }}", "", None);
     assert_matches!(
         result,
-        Err(Error::ParseRender(ErrorKind::UnexpectedRawBegin(_)))
+        Err(Error::ParseError(ParseErrorKind::UnexpectedRawBegin(_)))
     );
     assert_eq!(
         result.err().unwrap().to_string(),

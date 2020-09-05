@@ -1,4 +1,4 @@
-use crate::error::{Error, ErrorKind, Result};
+use crate::error::{Error, ParseErrorKind, Result};
 use crate::value::{Value, ValuesMap};
 use crate::FileSystemHandler;
 use crate::Template;
@@ -115,7 +115,7 @@ impl<'a> TemplateEnv<'a> {
             }
         }
         if not_found {
-            Err(Error::from(ErrorKind::TemplateNotFound(
+            Err(Error::from(ParseErrorKind::TemplateNotFound(
                 filename.to_string(),
             )))
         } else {
