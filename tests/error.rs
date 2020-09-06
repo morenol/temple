@@ -77,7 +77,7 @@ fn expected_right_bracket() -> Result<()> {
     );
     assert_eq!(
         result.err().unwrap().to_string(),
-        "noname.j2tpl:1:2: error: ']' expected".to_string()
+        "noname.j2tpl:12-12: error: ']' expected".to_string()
     );
     let result = assert_render_template_eq("{{ (2 + 2   }}", "", None);
     assert_matches!(

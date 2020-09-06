@@ -5,20 +5,19 @@ use crate::expression_evaluator::{
     ValueRefExpression,
 };
 use crate::filters::FilterExpression;
-use crate::lexer::Token;
+use crate::lexer::{PeekableLexer, Token};
 use crate::source::SourceLocationInfo;
 use crate::value::Value;
 
 use crate::renderer::ExpressionRenderer;
 use logos::{Lexer, Logos};
-use std::iter::Peekable;
 
 pub struct ExpressionParser {}
 
 impl ExpressionParser {
     pub fn parse<'a>(text: &'a str) -> Result<ExpressionRenderer> {
         let lexer: Lexer<Token<'a>> = Token::lexer(text);
-        let mut lexer: Peekable<Lexer<Token<'a>>> = lexer.peekable();
+        let mut lexer = PeekableLexer::new(lexer);
 
         let evaluator = ExpressionParser::full_expresion_parser(&mut lexer)?;
 
@@ -29,7 +28,7 @@ impl ExpressionParser {
     }
 
     pub fn full_expresion_parser<'a>(
-        mut lexer: &mut Peekable<Lexer<'a, Token<'a>>>,
+        mut lexer: &mut PeekableLexer<'a, Token<'a>>,
     ) -> Result<FullExpressionEvaluator<'a>> {
         let mut evaluator = FullExpressionEvaluator::default();
 
@@ -43,7 +42,7 @@ impl ExpressionParser {
     }
 
     fn parse_logical_or<'a>(
-        mut lexer: &mut Peekable<Lexer<'a, Token<'a>>>,
+        mut lexer: &mut PeekableLexer<'a, Token<'a>>,
     ) -> Result<Expression<'a>> {
         let left = ExpressionParser::parse_logical_and(&mut lexer)?;
         if let Some(Token::LogicalOr) = lexer.peek() {
@@ -59,7 +58,7 @@ impl ExpressionParser {
     }
 
     fn parse_logical_and<'a>(
-        mut lexer: &mut Peekable<Lexer<'a, Token<'a>>>,
+        mut lexer: &mut PeekableLexer<'a, Token<'a>>,
     ) -> Result<Expression<'a>> {
         let left = ExpressionParser::parse_logical_compare(&mut lexer)?;
         if let Some(Token::LogicalAnd) = lexer.peek() {
@@ -75,7 +74,7 @@ impl ExpressionParser {
     }
 
     fn parse_logical_compare<'a>(
-        mut lexer: &mut Peekable<Lexer<'a, Token<'a>>>,
+        mut lexer: &mut PeekableLexer<'a, Token<'a>>,
     ) -> Result<Expression<'a>> {
         let left = ExpressionParser::parse_string_concat(&mut lexer)?;
 
@@ -100,7 +99,7 @@ impl ExpressionParser {
     }
 
     fn parse_string_concat<'a>(
-        mut lexer: &mut Peekable<Lexer<'a, Token<'a>>>,
+        mut lexer: &mut PeekableLexer<'a, Token<'a>>,
     ) -> Result<Expression<'a>> {
         let left = ExpressionParser::parse_math_pow(&mut lexer)?;
         if let Some(Token::Tilde) = lexer.peek() {
@@ -115,9 +114,7 @@ impl ExpressionParser {
         Ok(left)
     }
 
-    fn parse_math_pow<'a>(
-        mut lexer: &mut Peekable<Lexer<'a, Token<'a>>>,
-    ) -> Result<Expression<'a>> {
+    fn parse_math_pow<'a>(mut lexer: &mut PeekableLexer<'a, Token<'a>>) -> Result<Expression<'a>> {
         let left = ExpressionParser::parse_math_plus_minus(&mut lexer)?;
         if let Some(Token::MulMul) = lexer.peek() {
             lexer.next();
@@ -132,7 +129,7 @@ impl ExpressionParser {
     }
 
     fn parse_math_plus_minus<'a>(
-        mut lexer: &mut Peekable<Lexer<'a, Token<'a>>>,
+        mut lexer: &mut PeekableLexer<'a, Token<'a>>,
     ) -> Result<Expression<'a>> {
         let left = ExpressionParser::parse_math_mul_div(&mut lexer)?;
         let binary_op = match lexer.peek() {
@@ -150,7 +147,7 @@ impl ExpressionParser {
     }
 
     fn parse_math_mul_div<'a>(
-        mut lexer: &mut Peekable<Lexer<'a, Token<'a>>>,
+        mut lexer: &mut PeekableLexer<'a, Token<'a>>,
     ) -> Result<Expression<'a>> {
         let left = ExpressionParser::parse_unary_plus_min(&mut lexer)?;
         let binary_op = match lexer.peek() {
@@ -171,7 +168,7 @@ impl ExpressionParser {
     }
 
     fn parse_unary_plus_min<'a>(
-        mut lexer: &mut Peekable<Lexer<'a, Token<'a>>>,
+        mut lexer: &mut PeekableLexer<'a, Token<'a>>,
     ) -> Result<Expression<'a>> {
         let unary_op = match lexer.peek() {
             Some(Token::Plus) => Some(UnaryOperation::Plus),
@@ -202,7 +199,7 @@ impl ExpressionParser {
         }
     }
     fn parse_filter_expression<'a>(
-        lexer: &mut Peekable<Lexer<'a, Token<'a>>>,
+        lexer: &mut PeekableLexer<'a, Token<'a>>,
     ) -> Result<FilterExpression<'a>> {
         let mut result: Option<FilterExpression> = None;
         loop {
@@ -242,7 +239,7 @@ impl ExpressionParser {
         Ok(result.unwrap())
     }
     fn parse_call_params<'a>(
-        lexer: &mut Peekable<Lexer<'a, Token<'a>>>,
+        lexer: &mut PeekableLexer<'a, Token<'a>>,
     ) -> Result<Option<CallParams<'a>>> {
         let mut params = CallParams::default();
         if let Some(Token::RBracket) = lexer.peek() {
@@ -274,13 +271,14 @@ impl ExpressionParser {
         if let Some(Token::RBracket) = lexer.next() {
             Ok(Some(params))
         } else {
+            let range = lexer.span();
             Err(Error::from(ErrorKind::ExpectedCurlyBracket(
-                SourceLocationInfo::new(1, 2),
+                SourceLocationInfo::new_with_range(range.start, range.end),
             )))
         }
     }
     fn parse_value_expression<'a>(
-        mut lexer: &mut Peekable<Lexer<'a, Token<'a>>>,
+        mut lexer: &mut PeekableLexer<'a, Token<'a>>,
     ) -> Result<Expression<'a>> {
         let token = lexer.next();
 
@@ -324,7 +322,7 @@ impl ExpressionParser {
     }
 
     fn parse_braced_expression_or_tuple<'a>(
-        mut lexer: &mut Peekable<Lexer<'a, Token<'a>>>,
+        mut lexer: &mut PeekableLexer<'a, Token<'a>>,
     ) -> Result<Expression<'a>> {
         let mut is_tuple: bool = false;
         let mut exprs = vec![];
@@ -362,7 +360,7 @@ impl ExpressionParser {
         }
     }
     fn parse_subscript<'a>(
-        mut lexer: &mut Peekable<Lexer<'a, Token<'a>>>,
+        mut lexer: &mut PeekableLexer<'a, Token<'a>>,
         expression: Expression<'a>,
     ) -> Result<Expression<'a>> {
         let mut subscript = SubscriptExpression::new(Box::new(expression));
@@ -374,8 +372,10 @@ impl ExpressionParser {
                     if let Some(Token::RSqBracket) = lexer.next() {
                         subscript.add_index(Box::new(expr));
                     } else {
+                        let range = lexer.span();
+
                         return Err(Error::from(ErrorKind::ExpectedSquareBracket(
-                            SourceLocationInfo::new(1, 2),
+                            SourceLocationInfo::new_with_range(range.start, range.end),
                         )));
                     }
                 }
@@ -387,8 +387,9 @@ impl ExpressionParser {
                             identifier.to_string(),
                         ))));
                     } else {
+                        let range = lexer.span();
                         return Err(Error::from(ErrorKind::ExpectedIdentifier(
-                            SourceLocationInfo::new(1, 2),
+                            SourceLocationInfo::new_with_range(range.start, range.end),
                         )));
                     }
                 }
@@ -398,7 +399,7 @@ impl ExpressionParser {
 
         Ok(Expression::SubscriptExpression(subscript))
     }
-    fn parse_tuple<'a>(mut lexer: &mut Peekable<Lexer<'a, Token<'a>>>) -> Result<Expression<'a>> {
+    fn parse_tuple<'a>(mut lexer: &mut PeekableLexer<'a, Token<'a>>) -> Result<Expression<'a>> {
         let mut tuple = TupleExpression::default();
         if let Some(Token::RSqBracket) = lexer.peek() {
             lexer.next();
@@ -418,12 +419,14 @@ impl ExpressionParser {
             lexer.next();
             Ok(Expression::Tuple(tuple))
         } else {
+            let range = lexer.span();
+
             Err(Error::from(ErrorKind::ExpectedSquareBracket(
-                SourceLocationInfo::new(1, 2),
+                SourceLocationInfo::new_with_range(range.start, range.end),
             )))
         }
     }
-    fn parse_dict<'a>(mut lexer: &mut Peekable<Lexer<'a, Token<'a>>>) -> Result<Expression<'a>> {
+    fn parse_dict<'a>(mut lexer: &mut PeekableLexer<'a, Token<'a>>) -> Result<Expression<'a>> {
         let mut dict = DictionaryExpression::default();
         if let Some(Token::RCrlBracket) = lexer.peek() {
             lexer.next();
@@ -442,22 +445,27 @@ impl ExpressionParser {
                         break;
                     }
                 } else {
+                    let range = lexer.span();
+
                     return Err(Error::from(ErrorKind::ExpectedToken(
                         ":",
-                        SourceLocationInfo::new(1, 2),
+                        SourceLocationInfo::new_with_range(range.start, range.end),
                     )));
                 }
             } else {
+                let range = lexer.span();
                 return Err(Error::from(ErrorKind::ExpectedStringLiteral(
-                    SourceLocationInfo::new(1, 2),
+                    SourceLocationInfo::new(range.start, range.end),
                 )));
             }
         }
         if let Some(Token::RCrlBracket) = lexer.next() {
             Ok(Expression::Dict(dict))
         } else {
+            let range = lexer.span();
+
             Err(Error::from(ErrorKind::ExpectedCurlyBracket(
-                SourceLocationInfo::new(1, 2),
+                SourceLocationInfo::new_with_range(range.start, range.end),
             )))
         }
     }
