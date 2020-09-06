@@ -1,5 +1,4 @@
 use enumn::N;
-use std::fmt;
 
 macro_rules! define_enum_regex {
     ($Name:ident { $($Variant:ident => $Regex:expr),+ $(,)*}, $Const_name:ident) => {
@@ -9,21 +8,6 @@ macro_rules! define_enum_regex {
         #[repr(usize)]
         pub enum $Name {
             $($Variant),*,
-        }
-
-        impl $Name{
-            fn as_str(&self) -> &str {
-                match *self {
-                    $($Name::$Variant => $Regex),
-                    *,
-                 }
-            }
-        }
-
-        impl fmt::Display for $Name {
-            fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-                write!(f, "{}", self.as_str())
-            }
         }
 
         pub const $Const_name: &'static str = concat!($("(", $Regex, ")|"),*);
