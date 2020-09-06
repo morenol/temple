@@ -54,7 +54,7 @@ impl SourceLocationInfo {
                 format!("{}:{}:{}:", self.filename, linecol.line, linecol.col)
             }
             SourceLocation::Range(range) => {
-                format!("{}:{}..{}:", self.filename, range.start, range.end)
+                format!("{}:{}-{}:", self.filename, range.start, range.end)
             }
         }
     }

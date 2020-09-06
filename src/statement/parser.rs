@@ -4,12 +4,11 @@ use super::{
 };
 use crate::error::{Error, ErrorKind, Result};
 use crate::expression_parser::ExpressionParser;
-use crate::lexer::Token;
+use crate::lexer::{PeekableLexer, Token};
 use crate::renderer::ComposedRenderer;
 use crate::source::SourceLocationInfo;
 use crate::statement::Evaluate;
 use logos::{Lexer, Logos};
-use std::iter::Peekable;
 pub struct StatementParser;
 use std::sync::Arc;
 
@@ -19,7 +18,7 @@ impl StatementParser {
         mut statementinfo_list: &mut StatementInfoList<'a>,
     ) -> Result<()> {
         let lexer: Lexer<Token<'a>> = Token::lexer(text);
-        let mut lexer: Peekable<Lexer<Token<'a>>> = lexer.peekable();
+        let mut lexer = PeekableLexer::new(lexer);
         let tok = lexer.next();
 
         match tok {
@@ -43,7 +42,7 @@ impl StatementParser {
         }
     }
     fn parse_if<'a>(
-        lexer: &mut Peekable<Lexer<'a, Token<'a>>>,
+        lexer: &mut PeekableLexer<'a, Token<'a>>,
         statementinfo_list: &mut StatementInfoList<'a>,
     ) -> Result<()> {
         let value = ExpressionParser::full_expresion_parser(lexer)?;
@@ -57,7 +56,7 @@ impl StatementParser {
         Ok(())
     }
     fn parse_elif<'a>(
-        lexer: &mut Peekable<Lexer<'a, Token<'a>>>,
+        lexer: &mut PeekableLexer<'a, Token<'a>>,
         statementinfo_list: &mut StatementInfoList<'a>,
     ) -> Result<()> {
         let value = ExpressionParser::full_expresion_parser(lexer)?;
@@ -121,7 +120,7 @@ impl StatementParser {
         Ok(())
     }
     fn parse_for<'a>(
-        lexer: &mut Peekable<Lexer<'a, Token<'a>>>,
+        lexer: &mut PeekableLexer<'a, Token<'a>>,
         statementinfo_list: &mut StatementInfoList<'a>,
     ) -> Result<()> {
         let mut vars = vec![];
@@ -165,7 +164,7 @@ impl StatementParser {
         }
     }
     fn parse_endfor<'a>(
-        _lexer: &mut Peekable<Lexer<'a, Token<'a>>>,
+        _lexer: &mut PeekableLexer<'a, Token<'a>>,
         statementinfo_list: &mut StatementInfoList<'a>,
     ) -> Result<()> {
         if statementinfo_list.len() <= 1 {
@@ -191,7 +190,7 @@ impl StatementParser {
         }
     }
     fn parse_with<'a>(
-        lexer: &mut Peekable<Lexer<'a, Token<'a>>>,
+        lexer: &mut PeekableLexer<'a, Token<'a>>,
         statementinfo_list: &mut StatementInfoList<'a>,
     ) -> Result<()> {
         let mut vars: Vec<(String, Box<dyn Evaluate + 'a>)> = vec![];
@@ -257,7 +256,7 @@ impl StatementParser {
         }
     }
     fn parse_include<'a>(
-        lexer: &mut Peekable<Lexer<'a, Token<'a>>>,
+        lexer: &mut PeekableLexer<'a, Token<'a>>,
         statementinfo_list: &mut StatementInfoList<'a>,
     ) -> Result<()> {
         if statementinfo_list.is_empty() {

@@ -1,4 +1,4 @@
-use logos::Logos;
+use logos::{Lexer, Logos};
 use std::borrow::Cow;
 
 #[derive(Logos, Debug, PartialEq)]
@@ -171,6 +171,48 @@ pub enum Token<'a> {
     ExprBegin,
     #[token("}}")]
     ExprEnd,
+}
+
+pub struct PeekableLexer<'source, T: Logos<'source>> {
+    lexer: Lexer<'source, T>,
+    peeked: Option<Option<T>>,
+}
+
+impl<'source, T> PeekableLexer<'source, T>
+where
+    T: Logos<'source>,
+{
+    pub fn new(lexer: Lexer<'source, T>) -> Self {
+        Self {
+            lexer,
+            peeked: None,
+        }
+    }
+    #[inline]
+    pub fn peek(&mut self) -> Option<&T> {
+        let lexer = &mut self.lexer;
+        self.peeked.get_or_insert_with(|| lexer.next()).as_ref()
+    }
+
+    #[inline]
+    pub fn span(&self) -> core::ops::Range<usize> {
+        self.lexer.span()
+    }
+}
+
+impl<'source, T> Iterator for PeekableLexer<'source, T>
+where
+    T: Logos<'source>,
+{
+    type Item = T;
+
+    #[inline]
+    fn next(&mut self) -> Option<Self::Item> {
+        match self.peeked.take() {
+            Some(token) => token,
+            None => self.lexer.next(),
+        }
+    }
 }
 
 #[test]
