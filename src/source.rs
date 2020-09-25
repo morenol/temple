@@ -1,4 +1,5 @@
 /// Byte range in the source.
+use std::fmt;
 pub type Span = core::ops::Range<usize>;
 
 #[derive(Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
@@ -60,6 +61,12 @@ impl SourceLocationInfo {
     }
     pub fn set_filename(&mut self, filename: String) {
         self.filename = filename;
+    }
+}
+
+impl fmt::Display for SourceLocationInfo {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{}", self.position_log())
     }
 }
 

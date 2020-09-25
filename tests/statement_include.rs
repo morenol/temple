@@ -82,7 +82,7 @@ fn error_include_missing() -> Result<()> {
     );
     assert_eq!(
         result.err().unwrap().to_string(),
-        "Template missing_inner_header.j2 not found".to_string()
+        "Template missing_inner_header.j2 not found.".to_string()
     );
 
     Ok(())

@@ -51,13 +51,13 @@ impl<'a> TemplateParser<'a> {
             match parse_error {
                 ParseErrorKind::ExpectedBracket(bracket, source) => {
                     let new_source = self.update_location(source, range);
-                    return Err(Error::from(ParseErrorKind::ExpectedBracket(
+                    Err(Error::from(ParseErrorKind::ExpectedBracket(
                         bracket, new_source,
-                    )));
+                    )))
                 }
                 ParseErrorKind::ExpectedExpression(source) => {
                     let new_source = self.update_location(source, range);
-                    return Err(Error::from(ParseErrorKind::ExpectedExpression(new_source)));
+                    Err(Error::from(ParseErrorKind::ExpectedExpression(new_source)))
                 }
                 _ => expression,
             }

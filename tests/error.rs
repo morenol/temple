@@ -102,7 +102,7 @@ fn undefined_value() -> Result<()> {
     );
     assert_eq!(
         result.err().unwrap().to_string(),
-        "noname.j2tpl:0:0: error: undefinedValue is not defined".to_string()
+        "noname.j2tpl:0:0: error: undefinedValue is not defined.".to_string()
     );
     Ok(())
 }
