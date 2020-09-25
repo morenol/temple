@@ -1,5 +1,5 @@
 use super::Value;
-use crate::error::{Error, ErrorKind, Result};
+use crate::error::{Error, RenderErrorKind, Result};
 use std::collections::HashMap;
 
 use regex::Regex;
@@ -9,7 +9,7 @@ impl Value {
         match self {
             Value::Integer(number) => Ok(Value::Integer(number.abs())),
             Value::Double(number) => Ok(Value::Double(number.abs())),
-            _ => Err(Error::from(ErrorKind::InvalidOperation)),
+            _ => Err(Error::from(RenderErrorKind::InvalidOperation)),
         }
     }
     pub fn capitalize(self) -> Result<Self> {
@@ -19,7 +19,7 @@ impl Value {
                 &s[0..1].to_string().to_uppercase(),
                 &s[1..],
             ))),
-            _ => Err(Error::from(ErrorKind::InvalidOperation)),
+            _ => Err(Error::from(RenderErrorKind::InvalidOperation)),
         }
     }
     pub fn center(self, mut params: HashMap<&str, Value>) -> Result<Self> {
@@ -79,7 +79,7 @@ impl Value {
                 Ok(Value::String(s))
             }
         } else {
-            Err(Error::from(ErrorKind::InvalidOperation))
+            Err(Error::from(RenderErrorKind::InvalidOperation))
         }
     }
 
@@ -91,7 +91,7 @@ impl Value {
                 Value::String(s) => Ok(Value::String(s.chars().next().unwrap().to_string())),
                 Value::ValuesList(values_list) => Ok(values_list.first().unwrap().clone()),
                 Value::ValuesMap(values_map) => Ok(values_map.values().next().unwrap().clone()),
-                _ => Err(Error::from(ErrorKind::InvalidOperation)),
+                _ => Err(Error::from(RenderErrorKind::InvalidOperation)),
             }
         }
     }
@@ -109,7 +109,7 @@ impl Value {
                 } else if let Value::Integer(number) = default_value {
                     Ok(number as f64)
                 } else {
-                    Err(Error::from(ErrorKind::InvalidOperation))
+                    Err(Error::from(RenderErrorKind::InvalidOperation))
                 }
             }
         }
@@ -126,7 +126,7 @@ impl Value {
                 if let Value::Integer(number) = default_value {
                     Ok(number)
                 } else {
-                    Err(Error::from(ErrorKind::InvalidOperation))
+                    Err(Error::from(RenderErrorKind::InvalidOperation))
                 }
             }
         }
@@ -137,7 +137,7 @@ impl Value {
             Value::String(s) => Ok(s.is_empty()),
             Value::ValuesMap(values_map) => Ok(values_map.is_empty()),
             Value::ValuesList(values_list) => Ok(values_list.is_empty()),
-            _ => Err(Error::from(ErrorKind::InvalidOperation)),
+            _ => Err(Error::from(RenderErrorKind::InvalidOperation)),
         }
     }
     pub fn max(self) -> Result<Self> {
@@ -148,7 +148,7 @@ impl Value {
                 Value::String(s) => Ok(Value::String(s.chars().max().unwrap().to_string())),
                 Value::ValuesList(values_list) => Ok(values_list.iter().max().unwrap().clone()),
                 Value::ValuesMap(values_map) => Ok(values_map.values().last().unwrap().clone()),
-                _ => Err(Error::from(ErrorKind::InvalidOperation)),
+                _ => Err(Error::from(RenderErrorKind::InvalidOperation)),
             }
         }
     }
@@ -161,7 +161,7 @@ impl Value {
                 Value::String(s) => Ok(Value::String(s.chars().min().unwrap().to_string())),
                 Value::ValuesList(values_list) => Ok(values_list.iter().min().unwrap().clone()),
                 Value::ValuesMap(values_map) => Ok(values_map.values().next().unwrap().clone()),
-                _ => Err(Error::from(ErrorKind::InvalidOperation)),
+                _ => Err(Error::from(RenderErrorKind::InvalidOperation)),
             }
         }
     }
@@ -174,7 +174,7 @@ impl Value {
                 Value::String(s) => Ok(Value::String(s.chars().last().unwrap().to_string())),
                 Value::ValuesList(values_list) => Ok(values_list.last().unwrap().clone()),
                 Value::ValuesMap(values_map) => Ok(values_map.values().last().unwrap().clone()),
-                _ => Err(Error::from(ErrorKind::InvalidOperation)),
+                _ => Err(Error::from(RenderErrorKind::InvalidOperation)),
             }
         }
     }
@@ -183,13 +183,13 @@ impl Value {
             Value::String(s) => Ok(s.len()),
             Value::ValuesMap(values_map) => Ok(values_map.len()),
             Value::ValuesList(values_list) => Ok(values_list.len()),
-            _ => Err(Error::from(ErrorKind::InvalidOperation)),
+            _ => Err(Error::from(RenderErrorKind::InvalidOperation)),
         }
     }
     pub fn lower(self) -> Result<Self> {
         match self {
             Value::String(s) => Ok(Value::String(s.to_lowercase())),
-            _ => Err(Error::from(ErrorKind::InvalidOperation)),
+            _ => Err(Error::from(RenderErrorKind::InvalidOperation)),
         }
     }
     pub fn round(self, mut params: HashMap<&str, Value>) -> Result<Self> {
@@ -206,15 +206,15 @@ impl Value {
                     "common" => Ok(Value::Double((value * pow10).round() / pow10)),
                     "ceil" => Ok(Value::Double((value * pow10).ceil() / pow10)),
                     "floor" => Ok(Value::Double((value * pow10).floor() / pow10)),
-                    _ => Err(Error::from(ErrorKind::InvalidValueType)),
+                    _ => Err(Error::from(RenderErrorKind::InvalidValueType)),
                 }
             } else {
-                Err(Error::from(ErrorKind::InvalidValueType))
+                Err(Error::from(RenderErrorKind::InvalidValueType))
             }
         } else if let Value::Integer(value) = self {
             Ok(Value::Integer(value))
         } else {
-            Err(Error::from(ErrorKind::InvalidValueType))
+            Err(Error::from(RenderErrorKind::InvalidValueType))
         }
     }
     pub fn sum(self) -> Result<Self> {
@@ -225,7 +225,7 @@ impl Value {
                 .sum();
             Ok(Value::Double(value))
         } else {
-            Err(Error::from(ErrorKind::InvalidOperation))
+            Err(Error::from(RenderErrorKind::InvalidOperation))
         }
     }
     pub fn title(self) -> Result<Self> {
@@ -273,7 +273,7 @@ impl Value {
     pub fn upper(self) -> Result<Self> {
         match self {
             Value::String(s) => Ok(Value::String(s.to_uppercase())),
-            _ => Err(Error::from(ErrorKind::InvalidOperation)),
+            _ => Err(Error::from(RenderErrorKind::InvalidOperation)),
         }
     }
     pub fn wordcount(self) -> Result<Self> {
@@ -289,7 +289,7 @@ impl Value {
             }
             Ok(Value::Integer(count))
         } else {
-            Err(Error::from(ErrorKind::InvalidOperation))
+            Err(Error::from(RenderErrorKind::InvalidOperation))
         }
     }
 }

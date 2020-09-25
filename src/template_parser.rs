@@ -1,9 +1,10 @@
-use crate::error::{Error, ErrorKind, Result};
+use crate::error::{Error, ParseErrorKind, Result};
 use crate::expression_parser::ExpressionParser;
 use crate::keyword::{RegexEnum, ROUGH_TOKENIZER};
 use crate::lexer::Token;
+use crate::renderer::ExpressionRenderer;
 use crate::renderer::{ComposedRenderer, RawTextRenderer};
-use crate::source::{Range, SourceLocationInfo};
+use crate::source::{Range, SourceLocation, SourceLocationInfo};
 use crate::statement::parser::StatementParser;
 use crate::statement::{StatementInfo, StatementInfoList, StatementInfoType};
 use crate::template_env::TemplateEnv;
@@ -34,7 +35,36 @@ impl<'a> TemplateParser<'a> {
             current_line_info: RwLock::new(LineInfo::default()),
         })
     }
-
+    fn update_location(&self, source: &SourceLocationInfo, range: Range) -> SourceLocationInfo {
+        match &source.location {
+            SourceLocation::End => self.make_source_location(range.end),
+            SourceLocation::LineCol(line) => SourceLocationInfo::new(line.line, line.col),
+            SourceLocation::Range(old_range) => {
+                self.make_source_location(range.start + old_range.start)
+            }
+        }
+    }
+    fn parse_expression(&self, range: Range) -> Result<ExpressionRenderer<'a>> {
+        let text = self.template_body;
+        let expression = ExpressionParser::parse(&text[range.span()]);
+        if let Err(Error::ParseError(parse_error)) = &expression {
+            match parse_error {
+                ParseErrorKind::ExpectedBracket(bracket, source) => {
+                    let new_source = self.update_location(source, range);
+                    Err(Error::from(ParseErrorKind::ExpectedBracket(
+                        bracket, new_source,
+                    )))
+                }
+                ParseErrorKind::ExpectedExpression(source) => {
+                    let new_source = self.update_location(source, range);
+                    Err(Error::from(ParseErrorKind::ExpectedExpression(new_source)))
+                }
+                _ => expression,
+            }
+        } else {
+            expression
+        }
+    }
     fn fine_parsing(&self, renderer: Arc<ComposedRenderer<'a>>) -> Result<()> {
         let mut statements_stack: StatementInfoList = vec![];
         let root = StatementInfo::new(StatementInfoType::TemplateRoot, Token::Unknown, renderer);
@@ -54,8 +84,8 @@ impl<'a> TemplateParser<'a> {
                         .add_renderer(Box::new(new_renderer));
                 }
                 TextBlockType::Expression => {
-                    let text = self.template_body;
-                    let new_renderer = ExpressionParser::parse(&text[orig_block.range.span()])?;
+                    let new_renderer = self.parse_expression(orig_block.range)?;
+
                     statements_stack
                         .last()
                         .unwrap()
@@ -125,7 +155,7 @@ impl<'a> TemplateParser<'a> {
                         TextBlockType::RawText => {}
                         _ => {
                             self.finish_current_line(match_end);
-                            return Err(Error::from(ErrorKind::UnexpectedCommentBegin(
+                            return Err(Error::from(ParseErrorKind::UnexpectedCommentBegin(
                                 self.make_source_location(match_start),
                             )));
                         }
@@ -143,7 +173,7 @@ impl<'a> TemplateParser<'a> {
                         TextBlockType::Comment => {}
                         _ => {
                             self.finish_current_line(match_end);
-                            return Err(Error::from(ErrorKind::UnexpectedCommentEnd(
+                            return Err(Error::from(ParseErrorKind::UnexpectedCommentEnd(
                                 self.make_source_location(match_start),
                             )));
                         }
@@ -159,7 +189,7 @@ impl<'a> TemplateParser<'a> {
                     match self.current_block_info.read().unwrap().mode {
                         TextBlockType::RawText => {
                             self.finish_current_line(match_end);
-                            return Err(Error::from(ErrorKind::UnexpectedExprEnd(
+                            return Err(Error::from(ParseErrorKind::UnexpectedExprEnd(
                                 self.make_source_location(match_start),
                             )));
                         }
@@ -178,7 +208,7 @@ impl<'a> TemplateParser<'a> {
                     match self.current_block_info.read().unwrap().mode {
                         TextBlockType::RawText => {
                             self.finish_current_line(match_end);
-                            return Err(Error::from(ErrorKind::UnexpectedStmtEnd(
+                            return Err(Error::from(ParseErrorKind::UnexpectedStmtEnd(
                                 self.make_source_location(match_start),
                             )));
                         }
@@ -196,7 +226,7 @@ impl<'a> TemplateParser<'a> {
                         TextBlockType::Comment | TextBlockType::RawText => {}
                         _ => {
                             self.finish_current_line(match_end);
-                            return Err(Error::from(ErrorKind::UnexpectedRawBegin(
+                            return Err(Error::from(ParseErrorKind::UnexpectedRawBegin(
                                 self.make_source_location(match_start),
                             )));
                         }
@@ -209,7 +239,7 @@ impl<'a> TemplateParser<'a> {
                         TextBlockType::RawBlock => {}
                         _ => {
                             self.finish_current_line(match_end);
-                            return Err(Error::from(ErrorKind::UnexpectedRawEnd(
+                            return Err(Error::from(ParseErrorKind::UnexpectedRawEnd(
                                 self.make_source_location(match_start),
                             )));
                         }
@@ -226,7 +256,7 @@ impl<'a> TemplateParser<'a> {
         let len_of_temp = self.template_body.len();
         self.finish_current_line(len_of_temp);
         if let TextBlockType::RawBlock = self.current_block_info.read().unwrap().mode {
-            return Err(Error::from(ErrorKind::ExpectedRawEnd(
+            return Err(Error::from(ParseErrorKind::ExpectedRawEnd(
                 self.make_source_location(len_of_temp), // TODO: THERE is not handling of expected end of comment????
             )));
         }
@@ -420,10 +450,17 @@ impl<'a> TemplateParser<'a> {
     }
 
     fn make_source_location(&self, match_begin: usize) -> SourceLocationInfo {
+        for line in self.lines.read().unwrap().iter() {
+            if line.range.start >= match_begin && line.range.end < match_begin {
+                let col = match_begin - line.range.start;
+
+                let line_number = line.line_number;
+                return SourceLocationInfo::new(line_number, col);
+            }
+        }
         let line = self.current_line_info.read().unwrap();
         let line_number = line.line_number;
         let col = match_begin - line.range.start;
-
         SourceLocationInfo::new(line_number, col)
     }
 }

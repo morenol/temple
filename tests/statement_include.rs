@@ -1,5 +1,5 @@
 use std::sync::Arc;
-use temple::error::{Error, ErrorKind, Result};
+use temple::error::{Error, ParseErrorKind, Result};
 use temple::value::{Value, ValuesMap};
 use temple::{MemoryFileSystem, Template, TemplateEnv};
 
@@ -78,11 +78,11 @@ fn error_include_missing() -> Result<()> {
     );
     assert_matches!(
         result,
-        Err(Error::ParseRender(ErrorKind::TemplateNotFound(_)))
+        Err(Error::ParseError(ParseErrorKind::TemplateNotFound(_)))
     );
     assert_eq!(
         result.err().unwrap().to_string(),
-        "Template missing_inner_header.j2 not found".to_string()
+        "Template missing_inner_header.j2 not found.".to_string()
     );
 
     Ok(())
@@ -97,7 +97,7 @@ fn error_include_ignore_missing() -> Result<()> {
     );
     assert_matches!(
         result,
-        Err(Error::ParseRender(ErrorKind::ExpectedToken(_, _)))
+        Err(Error::ParseError(ParseErrorKind::ExpectedToken(_, _)))
     );
     assert_eq!(
         result.err().unwrap().to_string(),
@@ -113,7 +113,7 @@ fn error_include_without_context() -> Result<()> {
         assert_render_template_with_includes_eq("{% include \"simple.j2\" without c %}", "", None);
     assert_matches!(
         result,
-        Err(Error::ParseRender(ErrorKind::ExpectedToken(_, _)))
+        Err(Error::ParseError(ParseErrorKind::ExpectedToken(_, _)))
     );
     assert_eq!(
         result.err().unwrap().to_string(),
@@ -129,7 +129,7 @@ fn error_include_with_context() -> Result<()> {
         assert_render_template_with_includes_eq("{% include \"simple.j2\" with c %}", "", None);
     assert_matches!(
         result,
-        Err(Error::ParseRender(ErrorKind::ExpectedToken(_, _)))
+        Err(Error::ParseError(ParseErrorKind::ExpectedToken(_, _)))
     );
     assert_eq!(
         result.err().unwrap().to_string(),
