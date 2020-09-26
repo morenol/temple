@@ -16,7 +16,7 @@ fn unexpected_endraw() -> Result<()> {
     let result = assert_render_template_eq("{% raw %} {% endraw %} {% endraw %}", "", None);
     assert_eq!(
         result.err().unwrap().to_string(),
-        "noname.j2tpl:1:23: error: Unexpected raw block end {% endraw %}".to_string()
+        "noname.j2tpl:1:23: error: Unexpected raw block end ('{% endraw %}')".to_string()
     );
 
     Ok(())
@@ -79,7 +79,7 @@ fn unexpected_expr_end() -> Result<()> {
     let result = assert_render_template_eq("{%  }}", "", None);
     assert_eq!(
         result.err().unwrap().to_string(),
-        "noname.j2tpl:1:2: error: Unexpected token".to_string()
+        "noname.j2tpl:1:4: error: Unexpected token".to_string()
     );
 
     let result = assert_render_template_eq("   }}", "", None);
@@ -108,6 +108,25 @@ fn unexpected_raw_begin_end() -> Result<()> {
     assert_eq!(
         result.err().unwrap().to_string(),
         "noname.j2tpl:1:3: error: Unexpected raw block begin ('{% raw %}')".to_string()
+    );
+
+    Ok(())
+}
+
+#[test]
+fn error_with_multiple_lines() -> Result<()> {
+    let result = assert_render_template_eq(
+        "{% raw %} 
+          {% raw %} 
+
+          {% endraw %} 
+{% endraw %}",
+        "",
+        None,
+    );
+    assert_eq!(
+        result.err().unwrap().to_string(),
+        "noname.j2tpl:5:0: error: Unexpected raw block end ('{% endraw %}')".to_string()
     );
 
     Ok(())

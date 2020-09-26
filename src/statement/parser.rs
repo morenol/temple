@@ -24,21 +24,26 @@ impl StatementParser {
         match tok {
             Some(Token::If) => StatementParser::parse_if(&mut lexer, &mut statementinfo_list),
             Some(Token::Else) => StatementParser::parse_else(&mut statementinfo_list),
-            Some(Token::EndIf) => StatementParser::parse_endif(&mut statementinfo_list),
+            Some(Token::EndIf) => StatementParser::parse_endif(&mut lexer, &mut statementinfo_list),
             Some(Token::ElIf) => StatementParser::parse_elif(&mut lexer, &mut statementinfo_list),
             Some(Token::For) => StatementParser::parse_for(&mut lexer, &mut statementinfo_list),
             Some(Token::EndFor) => {
                 StatementParser::parse_endfor(&mut lexer, &mut statementinfo_list)
             }
             Some(Token::With) => StatementParser::parse_with(&mut lexer, &mut statementinfo_list),
-            Some(Token::EndWith) => StatementParser::parse_endwith(&mut statementinfo_list),
+            Some(Token::EndWith) => {
+                StatementParser::parse_endwith(&mut lexer, &mut statementinfo_list)
+            }
             Some(Token::Include) => {
                 StatementParser::parse_include(&mut lexer, &mut statementinfo_list)
             }
-            Some(_) => Err(Error::from(ParseError::new(
-                ParseErrorKind::UnexpectedToken,
-                Some(SourceLocationInfo::new(1, 2)),
-            ))),
+            Some(_) => {
+                let range = lexer.span();
+                Err(Error::from(ParseError::new(
+                    ParseErrorKind::UnexpectedToken,
+                    Some(SourceLocationInfo::new_with_range(range.start, range.end)),
+                )))
+            }
             _ => todo!(),
         }
     }
@@ -85,10 +90,15 @@ impl StatementParser {
         statementinfo_list.push(statement_info);
         Ok(())
     }
-    fn parse_endif<'a>(statementinfo_list: &mut StatementInfoList<'a>) -> Result<()> {
+    fn parse_endif<'a>(
+        lexer: &mut PeekableLexer<'a, Token<'a>>,
+
+        statementinfo_list: &mut StatementInfoList<'a>,
+    ) -> Result<()> {
         if statementinfo_list.len() <= 1 {
+            let range = lexer.span();
             return Err(Error::from(ParseErrorKind::UnexpectedStatement(
-                SourceLocationInfo::new(1, 2),
+                SourceLocationInfo::new_with_range(range.start, range.end),
             )));
         }
         let mut info;
@@ -129,8 +139,9 @@ impl StatementParser {
             if let Some(Token::Identifier(identifier)) = lexer.next() {
                 vars.push(identifier.to_string());
             } else {
+                let range = lexer.span();
                 return Err(Error::from(ParseErrorKind::ExpectedIdentifier(
-                    SourceLocationInfo::new(1, 2),
+                    SourceLocationInfo::new_with_range(range.start, range.end),
                 )));
             }
             if let Some(Token::Comma) = lexer.peek() {
@@ -142,9 +153,10 @@ impl StatementParser {
         if let Some(Token::In) = lexer.next() {
             let expression = ExpressionParser::full_expresion_parser(lexer)?;
             if lexer.next().is_some() {
+                let range = lexer.span();
                 Err(Error::from(ParseError::new(
                     ParseErrorKind::UnexpectedToken,
-                    Some(SourceLocationInfo::new(1, 2)),
+                    Some(SourceLocationInfo::new_with_range(range.start, range.end)),
                 )))
             } else {
                 let composed_renderer = Arc::new(ComposedRenderer::new());
@@ -159,19 +171,21 @@ impl StatementParser {
                 Ok(())
             }
         } else {
+            let range = lexer.span();
             Err(Error::from(ParseError::new(
                 ParseErrorKind::ExpectedToken("in"),
-                Some(SourceLocationInfo::new(1, 2)),
+                Some(SourceLocationInfo::new_with_range(range.start, range.end)),
             )))
         }
     }
     fn parse_endfor<'a>(
-        _lexer: &mut PeekableLexer<'a, Token<'a>>,
+        lexer: &mut PeekableLexer<'a, Token<'a>>,
         statementinfo_list: &mut StatementInfoList<'a>,
     ) -> Result<()> {
         if statementinfo_list.len() <= 1 {
+            let range = lexer.span();
             return Err(Error::from(ParseErrorKind::UnexpectedStatement(
-                SourceLocationInfo::new(1, 2),
+                SourceLocationInfo::new_with_range(range.start, range.end),
             )));
         }
         let mut info = statementinfo_list.pop().unwrap();
@@ -186,8 +200,9 @@ impl StatementParser {
                 .add_renderer(Box::new(renderer));
             Ok(())
         } else {
+            let range = lexer.span();
             Err(Error::from(ParseErrorKind::UnexpectedStatement(
-                SourceLocationInfo::new(1, 2),
+                SourceLocationInfo::new_with_range(range.start, range.end),
             )))
         }
     }
@@ -201,9 +216,10 @@ impl StatementParser {
                 lexer.next();
                 ExpressionParser::full_expresion_parser(lexer)?
             } else {
+                let range = lexer.span();
                 return Err(Error::from(ParseError::new(
                     ParseErrorKind::ExpectedToken("="),
-                    Some(SourceLocationInfo::new(1, 2)),
+                    Some(SourceLocationInfo::new_with_range(range.start, range.end)),
                 )));
             };
             vars.push((identifier.to_string(), Box::new(value)));
@@ -214,14 +230,16 @@ impl StatementParser {
             }
         }
         if vars.is_empty() {
+            let range = lexer.span();
             return Err(Error::from(ParseErrorKind::ExpectedIdentifier(
-                SourceLocationInfo::new(1, 2),
+                SourceLocationInfo::new_with_range(range.start, range.end),
             )));
         }
         if lexer.peek().is_some() {
+            let range = lexer.span();
             return Err(Error::from(ParseError::new(
                 ParseErrorKind::UnexpectedToken,
-                Some(SourceLocationInfo::new(1, 2)),
+                Some(SourceLocationInfo::new_with_range(range.start, range.end)),
             )));
         }
         let composed_renderer = Arc::new(ComposedRenderer::new());
@@ -235,10 +253,14 @@ impl StatementParser {
         statementinfo_list.push(statement_info);
         Ok(())
     }
-    fn parse_endwith<'a>(statementinfo_list: &mut StatementInfoList<'a>) -> Result<()> {
+    fn parse_endwith<'a>(
+        lexer: &mut PeekableLexer<'a, Token<'a>>,
+        statementinfo_list: &mut StatementInfoList<'a>,
+    ) -> Result<()> {
         if statementinfo_list.len() <= 1 {
+            let range = lexer.span();
             return Err(Error::from(ParseErrorKind::UnexpectedStatement(
-                SourceLocationInfo::new(1, 2),
+                SourceLocationInfo::new_with_range(range.start, range.end),
             )));
         }
         let mut info = statementinfo_list.pop().unwrap();
@@ -253,8 +275,9 @@ impl StatementParser {
                 .add_renderer(Box::new(renderer));
             Ok(())
         } else {
+            let range = lexer.span();
             Err(Error::from(ParseErrorKind::UnexpectedStatement(
-                SourceLocationInfo::new(1, 2),
+                SourceLocationInfo::new_with_range(range.start, range.end),
             )))
         }
     }
@@ -263,8 +286,9 @@ impl StatementParser {
         statementinfo_list: &mut StatementInfoList<'a>,
     ) -> Result<()> {
         if statementinfo_list.is_empty() {
+            let range = lexer.span();
             return Err(Error::from(ParseErrorKind::UnexpectedStatement(
-                SourceLocationInfo::new(1, 2),
+                SourceLocationInfo::new_with_range(range.start, range.end),
             )));
         }
         let expr = ExpressionParser::full_expresion_parser(lexer)?;
@@ -314,14 +338,15 @@ impl StatementParser {
                 let range = lexer.span();
                 return Err(Error::from(ParseError::new(
                     ParseErrorKind::UnexpectedToken,
-                    Some(SourceLocationInfo::new(range.start, range.end)),
+                    Some(SourceLocationInfo::new_with_range(range.start, range.end)),
                 )));
             }
         }
         if lexer.next().is_some() {
+            let range = lexer.span();
             return Err(Error::from(ParseError::new(
                 ParseErrorKind::UnexpectedToken,
-                Some(SourceLocationInfo::new(1, 2)),
+                Some(SourceLocationInfo::new_with_range(range.start, range.end)),
             )));
         }
         let renderer = Statement::Include(IncludeStatement::new(

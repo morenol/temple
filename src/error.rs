@@ -80,7 +80,7 @@ pub enum ParseErrorKind {
     UnexpectedStmtEnd,
     #[error("Unexpected raw block begin ('{{% raw %}}')")]
     UnexpectedRawBegin,
-    #[error("Unexpected raw block end {{% endraw %}}")]
+    #[error("Unexpected raw block end ('{{% endraw %}}')")]
     UnexpectedRawEnd,
 }
 
