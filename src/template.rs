@@ -1,5 +1,5 @@
 use crate::context::Context;
-use crate::error::Result;
+use crate::error::{Error, Result};
 use crate::renderer::{ComposedRenderer, Render};
 use crate::template_env::TemplateEnv;
 use crate::template_parser::TemplateParser;
@@ -11,6 +11,7 @@ pub struct Template<'a> {
     body: Cow<'a, str>,
     template_env: Arc<&'a TemplateEnv<'a>>,
     renderer: Option<ComposedRenderer<'a>>,
+    template_name: Option<String>,
 }
 
 impl<'a> Template<'a> {
@@ -19,6 +20,18 @@ impl<'a> Template<'a> {
             template_env,
             renderer: None,
             body: Cow::Borrowed(""),
+            template_name: None,
+        })
+    }
+    pub fn new_with_filename(
+        template_env: Arc<&'a TemplateEnv>,
+        template_name: String,
+    ) -> Result<Self> {
+        Ok(Self {
+            template_env,
+            renderer: None,
+            body: Cow::Borrowed(""),
+            template_name: Some(template_name),
         })
     }
 
@@ -60,7 +73,17 @@ impl<'a> Template<'a> {
 impl<'a> Render for Template<'a> {
     fn render(&self, out: &mut dyn Write, params: Context) -> Result<()> {
         if let Some(ref renderer) = self.renderer {
-            renderer.render(out, params)
+            let result = renderer.render(out, params);
+            if let Err(Error::ParseError(mut parse_error)) = result {
+                if let Some(tpl_name) = &self.template_name {
+                    let mut source = parse_error.location;
+                    source.set_filename(tpl_name.to_owned());
+                    parse_error.location = source;
+                }
+                Err(Error::ParseError(parse_error))
+            } else {
+                result
+            }
         } else {
             todo!()
         }

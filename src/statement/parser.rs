@@ -276,9 +276,10 @@ impl StatementParser {
             if let Some(Token::Missing) = lexer.peek() {
                 is_ignore_missing = true;
             } else {
+                let range = lexer.span();
                 return Err(Error::from(ParseError::new(
                     ParseErrorKind::ExpectedToken("missing"),
-                    Some(SourceLocationInfo::new(1, 2)),
+                    Some(SourceLocationInfo::new_with_range(range.start, range.end)),
                 )));
             }
             lexer.next();
@@ -289,9 +290,10 @@ impl StatementParser {
                 if let Some(Token::Context) = lexer.peek() {
                     lexer.next();
                 } else {
+                    let range = lexer.span();
                     return Err(Error::from(ParseError::new(
                         ParseErrorKind::ExpectedToken("context"),
-                        Some(SourceLocationInfo::new(1, 2)),
+                        Some(SourceLocationInfo::new_with_range(range.start, range.end)),
                     )));
                 }
             }
@@ -300,17 +302,19 @@ impl StatementParser {
                 if let Some(Token::Context) = lexer.peek() {
                     lexer.next();
                 } else {
+                    let range = lexer.span();
                     return Err(Error::from(ParseError::new(
                         ParseErrorKind::ExpectedToken("context"),
-                        Some(SourceLocationInfo::new(1, 2)),
+                        Some(SourceLocationInfo::new_with_range(range.start, range.end)),
                     )));
                 }
             }
             None => {}
             _ => {
+                let range = lexer.span();
                 return Err(Error::from(ParseError::new(
                     ParseErrorKind::UnexpectedToken,
-                    Some(SourceLocationInfo::new(1, 2)),
+                    Some(SourceLocationInfo::new(range.start, range.end)),
                 )));
             }
         }

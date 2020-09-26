@@ -56,6 +56,21 @@ impl<'a> TemplateParser<'a> {
             expression
         }
     }
+    fn parse_statement(
+        &self,
+        range: Range,
+        statements_stack: &mut StatementInfoList<'a>,
+    ) -> Result<()> {
+        let text = self.template_body;
+        let statement = StatementParser::parse(&text[range.span()], statements_stack);
+        if let Err(Error::ParseError(mut parse_error)) = statement {
+            let new_source = self.update_location(&parse_error.location, range);
+            parse_error.set_location(new_source);
+            Err(Error::ParseError(parse_error))
+        } else {
+            statement
+        }
+    }
     fn fine_parsing(&self, renderer: Arc<ComposedRenderer<'a>>) -> Result<()> {
         let mut statements_stack: StatementInfoList = vec![];
         let root = StatementInfo::new(StatementInfoType::TemplateRoot, Token::Unknown, renderer);
@@ -85,8 +100,7 @@ impl<'a> TemplateParser<'a> {
                 }
                 TextBlockType::Comment => {}
                 TextBlockType::Statement | TextBlockType::LineStatement => {
-                    let text = self.template_body;
-                    StatementParser::parse(&text[orig_block.range.span()], &mut statements_stack)?;
+                    self.parse_statement(orig_block.range, &mut statements_stack)?;
                 }
             }
         }

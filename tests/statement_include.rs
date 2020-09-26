@@ -93,7 +93,7 @@ fn error_include_ignore_missing() -> Result<()> {
     );
     assert_eq!(
         result.err().unwrap().to_string(),
-        "noname.j2tpl:1:2: error: Specific token expected (missing)".to_string()
+        "noname.j2tpl:1:44: error: Specific token expected (missing)".to_string()
     );
 
     Ok(())
@@ -105,7 +105,7 @@ fn error_include_without_context() -> Result<()> {
         assert_render_template_with_includes_eq("{% include \"simple.j2\" without c %}", "", None);
     assert_eq!(
         result.err().unwrap().to_string(),
-        "noname.j2tpl:1:2: error: Specific token expected (context)".to_string()
+        "noname.j2tpl:1:31: error: Specific token expected (context)".to_string()
     );
 
     Ok(())
@@ -117,7 +117,7 @@ fn error_include_with_context() -> Result<()> {
         assert_render_template_with_includes_eq("{% include \"simple.j2\" with c %}", "", None);
     assert_eq!(
         result.err().unwrap().to_string(),
-        "noname.j2tpl:1:2: error: Specific token expected (context)".to_string()
+        "noname.j2tpl:1:28: error: Specific token expected (context)".to_string()
     );
 
     Ok(())

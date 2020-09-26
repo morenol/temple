@@ -27,3 +27,19 @@ pub fn memory_filesystem_basic_template() -> Result<()> {
     assert_eq!(result, "Hello Rustaceans!".to_string());
     Ok(())
 }
+
+#[test]
+pub fn real_filesystem_template_with_error() -> Result<()> {
+    let mut temp_env = TemplateEnv::default();
+    let handler = RealFileSystem::new("tests/tests_data".to_string());
+    temp_env.add_filesystem_handler(Box::new(handler))?;
+    let template = temp_env.load_template("error.j2")?;
+    let context = ValuesMap::default();
+    let result = template.render_as_string(context);
+    assert_eq!(
+        result.err().unwrap().to_string(),
+        "error.j2: error: undefinedValue is not defined.".to_string()
+    );
+
+    Ok(())
+}
