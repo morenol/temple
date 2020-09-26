@@ -51,6 +51,7 @@ impl<'a> Template<'a> {
         let mut b: Vec<u8> = Vec::new();
         let mut context = Context::new(params, self.template_env.clone());
         context.set_global(self.template_env.globals());
+
         self.render(&mut b, context)?;
         Ok(String::from_utf8(b).expect("Found invalid UTF-8"))
     }

@@ -2,7 +2,7 @@ use super::{
     ElseStatement, ForStatement, IfStatement, IncludeStatement, Statement, StatementInfo,
     StatementInfoList, StatementInfoType, WithStatement,
 };
-use crate::error::{Error, ParseErrorKind, Result};
+use crate::error::{Error, ParseError, ParseErrorKind, Result};
 use crate::expression_parser::ExpressionParser;
 use crate::lexer::{PeekableLexer, Token};
 use crate::renderer::ComposedRenderer;
@@ -35,8 +35,9 @@ impl StatementParser {
             Some(Token::Include) => {
                 StatementParser::parse_include(&mut lexer, &mut statementinfo_list)
             }
-            Some(_) => Err(Error::from(ParseErrorKind::UnexpectedToken(
-                SourceLocationInfo::new(1, 2),
+            Some(_) => Err(Error::from(ParseError::new(
+                ParseErrorKind::UnexpectedToken,
+                Some(SourceLocationInfo::new(1, 2)),
             ))),
             _ => todo!(),
         }
@@ -141,8 +142,9 @@ impl StatementParser {
         if let Some(Token::In) = lexer.next() {
             let expression = ExpressionParser::full_expresion_parser(lexer)?;
             if lexer.next().is_some() {
-                Err(Error::from(ParseErrorKind::UnexpectedToken(
-                    SourceLocationInfo::new(1, 2),
+                Err(Error::from(ParseError::new(
+                    ParseErrorKind::UnexpectedToken,
+                    Some(SourceLocationInfo::new(1, 2)),
                 )))
             } else {
                 let composed_renderer = Arc::new(ComposedRenderer::new());
@@ -157,9 +159,9 @@ impl StatementParser {
                 Ok(())
             }
         } else {
-            Err(Error::from(ParseErrorKind::ExpectedToken(
-                "in",
-                SourceLocationInfo::new(1, 2),
+            Err(Error::from(ParseError::new(
+                ParseErrorKind::ExpectedToken("in"),
+                Some(SourceLocationInfo::new(1, 2)),
             )))
         }
     }
@@ -199,9 +201,9 @@ impl StatementParser {
                 lexer.next();
                 ExpressionParser::full_expresion_parser(lexer)?
             } else {
-                return Err(Error::from(ParseErrorKind::ExpectedToken(
-                    "=",
-                    SourceLocationInfo::new(1, 2),
+                return Err(Error::from(ParseError::new(
+                    ParseErrorKind::ExpectedToken("="),
+                    Some(SourceLocationInfo::new(1, 2)),
                 )));
             };
             vars.push((identifier.to_string(), Box::new(value)));
@@ -217,8 +219,9 @@ impl StatementParser {
             )));
         }
         if lexer.peek().is_some() {
-            return Err(Error::from(ParseErrorKind::UnexpectedToken(
-                SourceLocationInfo::new(1, 2),
+            return Err(Error::from(ParseError::new(
+                ParseErrorKind::UnexpectedToken,
+                Some(SourceLocationInfo::new(1, 2)),
             )));
         }
         let composed_renderer = Arc::new(ComposedRenderer::new());
@@ -273,9 +276,9 @@ impl StatementParser {
             if let Some(Token::Missing) = lexer.peek() {
                 is_ignore_missing = true;
             } else {
-                return Err(Error::from(ParseErrorKind::ExpectedToken(
-                    "missing",
-                    SourceLocationInfo::new(1, 2),
+                return Err(Error::from(ParseError::new(
+                    ParseErrorKind::ExpectedToken("missing"),
+                    Some(SourceLocationInfo::new(1, 2)),
                 )));
             }
             lexer.next();
@@ -286,9 +289,9 @@ impl StatementParser {
                 if let Some(Token::Context) = lexer.peek() {
                     lexer.next();
                 } else {
-                    return Err(Error::from(ParseErrorKind::ExpectedToken(
-                        "context",
-                        SourceLocationInfo::new(1, 2),
+                    return Err(Error::from(ParseError::new(
+                        ParseErrorKind::ExpectedToken("context"),
+                        Some(SourceLocationInfo::new(1, 2)),
                     )));
                 }
             }
@@ -297,22 +300,24 @@ impl StatementParser {
                 if let Some(Token::Context) = lexer.peek() {
                     lexer.next();
                 } else {
-                    return Err(Error::from(ParseErrorKind::ExpectedToken(
-                        "context",
-                        SourceLocationInfo::new(1, 2),
+                    return Err(Error::from(ParseError::new(
+                        ParseErrorKind::ExpectedToken("context"),
+                        Some(SourceLocationInfo::new(1, 2)),
                     )));
                 }
             }
             None => {}
             _ => {
-                return Err(Error::from(ParseErrorKind::UnexpectedToken(
-                    SourceLocationInfo::new(1, 2),
+                return Err(Error::from(ParseError::new(
+                    ParseErrorKind::UnexpectedToken,
+                    Some(SourceLocationInfo::new(1, 2)),
                 )));
             }
         }
         if lexer.next().is_some() {
-            return Err(Error::from(ParseErrorKind::UnexpectedToken(
-                SourceLocationInfo::new(1, 2),
+            return Err(Error::from(ParseError::new(
+                ParseErrorKind::UnexpectedToken,
+                Some(SourceLocationInfo::new(1, 2)),
             )));
         }
         let renderer = Statement::Include(IncludeStatement::new(

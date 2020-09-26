@@ -1,4 +1,4 @@
-use crate::error::{Error, ParseErrorKind, Result};
+use crate::error::{Error, ParseError, ParseErrorKind, Result};
 use crate::expression_evaluator::{
     BinaryOperation, CallParams, DictionaryExpression, Expression, FilteredExpression,
     FullExpressionEvaluator, SubscriptExpression, TupleExpression, UnaryOperation,
@@ -274,9 +274,9 @@ impl ExpressionParser {
             Ok(Some(params))
         } else {
             let range = lexer.span();
-            Err(Error::from(ParseErrorKind::ExpectedBracket(
-                "}",
-                SourceLocationInfo::new_with_range(range.start, range.end),
+            Err(Error::from(ParseError::new(
+                ParseErrorKind::ExpectedBracket("}"),
+                Some(SourceLocationInfo::new_with_range(range.start, range.end)),
             )))
         }
     }
@@ -301,15 +301,17 @@ impl ExpressionParser {
 
                 _ => {
                     let range = lexer.span();
-                    return Err(Error::from(ParseErrorKind::ExpectedExpression(
-                        SourceLocationInfo::new_with_range(range.start, range.end),
+                    return Err(Error::from(ParseError::new(
+                        ParseErrorKind::ExpectedExpression,
+                        Some(SourceLocationInfo::new_with_range(range.start, range.end)),
                     )));
                 }
             }
         } else {
             let range = lexer.span();
-            return Err(Error::from(ParseErrorKind::ExpectedExpression(
-                SourceLocationInfo::new_with_range(range.start, range.end),
+            return Err(Error::from(ParseError::new(
+                ParseErrorKind::ExpectedExpression,
+                Some(SourceLocationInfo::new_with_range(range.start, range.end)),
             )));
         };
 
@@ -341,9 +343,9 @@ impl ExpressionParser {
                 Ok(expr) => exprs.push(expr),
                 Err(err) => {
                     if !exprs.is_empty() {
-                        return Err(Error::from(ParseErrorKind::ExpectedBracket(
-                            ")",
-                            SourceLocationInfo::new_at_the_end(),
+                        return Err(Error::from(ParseError::new(
+                            ParseErrorKind::ExpectedBracket(")"),
+                            Some(SourceLocationInfo::new_at_the_end()),
                         )));
                     } else {
                         return Err(err);
@@ -380,9 +382,9 @@ impl ExpressionParser {
                     } else {
                         let range = lexer.span();
 
-                        return Err(Error::from(ParseErrorKind::ExpectedBracket(
-                            "]",
-                            SourceLocationInfo::new_with_range(range.start, range.end),
+                        return Err(Error::from(ParseError::new(
+                            ParseErrorKind::ExpectedBracket("]"),
+                            Some(SourceLocationInfo::new_with_range(range.start, range.end)),
                         )));
                     }
                 }
@@ -428,9 +430,9 @@ impl ExpressionParser {
         } else {
             let range = lexer.span();
 
-            Err(Error::from(ParseErrorKind::ExpectedBracket(
-                "]",
-                SourceLocationInfo::new_with_range(range.start, range.end),
+            Err(Error::from(ParseError::new(
+                ParseErrorKind::ExpectedBracket("]"),
+                Some(SourceLocationInfo::new_with_range(range.start, range.end)),
             )))
         }
     }
@@ -455,9 +457,9 @@ impl ExpressionParser {
                 } else {
                     let range = lexer.span();
 
-                    return Err(Error::from(ParseErrorKind::ExpectedToken(
-                        ":",
-                        SourceLocationInfo::new_with_range(range.start, range.end),
+                    return Err(Error::from(ParseError::new(
+                        ParseErrorKind::ExpectedToken(":"),
+                        Some(SourceLocationInfo::new_with_range(range.start, range.end)),
                     )));
                 }
             } else {
@@ -472,9 +474,9 @@ impl ExpressionParser {
         } else {
             let range = lexer.span();
 
-            Err(Error::from(ParseErrorKind::ExpectedBracket(
-                "}",
-                SourceLocationInfo::new_with_range(range.start, range.end),
+            Err(Error::from(ParseError::new(
+                ParseErrorKind::ExpectedBracket("}"),
+                Some(SourceLocationInfo::new_with_range(range.start, range.end)),
             )))
         }
     }

@@ -7,6 +7,7 @@ pub enum SourceLocation {
     Range(Range),
     LineCol(LineCol),
     End,
+    Unspecified,
 }
 #[derive(Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
 pub struct LineCol {
@@ -57,10 +58,20 @@ impl SourceLocationInfo {
             SourceLocation::Range(range) => {
                 format!("{}:{}-{}:", self.filename, range.start, range.end)
             }
+            SourceLocation::Unspecified => format!("{}:", self.filename),
         }
     }
     pub fn set_filename(&mut self, filename: String) {
         self.filename = filename;
+    }
+}
+
+impl Default for SourceLocationInfo {
+    fn default() -> Self {
+        Self {
+            filename: "noname.j2tpl".to_string(),
+            location: SourceLocation::Unspecified,
+        }
     }
 }
 
