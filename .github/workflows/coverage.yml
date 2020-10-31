@@ -20,12 +20,14 @@ jobs:
       with:
         path: ~/.cargo
         key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.toml') }}
-    - name: Run cargo-tarpaulin
-      uses: actions-rs/tarpaulin@v0.1
+    - name: Install cargo-tarpaulin
+      uses: actions-rs/install@v0.1
       with:
-        out-type: Lcov
-        version: '0.15'
-        args: '-- --test-threads 1'
+        crate: cargo-tarpaulin
+        version: latest
+        use-tool-cache: true
+    - name: Coverage with tarpaulin
+      run: cargo tarpaulin --all --all-features --out Lcov -- --test-threads 1
     - name: Coveralls upload
       uses: coverallsapp/github-action@master
       with:
