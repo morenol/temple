@@ -24,7 +24,7 @@ jobs:
       uses: actions-rs/tarpaulin@v0.1
       with:
         out-type: Lcov
-        version: '0.14.2'
+        version: '0.15'
         args: '-- --test-threads 1'
     - name: Coveralls upload
       uses: coverallsapp/github-action@master
