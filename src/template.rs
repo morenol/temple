@@ -3,10 +3,11 @@ use crate::error::{Error, Result};
 use crate::renderer::{ComposedRenderer, Render};
 use crate::template_env::TemplateEnv;
 use crate::template_parser::TemplateParser;
-use crate::value::ValuesMap;
+use serde::Serialize;
 use std::borrow::Cow;
 use std::io::Write;
 use std::sync::Arc;
+
 pub struct Template<'a> {
     body: Cow<'a, str>,
     template_env: Arc<&'a TemplateEnv<'a>>,
@@ -60,7 +61,7 @@ impl<'a> Template<'a> {
         Ok(())
     }
 
-    pub fn render_as_string(&self, params: ValuesMap) -> Result<String> {
+    pub fn render_as_string(&self, params: impl Serialize) -> Result<String> {
         let mut b: Vec<u8> = Vec::new();
         let mut context = Context::new(params, self.template_env.clone());
         context.set_global(self.template_env.globals());

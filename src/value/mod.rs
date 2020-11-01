@@ -1,6 +1,6 @@
+use serde::{Deserialize, Serialize};
 use std::fmt;
-
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub enum Value {
     Empty,
     Error,
