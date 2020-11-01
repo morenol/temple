@@ -82,6 +82,8 @@ pub enum ParseErrorKind {
     UnexpectedRawBegin,
     #[error("Unexpected raw block end ('{{% endraw %}}')")]
     UnexpectedRawEnd,
+    #[error("Unknown filter: {0}")]
+    UnknownFilter(String),
 }
 
 #[non_exhaustive]

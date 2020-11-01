@@ -116,8 +116,8 @@ fn unexpected_raw_begin_end() -> Result<()> {
 #[test]
 fn error_with_multiple_lines() -> Result<()> {
     let result = assert_render_template_eq(
-        "{% raw %} 
-          {% raw %} 
+        "{% raw %}
+          {% raw %}
 
           {% endraw %} 
 {% endraw %}",
@@ -127,6 +127,17 @@ fn error_with_multiple_lines() -> Result<()> {
     assert_eq!(
         result.err().unwrap().to_string(),
         "noname.j2tpl:5:0: error: Unexpected raw block end ('{% endraw %}')".to_string()
+    );
+
+    Ok(())
+}
+
+#[test]
+fn unknown_filter() -> Result<()> {
+    let result = assert_render_template_eq("{{ 10 | turn_to_42 }}", "42", None);
+    assert_eq!(
+        result.err().unwrap().to_string(),
+        "noname.j2tpl: error: Unknown filter: turn_to_42".to_string()
     );
 
     Ok(())

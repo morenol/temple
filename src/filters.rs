@@ -1,5 +1,5 @@
 use crate::context::Context;
-use crate::error::Result;
+use crate::error::{Error, ParseError, ParseErrorKind, Result};
 use crate::expression_evaluator::CallParams;
 use crate::value::Value;
 use std::collections::HashMap;
@@ -49,7 +49,10 @@ impl Filter {
             "truncate" => Ok(Filter::Truncate),
             "upper" => Ok(Filter::Upper),
             "wordcount" => Ok(Filter::WordCount),
-            _ => todo!(),
+            unknown => Err(Error::from(ParseError::new(
+                ParseErrorKind::UnknownFilter(unknown.to_string()),
+                None,
+            ))),
         }
     }
     pub fn filter<'a>(
