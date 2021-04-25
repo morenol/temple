@@ -1,5 +1,5 @@
 # temple
-[![Coverage Status](https://coveralls.io/repos/github/morenol/temple/badge.svg?branch=master)](https://coveralls.io/github/morenol/temple?branch=master)
+[![Coverage Status](https://coveralls.io/repos/github/morenol/temple/badge.svg?branch=main)](https://coveralls.io/github/morenol/temple?branch=main)
 [![Actions Status](https://github.com/morenol/temple/workflows/CI/badge.svg)](https://github.com/morenol/temple/actions)
 
 
