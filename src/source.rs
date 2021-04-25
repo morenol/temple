@@ -76,7 +76,7 @@ impl Default for SourceLocationInfo {
 }
 
 impl fmt::Display for SourceLocationInfo {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", self.position_log())
     }
 }

@@ -22,7 +22,7 @@ pub struct TemplateParser<'a> {
 }
 
 impl<'a> TemplateParser<'a> {
-    pub fn new(body: &'a str, env: Arc<&'a TemplateEnv>) -> Result<Self> {
+    pub fn new(body: &'a str, env: Arc<&'a TemplateEnv<'_>>) -> Result<Self> {
         let rough_tokenizer = Regex::new(&ROUGH_TOKENIZER[..ROUGH_TOKENIZER.len() - 1]).unwrap();
 
         Ok(Self {
@@ -72,7 +72,7 @@ impl<'a> TemplateParser<'a> {
         }
     }
     fn fine_parsing(&self, renderer: Arc<ComposedRenderer<'a>>) -> Result<()> {
-        let mut statements_stack: StatementInfoList = vec![];
+        let mut statements_stack: StatementInfoList<'_> = vec![];
         let root = StatementInfo::new(StatementInfoType::TemplateRoot, Token::Unknown, renderer);
         statements_stack.push(root);
         for orig_block in self.text_blocks.read().unwrap().iter() {

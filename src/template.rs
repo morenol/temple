@@ -16,7 +16,7 @@ pub struct Template<'a> {
 }
 
 impl<'a> Template<'a> {
-    pub fn new(template_env: Arc<&'a TemplateEnv>) -> Result<Self> {
+    pub fn new(template_env: Arc<&'a TemplateEnv<'_>>) -> Result<Self> {
         Ok(Self {
             template_env,
             renderer: None,
@@ -25,7 +25,7 @@ impl<'a> Template<'a> {
         })
     }
     pub fn new_with_filename(
-        template_env: Arc<&'a TemplateEnv>,
+        template_env: Arc<&'a TemplateEnv<'_>>,
         template_name: String,
     ) -> Result<Self> {
         Ok(Self {
@@ -72,7 +72,7 @@ impl<'a> Template<'a> {
 }
 
 impl<'a> Render for Template<'a> {
-    fn render(&self, out: &mut dyn Write, params: Context) -> Result<()> {
+    fn render(&self, out: &mut dyn Write, params: Context<'_>) -> Result<()> {
         if let Some(ref renderer) = self.renderer {
             let result = renderer.render(out, params);
             if let Err(Error::ParseError(mut parse_error)) = result {

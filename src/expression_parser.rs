@@ -15,8 +15,8 @@ use logos::{Lexer, Logos};
 pub struct ExpressionParser {}
 
 impl ExpressionParser {
-    pub fn parse<'a>(text: &'a str) -> Result<ExpressionRenderer> {
-        let lexer: Lexer<Token<'a>> = Token::lexer(text);
+    pub fn parse<'a>(text: &'a str) -> Result<ExpressionRenderer<'_>> {
+        let lexer: Lexer<'_, Token<'a>> = Token::lexer(text);
         let mut lexer = PeekableLexer::new(lexer);
 
         let evaluator = ExpressionParser::full_expresion_parser(&mut lexer)?;
@@ -201,7 +201,7 @@ impl ExpressionParser {
     fn parse_filter_expression<'a>(
         lexer: &mut PeekableLexer<'a, Token<'a>>,
     ) -> Result<FilterExpression<'a>> {
-        let mut result: Option<FilterExpression> = None;
+        let mut result: Option<FilterExpression<'_>> = None;
         loop {
             match lexer.next() {
                 Some(token) => {

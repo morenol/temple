@@ -14,7 +14,10 @@ pub struct Context<'a> {
 }
 
 impl<'a> Context<'a> {
-    pub fn new(external_scope: impl Serialize, callback_renderer: Arc<&'a TemplateEnv>) -> Self {
+    pub fn new(
+        external_scope: impl Serialize,
+        callback_renderer: Arc<&'a TemplateEnv<'_>>,
+    ) -> Self {
         let v = serde_json::to_value(&external_scope).unwrap();
         let external_scope: ValuesMap = serde_json::from_value(v).unwrap();
 

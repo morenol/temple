@@ -100,7 +100,7 @@ impl<'a> TemplateEnv<'a> {
         self.filesystem_handlers.push(handler);
         Ok(())
     }
-    pub fn load_template(&self, filename: &str) -> Result<Template> {
+    pub fn load_template(&self, filename: &str) -> Result<Template<'_>> {
         let mut template = Template::new_with_filename(Arc::new(self), filename.to_string())?;
         let mut not_found = true;
         for handler in &self.filesystem_handlers {

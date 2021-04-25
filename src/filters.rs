@@ -59,7 +59,7 @@ impl Filter {
         &self,
         base_value: Value,
         params: &Option<CallParams<'a>>,
-        context: Context,
+        context: Context<'_>,
     ) -> Result<Value> {
         match &self {
             Filter::Abs => base_value.abs(),
@@ -163,7 +163,7 @@ impl<'a> FilterExpression<'a> {
         self.parent = Some(Box::new(parent));
     }
 
-    pub fn filter(&self, base_value: Value, context: Context) -> Result<Value> {
+    pub fn filter(&self, base_value: Value, context: Context<'_>) -> Result<Value> {
         if self.parent.is_some() {
             self.filter.filter(
                 self.parent

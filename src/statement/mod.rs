@@ -30,7 +30,7 @@ impl<'a> IfStatement<'a> {
     }
 }
 impl<'a> Render for IfStatement<'a> {
-    fn render(&self, out: &mut dyn Write, params: Context) -> Result<()> {
+    fn render(&self, out: &mut dyn Write, params: Context<'_>) -> Result<()> {
         let value = self.expression.evaluate(params.clone())?;
         if let Value::Boolean(true) = value {
             self.body.as_ref().unwrap().render(out, params)?
@@ -67,7 +67,7 @@ impl<'a> ElseStatement<'a> {
         self.body = Some(else_body);
     }
 
-    fn should_render(&self, values: Context) -> bool {
+    fn should_render(&self, values: Context<'_>) -> bool {
         self.expression.is_none()
             || match self.expression.as_ref().unwrap().evaluate(values) {
                 Ok(Value::Boolean(boolean)) => boolean,
@@ -76,7 +76,7 @@ impl<'a> ElseStatement<'a> {
     }
 }
 impl<'a> Render for ElseStatement<'a> {
-    fn render(&self, out: &mut dyn Write, params: Context) -> Result<()> {
+    fn render(&self, out: &mut dyn Write, params: Context<'_>) -> Result<()> {
         self.body.as_ref().unwrap().render(out, params)
     }
 }
@@ -97,7 +97,7 @@ impl<'a> WithStatement<'a> {
     }
 }
 impl<'a> Render for WithStatement<'a> {
-    fn render(&self, out: &mut dyn Write, params: Context) -> Result<()> {
+    fn render(&self, out: &mut dyn Write, params: Context<'_>) -> Result<()> {
         let mut inner_values = params.clone();
         let scope = inner_values.enter_scope();
         for (name, value) in &self.scope_vars {
@@ -130,7 +130,7 @@ impl<'a> ForStatement<'a> {
         &self,
         loop_value: Value,
         out: &mut dyn Write,
-        mut params: Context,
+        mut params: Context<'_>,
         _level: usize,
     ) -> Result<()> {
         let loop_items: ValuesList = loop_value.into();
@@ -165,7 +165,7 @@ impl<'a> ForStatement<'a> {
     }
 }
 impl<'a> Render for ForStatement<'a> {
-    fn render(&self, out: &mut dyn Write, params: Context) -> Result<()> {
+    fn render(&self, out: &mut dyn Write, params: Context<'_>) -> Result<()> {
         let loop_value = self.value.evaluate(params.clone())?;
         self.render_loop(loop_value, out, params, 0)?;
         Ok(())
@@ -191,7 +191,7 @@ impl<'a> IncludeStatement<'a> {
     }
 }
 impl<'a> Render for IncludeStatement<'a> {
-    fn render(&self, out: &mut dyn Write, params: Context) -> Result<()> {
+    fn render(&self, out: &mut dyn Write, params: Context<'_>) -> Result<()> {
         let template_env = params.get_renderer_callback();
         let name = self.expr_name.evaluate(params.clone())?.to_string();
         let template_result = template_env.load_template(&name);
@@ -242,7 +242,7 @@ impl<'a> Statement<'a> {
     }
 }
 impl<'a> Render for Statement<'a> {
-    fn render(&self, out: &mut dyn Write, params: Context) -> Result<()> {
+    fn render(&self, out: &mut dyn Write, params: Context<'_>) -> Result<()> {
         match self {
             Statement::If(statement) => statement.render(out, params),
             Statement::Else(statement) => statement.render(out, params),

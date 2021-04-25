@@ -8,7 +8,7 @@ use std::collections::HashMap;
 use std::io::Write;
 
 pub trait Evaluate {
-    fn evaluate(&self, values: Context) -> Result<Value>;
+    fn evaluate(&self, values: Context<'_>) -> Result<Value>;
 }
 #[derive(Debug)]
 pub enum BinaryOperation {
@@ -50,7 +50,7 @@ impl<'a> TupleExpression<'a> {
     }
 }
 impl<'a> Evaluate for TupleExpression<'a> {
-    fn evaluate(&self, values: Context) -> Result<Value> {
+    fn evaluate(&self, values: Context<'_>) -> Result<Value> {
         let tuple: ValuesList = self
             .expressions
             .iter()
@@ -73,7 +73,7 @@ impl<'a> DictionaryExpression<'a> {
     }
 }
 impl<'a> Evaluate for DictionaryExpression<'a> {
-    fn evaluate(&self, values: Context) -> Result<Value> {
+    fn evaluate(&self, values: Context<'_>) -> Result<Value> {
         let mut dict = ValuesMap::new();
         for (key, expression) in self.elems.iter() {
             dict.insert(key.to_string(), expression.evaluate(values.clone())?);
@@ -93,7 +93,7 @@ impl<'a> FilteredExpression<'a> {
 }
 
 impl<'a> Evaluate for FilteredExpression<'a> {
-    fn evaluate(&self, values: Context) -> Result<Value> {
+    fn evaluate(&self, values: Context<'_>) -> Result<Value> {
         let result = self.expression.evaluate(values.clone());
         let base_value = match result {
             Ok(value) => value,
@@ -119,7 +119,7 @@ impl ValueRefExpression {
     }
 }
 impl Evaluate for ValueRefExpression {
-    fn evaluate(&self, values: Context) -> Result<Value> {
+    fn evaluate(&self, values: Context<'_>) -> Result<Value> {
         values.find(&self.identifier)
     }
 }
@@ -137,7 +137,7 @@ impl<'a> SubscriptExpression<'a> {
     }
 }
 impl<'a> Evaluate for SubscriptExpression<'a> {
-    fn evaluate(&self, values: Context) -> Result<Value> {
+    fn evaluate(&self, values: Context<'_>) -> Result<Value> {
         let mut cur = self.expression.evaluate(values.clone())?;
         for idx in &self.subscript_expression {
             let subscript = idx.evaluate(values.clone())?;
@@ -148,7 +148,7 @@ impl<'a> Evaluate for SubscriptExpression<'a> {
     }
 }
 impl<'a> Evaluate for Expression<'a> {
-    fn evaluate(&self, values: Context) -> Result<Value> {
+    fn evaluate(&self, values: Context<'_>) -> Result<Value> {
         let result = match &self {
             Expression::Constant(value) => value.clone(),
             Expression::BinaryExpression(op, left, right) => {
@@ -180,7 +180,7 @@ pub struct FullExpressionEvaluator<'a> {
 }
 
 impl<'a> Render for FullExpressionEvaluator<'a> {
-    fn render(&self, out: &mut dyn Write, params: Context) -> Result<()> {
+    fn render(&self, out: &mut dyn Write, params: Context<'_>) -> Result<()> {
         let value = self.evaluate(params)?;
         if let Err(err) = out.write(value.to_string().as_bytes()) {
             Err(Error::Io(err))
@@ -197,7 +197,7 @@ impl<'a> FullExpressionEvaluator<'a> {
 }
 
 impl<'a> Evaluate for FullExpressionEvaluator<'a> {
-    fn evaluate(&self, values: Context) -> Result<Value> {
+    fn evaluate(&self, values: Context<'_>) -> Result<Value> {
         let result = match &self.expression {
             Some(expression) => expression.evaluate(values)?,
             None => Value::default(),
@@ -216,7 +216,7 @@ impl<'a> CallParams<'a> {
     pub fn parse<'b>(
         &self,
         param_names: Vec<&'b str>,
-        context: Context,
+        context: Context<'_>,
     ) -> Result<HashMap<&'b str, Value>> {
         let mut parameters = HashMap::default();
         let mut idx = 0;

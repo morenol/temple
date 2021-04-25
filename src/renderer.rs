@@ -11,7 +11,7 @@ pub struct ComposedRenderer<'a> {
 }
 
 pub trait Render {
-    fn render(&self, out: &mut dyn Write, params: Context) -> Result<()>;
+    fn render(&self, out: &mut dyn Write, params: Context<'_>) -> Result<()>;
 }
 
 impl<'a> ComposedRenderer<'a> {
@@ -31,7 +31,7 @@ impl<'a> Default for ComposedRenderer<'a> {
 }
 
 impl<'a> Render for ComposedRenderer<'a> {
-    fn render(&self, out: &mut dyn Write, params: Context) -> Result<()> {
+    fn render(&self, out: &mut dyn Write, params: Context<'_>) -> Result<()> {
         for r in self.renderers.read().unwrap().iter() {
             r.render(out, params.clone())?;
         }
@@ -40,7 +40,7 @@ impl<'a> Render for ComposedRenderer<'a> {
 }
 
 impl<'a> fmt::Debug for ComposedRenderer<'a> {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "ComposedRenderer")
     }
 }
@@ -62,7 +62,7 @@ impl<'a> RawTextRenderer<'a> {
 }
 
 impl<'a> Render for RawTextRenderer<'a> {
-    fn render(&self, out: &mut dyn Write, _params: Context) -> Result<()> {
+    fn render(&self, out: &mut dyn Write, _params: Context<'_>) -> Result<()> {
         if let Err(err) = out.write(self.content.as_bytes()) {
             Err(Error::Io(err))
         } else {
@@ -76,7 +76,7 @@ pub struct ExpressionRenderer<'a> {
 }
 
 impl<'a> Render for ExpressionRenderer<'a> {
-    fn render(&self, out: &mut dyn Write, params: Context) -> Result<()> {
+    fn render(&self, out: &mut dyn Write, params: Context<'_>) -> Result<()> {
         self.expression.render(out, params)
     }
 }

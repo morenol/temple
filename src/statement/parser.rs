@@ -17,7 +17,7 @@ impl StatementParser {
         text: &'a str,
         mut statementinfo_list: &mut StatementInfoList<'a>,
     ) -> Result<()> {
-        let lexer: Lexer<Token<'a>> = Token::lexer(text);
+        let lexer: Lexer<'_, Token<'a>> = Token::lexer(text);
         let mut lexer = PeekableLexer::new(lexer);
         let tok = lexer.next();
 
@@ -81,7 +81,7 @@ impl StatementParser {
         Ok(())
     }
 
-    fn parse_else(statementinfo_list: &mut StatementInfoList) {
+    fn parse_else(statementinfo_list: &mut StatementInfoList<'_>) {
         let composed_renderer = Arc::new(ComposedRenderer::new());
         let renderer = Statement::Else(ElseStatement::new(None));
         let mut statement_info = StatementInfo::new(
