@@ -67,5 +67,5 @@ jobs:
       - uses: actions-rs/cargo@v1
         with:
           command: clippy
-          args: -- -D warnings
+          args: -- -D warnings -Drust-2018-idioms
 

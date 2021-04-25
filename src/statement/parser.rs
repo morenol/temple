@@ -23,7 +23,10 @@ impl StatementParser {
 
         match tok {
             Some(Token::If) => StatementParser::parse_if(&mut lexer, &mut statementinfo_list),
-            Some(Token::Else) => StatementParser::parse_else(&mut statementinfo_list),
+            Some(Token::Else) => {
+                StatementParser::parse_else(&mut statementinfo_list);
+                Ok(())
+            }
             Some(Token::EndIf) => StatementParser::parse_endif(&mut lexer, &mut statementinfo_list),
             Some(Token::ElIf) => StatementParser::parse_elif(&mut lexer, &mut statementinfo_list),
             Some(Token::For) => StatementParser::parse_for(&mut lexer, &mut statementinfo_list),
@@ -78,7 +81,7 @@ impl StatementParser {
         Ok(())
     }
 
-    fn parse_else(statementinfo_list: &mut StatementInfoList) -> Result<()> {
+    fn parse_else(statementinfo_list: &mut StatementInfoList) {
         let composed_renderer = Arc::new(ComposedRenderer::new());
         let renderer = Statement::Else(ElseStatement::new(None));
         let mut statement_info = StatementInfo::new(
@@ -88,7 +91,6 @@ impl StatementParser {
         );
         statement_info.renderer = Some(renderer);
         statementinfo_list.push(statement_info);
-        Ok(())
     }
     fn parse_endif<'a>(
         lexer: &mut PeekableLexer<'a, Token<'a>>,

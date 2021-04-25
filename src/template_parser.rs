@@ -496,6 +496,7 @@ enum TextBlockType {
     Expression,
     Statement,
     Comment,
+    #[allow(dead_code)]
     LineStatement,
     RawBlock,
 }

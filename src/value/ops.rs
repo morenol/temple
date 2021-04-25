@@ -218,7 +218,7 @@ impl BitOr for Value {
     type Output = Self;
     fn bitor(self, other: Self) -> Self::Output {
         match (self, other) {
-            (Value::Boolean(left), Value::Boolean(right)) => Value::Boolean(left || right),
+            (Value::Boolean(left), Value::Boolean(right)) => Value::Boolean(left | right),
             _ => Value::Error,
         }
     }
