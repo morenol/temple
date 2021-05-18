@@ -25,6 +25,7 @@ impl MemoryFileSystem {
 }
 
 impl FileSystemHandler for MemoryFileSystem {
+    #[allow(clippy::manual_map)]
     fn open_stream<'a>(&'a self, name: &str) -> Option<Box<dyn Read + 'a>> {
         if let Some(body) = self.files_map.get(name) {
             Some(Box::new(BufReader::new(body.as_bytes())))

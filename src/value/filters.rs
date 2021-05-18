@@ -178,6 +178,7 @@ impl Value {
             }
         }
     }
+    #[allow(clippy::len_without_is_empty)]
     pub fn len(self) -> Result<usize> {
         match self {
             Value::String(s) => Ok(s.len()),
