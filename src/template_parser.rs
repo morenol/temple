@@ -119,7 +119,7 @@ impl<'a> TemplateParser<'a> {
     }
 
     fn rough_parsing(&mut self) -> Result<()> {
-        let match_begin = self.rough_tokenizer.captures_iter(&self.template_body);
+        let match_begin = self.rough_tokenizer.captures_iter(self.template_body);
 
         for capture in match_begin {
             // This does not seem idiomatic to rust

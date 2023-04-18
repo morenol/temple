@@ -140,10 +140,10 @@ impl Value {
 impl PartialOrd for Value {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
         match (self, other) {
-            (Value::Integer(left), Value::Integer(right)) => left.partial_cmp(&right),
-            (Value::Integer(left), Value::Double(right)) => (*left as f64).partial_cmp(&right),
+            (Value::Integer(left), Value::Integer(right)) => left.partial_cmp(right),
+            (Value::Integer(left), Value::Double(right)) => (*left as f64).partial_cmp(right),
             (Value::Double(left), Value::Integer(right)) => left.partial_cmp(&(*right as f64)),
-            (Value::Double(left), Value::Double(right)) => left.partial_cmp(&right),
+            (Value::Double(left), Value::Double(right)) => left.partial_cmp(right),
             _ => todo!(),
         }
     }
@@ -157,7 +157,7 @@ impl Ord for Value {
         match (self, other) {
             (Value::Integer(left), Value::Integer(right)) => left.cmp(right),
             (Value::Integer(left), Value::Double(right)) => {
-                (*left as f64).partial_cmp(&right).unwrap()
+                (*left as f64).partial_cmp(right).unwrap()
             }
             (Value::Double(left), Value::Integer(right)) => {
                 left.partial_cmp(&(*right as f64)).unwrap()
@@ -238,12 +238,12 @@ fn operations() {
     assert_eq!(three.clone() / four.clone(), Value::Double(0.75));
     assert_eq!(five.clone() / four.clone(), Value::Double(1.25));
     assert_eq!(three.clone() / five.clone(), Value::Double(0.6));
-    assert_eq!(two.clone() * three.clone(), Value::String("222".to_owned()));
+    assert_eq!(two * three.clone(), Value::String("222".to_owned()));
     assert_eq!(five.clone() - three.clone(), Value::Double(2.0));
     assert_eq!(-four.clone(), Value::Double(-4.0));
     assert_eq!(!Value::Boolean(true), Value::Boolean(false));
     assert_eq!(five.clone() % three.clone(), Value::Double(2.0));
     assert_eq!(four.clone() % three.clone(), Value::Double(1.0));
     assert_eq!(five.pow(three.clone()), Value::Double(125.0));
-    assert_eq!(four.pow(three.clone()), Value::Double(64.0));
+    assert_eq!(four.pow(three), Value::Double(64.0));
 }

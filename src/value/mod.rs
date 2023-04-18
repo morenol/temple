@@ -1,7 +1,8 @@
 use serde::{Deserialize, Serialize};
 use std::fmt;
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize, Default)]
 pub enum Value {
+    #[default]
     Empty,
     Error,
     Boolean(bool),
@@ -55,12 +56,6 @@ impl fmt::Display for Value {
 pub type ValuesMap = std::collections::BTreeMap<String, Value>;
 
 pub type ValuesList = Vec<Value>;
-
-impl Default for Value {
-    fn default() -> Value {
-        Value::Empty
-    }
-}
 
 mod filters;
 mod from;
