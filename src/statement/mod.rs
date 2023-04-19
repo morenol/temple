@@ -257,7 +257,7 @@ pub struct StatementInfo<'a> {
     mode: StatementInfoType,
     pub current_composition: Arc<ComposedRenderer<'a>>,
     compositions: Vec<Arc<ComposedRenderer<'a>>>,
-    _token: Token<'a>,
+    _token: Option<Token<'a>>,
     renderer: Option<Statement<'a>>,
 }
 
@@ -272,7 +272,7 @@ pub enum StatementInfoType {
 impl<'a> StatementInfo<'a> {
     pub fn new(
         mode: StatementInfoType,
-        _token: Token<'a>,
+        _token: Option<Token<'a>>,
         renderers: Arc<ComposedRenderer<'a>>,
     ) -> Self {
         let current_composition = renderers.clone();
