@@ -1,12 +1,30 @@
 use logos::{Lexer, Logos};
-use std::borrow::Cow;
+use std::{
+    borrow::Cow,
+    num::{ParseFloatError, ParseIntError},
+};
 
-#[derive(Logos, Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone, Copy, Default)]
+pub struct ParseError;
+
+impl From<ParseIntError> for ParseError {
+    fn from(_: ParseIntError) -> Self {
+        ParseError
+    }
+}
+
+impl From<ParseFloatError> for ParseError {
+    fn from(_: ParseFloatError) -> Self {
+        ParseError
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Logos)]
+#[logos(
+    error = ParseError,
+)]
+#[logos(skip r"[ \t\n\f]+")]
 pub enum Token<'a> {
-    #[error]
-    #[regex(r"[ \t\n\f]+", logos::skip)]
-    Unknown,
-
     // One-symbol operators
     #[token("<")]
     Lt,
@@ -175,7 +193,7 @@ pub enum Token<'a> {
 
 pub struct PeekableLexer<'source, T: Logos<'source>> {
     lexer: Lexer<'source, T>,
-    peeked: Option<Option<T>>,
+    peeked: Option<Option<Result<T, T::Error>>>,
 }
 
 impl<'source, T> PeekableLexer<'source, T>
@@ -189,7 +207,7 @@ where
         }
     }
     #[inline]
-    pub fn peek(&mut self) -> Option<&T> {
+    pub fn peek(&mut self) -> Option<&Result<T, T::Error>> {
         let lexer = &mut self.lexer;
         self.peeked.get_or_insert_with(|| lexer.next()).as_ref()
     }
@@ -204,7 +222,7 @@ impl<'source, T> Iterator for PeekableLexer<'source, T>
 where
     T: Logos<'source>,
 {
-    type Item = T;
+    type Item = Result<T, T::Error>;
 
     #[inline]
     fn next(&mut self) -> Option<Self::Item> {
@@ -221,13 +239,13 @@ fn lex_numbers() {
     assert_eq!(
         tokens,
         &[
-            Token::IntegerNum(1),
-            Token::IntegerNum(42),
-            Token::Minus,
-            Token::IntegerNum(100),
-            Token::FloatNum(3.18),
-            Token::Minus,
-            Token::FloatNum(77.77),
+            Ok(Token::IntegerNum(1)),
+            Ok(Token::IntegerNum(42)),
+            Ok(Token::Minus),
+            Ok(Token::IntegerNum(100)),
+            Ok(Token::FloatNum(3.18)),
+            Ok(Token::Minus),
+            Ok(Token::FloatNum(77.77)),
         ]
     );
 }
@@ -238,8 +256,8 @@ fn lex_strings() {
     assert_eq!(
         tokens,
         &[
-            Token::String(std::borrow::Cow::Borrowed("some string")),
-            Token::String(std::borrow::Cow::Borrowed("")),
+            Ok(Token::String(std::borrow::Cow::Borrowed("some string"))),
+            Ok(Token::String(std::borrow::Cow::Borrowed(""))),
         ]
     );
 }
@@ -250,25 +268,25 @@ fn lex_math() {
     assert_eq!(
         tokens,
         &[
-            Token::LBracket,
-            Token::IntegerNum(2),
-            Token::Plus,
-            Token::IntegerNum(3),
-            Token::Mul,
-            Token::LBracket,
-            Token::IntegerNum(5),
-            Token::Minus,
-            Token::IntegerNum(1),
-            Token::RBracket,
-            Token::Plus,
-            Token::IntegerNum(2),
-            Token::MulMul,
-            Token::IntegerNum(3),
-            Token::Div,
-            Token::IntegerNum(16),
-            Token::RBracket,
-            Token::Percent,
-            Token::IntegerNum(5),
+            Ok(Token::LBracket),
+            Ok(Token::IntegerNum(2)),
+            Ok(Token::Plus),
+            Ok(Token::IntegerNum(3)),
+            Ok(Token::Mul),
+            Ok(Token::LBracket),
+            Ok(Token::IntegerNum(5)),
+            Ok(Token::Minus),
+            Ok(Token::IntegerNum(1)),
+            Ok(Token::RBracket),
+            Ok(Token::Plus),
+            Ok(Token::IntegerNum(2)),
+            Ok(Token::MulMul),
+            Ok(Token::IntegerNum(3)),
+            Ok(Token::Div),
+            Ok(Token::IntegerNum(16)),
+            Ok(Token::RBracket),
+            Ok(Token::Percent),
+            Ok(Token::IntegerNum(5)),
         ]
     );
 }

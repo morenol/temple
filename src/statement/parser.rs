@@ -19,18 +19,24 @@ impl StatementParser {
         let tok = lexer.next();
 
         match tok {
-            Some(Token::If) => StatementParser::parse_if(&mut lexer, statementinfo_list),
-            Some(Token::Else) => {
+            Some(Ok(Token::If)) => StatementParser::parse_if(&mut lexer, statementinfo_list),
+            Some(Ok(Token::Else)) => {
                 StatementParser::parse_else(statementinfo_list);
                 Ok(())
             }
-            Some(Token::EndIf) => StatementParser::parse_endif(&mut lexer, statementinfo_list),
-            Some(Token::ElIf) => StatementParser::parse_elif(&mut lexer, statementinfo_list),
-            Some(Token::For) => StatementParser::parse_for(&mut lexer, statementinfo_list),
-            Some(Token::EndFor) => StatementParser::parse_endfor(&mut lexer, statementinfo_list),
-            Some(Token::With) => StatementParser::parse_with(&mut lexer, statementinfo_list),
-            Some(Token::EndWith) => StatementParser::parse_endwith(&mut lexer, statementinfo_list),
-            Some(Token::Include) => StatementParser::parse_include(&mut lexer, statementinfo_list),
+            Some(Ok(Token::EndIf)) => StatementParser::parse_endif(&mut lexer, statementinfo_list),
+            Some(Ok(Token::ElIf)) => StatementParser::parse_elif(&mut lexer, statementinfo_list),
+            Some(Ok(Token::For)) => StatementParser::parse_for(&mut lexer, statementinfo_list),
+            Some(Ok(Token::EndFor)) => {
+                StatementParser::parse_endfor(&mut lexer, statementinfo_list)
+            }
+            Some(Ok(Token::With)) => StatementParser::parse_with(&mut lexer, statementinfo_list),
+            Some(Ok(Token::EndWith)) => {
+                StatementParser::parse_endwith(&mut lexer, statementinfo_list)
+            }
+            Some(Ok(Token::Include)) => {
+                StatementParser::parse_include(&mut lexer, statementinfo_list)
+            }
             Some(_) => {
                 let range = lexer.span();
                 Err(Error::from(ParseError::new(
@@ -48,8 +54,11 @@ impl StatementParser {
         let value = ExpressionParser::full_expresion_parser(lexer)?;
         let composed_renderer = Arc::new(ComposedRenderer::new());
         let renderer = Statement::If(IfStatement::new(Box::new(value)));
-        let mut statement_info =
-            StatementInfo::new(StatementInfoType::IfStatement, Token::If, composed_renderer);
+        let mut statement_info = StatementInfo::new(
+            StatementInfoType::IfStatement,
+            Some(Token::If),
+            composed_renderer,
+        );
         statement_info.renderer = Some(renderer);
 
         statementinfo_list.push(statement_info);
@@ -64,7 +73,7 @@ impl StatementParser {
         let renderer = Statement::Else(ElseStatement::new(Some(Box::new(value))));
         let mut statement_info = StatementInfo::new(
             StatementInfoType::ElseIfStatement,
-            Token::Else,
+            Some(Token::Else),
             composed_renderer,
         );
         statement_info.renderer = Some(renderer);
@@ -77,7 +86,7 @@ impl StatementParser {
         let renderer = Statement::Else(ElseStatement::new(None));
         let mut statement_info = StatementInfo::new(
             StatementInfoType::ElseIfStatement,
-            Token::Else,
+            Some(Token::Else),
             composed_renderer,
         );
         statement_info.renderer = Some(renderer);
@@ -129,7 +138,7 @@ impl StatementParser {
     ) -> Result<()> {
         let mut vars = vec![];
         loop {
-            if let Some(Token::Identifier(identifier)) = lexer.next() {
+            if let Some(Ok(Token::Identifier(identifier))) = lexer.next() {
                 vars.push(identifier.to_string());
             } else {
                 let range = lexer.span();
@@ -137,13 +146,13 @@ impl StatementParser {
                     SourceLocationInfo::new_with_range(range.start, range.end),
                 )));
             }
-            if let Some(Token::Comma) = lexer.peek() {
+            if let Some(Ok(Token::Comma)) = lexer.peek() {
                 lexer.next();
             } else {
                 break;
             }
         }
-        if let Some(Token::In) = lexer.next() {
+        if let Some(Ok(Token::In)) = lexer.next() {
             let expression = ExpressionParser::full_expresion_parser(lexer)?;
             if lexer.next().is_some() {
                 let range = lexer.span();
@@ -156,7 +165,7 @@ impl StatementParser {
                 let renderer = Statement::For(ForStatement::new(vars, Box::new(expression)));
                 let mut statement_info = StatementInfo::new(
                     StatementInfoType::ForStatement,
-                    Token::For,
+                    Some(Token::For),
                     composed_renderer,
                 );
                 statement_info.renderer = Some(renderer);
@@ -204,8 +213,8 @@ impl StatementParser {
         statementinfo_list: &mut StatementInfoList<'a>,
     ) -> Result<()> {
         let mut vars: Vec<(String, Box<dyn Evaluate + 'a>)> = vec![];
-        while let Some(Token::Identifier(identifier)) = lexer.next() {
-            let value = if let Some(Token::Assign) = lexer.peek() {
+        while let Some(Ok(Token::Identifier(identifier))) = lexer.next() {
+            let value = if let Some(Ok(Token::Assign)) = lexer.peek() {
                 lexer.next();
                 ExpressionParser::full_expresion_parser(lexer)?
             } else {
@@ -216,7 +225,7 @@ impl StatementParser {
                 )));
             };
             vars.push((identifier.to_string(), Box::new(value)));
-            if let Some(Token::Comma) = lexer.peek() {
+            if let Some(Ok(Token::Comma)) = lexer.peek() {
                 lexer.next();
             } else {
                 break;
@@ -239,7 +248,7 @@ impl StatementParser {
         let renderer = Statement::With(WithStatement::new(vars));
         let mut statement_info = StatementInfo::new(
             StatementInfoType::WithStatement,
-            Token::With,
+            Some(Token::With),
             composed_renderer,
         );
         statement_info.renderer = Some(renderer);
@@ -288,9 +297,9 @@ impl StatementParser {
         let mut is_ignore_missing = false;
         let mut is_with_context = true;
 
-        if let Some(Token::Ignore) = lexer.peek() {
+        if let Some(Ok(Token::Ignore)) = lexer.peek() {
             lexer.next();
-            if let Some(Token::Missing) = lexer.peek() {
+            if let Some(Ok(Token::Missing)) = lexer.peek() {
                 is_ignore_missing = true;
             } else {
                 let range = lexer.span();
@@ -303,8 +312,8 @@ impl StatementParser {
         }
 
         match lexer.next() {
-            Some(Token::With) => {
-                if let Some(Token::Context) = lexer.peek() {
+            Some(Ok(Token::With)) => {
+                if let Some(Ok(Token::Context)) = lexer.peek() {
                     lexer.next();
                 } else {
                     let range = lexer.span();
@@ -314,9 +323,9 @@ impl StatementParser {
                     )));
                 }
             }
-            Some(Token::Without) => {
+            Some(Ok(Token::Without)) => {
                 is_with_context = false;
-                if let Some(Token::Context) = lexer.peek() {
+                if let Some(Ok(Token::Context)) = lexer.peek() {
                     lexer.next();
                 } else {
                     let range = lexer.span();

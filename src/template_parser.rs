@@ -1,7 +1,6 @@
 use crate::error::{Error, ParseError, ParseErrorKind, Result};
 use crate::expression_parser::ExpressionParser;
 use crate::keyword::{RegexEnum, ROUGH_TOKENIZER};
-use crate::lexer::Token;
 use crate::renderer::ExpressionRenderer;
 use crate::renderer::{ComposedRenderer, RawTextRenderer};
 use crate::source::{Range, SourceLocation, SourceLocationInfo};
@@ -73,7 +72,7 @@ impl<'a> TemplateParser<'a> {
     }
     fn fine_parsing(&self, renderer: Arc<ComposedRenderer<'a>>) -> Result<()> {
         let mut statements_stack: StatementInfoList<'_> = vec![];
-        let root = StatementInfo::new(StatementInfoType::TemplateRoot, Token::Unknown, renderer);
+        let root = StatementInfo::new(StatementInfoType::TemplateRoot, None, renderer);
         statements_stack.push(root);
         for orig_block in self.text_blocks.read().unwrap().iter() {
             match orig_block.mode {
