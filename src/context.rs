@@ -10,14 +10,11 @@ pub struct Context<'a> {
     global_scope: Arc<RwLock<ValuesMap>>,
     external_scope: ValuesMap,
     scopes: Vec<Arc<RwLock<ValuesMap>>>,
-    callback_renderer: Arc<&'a TemplateEnv<'a>>,
+    callback_renderer: &'a TemplateEnv<'a>,
 }
 
 impl<'a> Context<'a> {
-    pub fn new(
-        external_scope: impl Serialize,
-        callback_renderer: Arc<&'a TemplateEnv<'_>>,
-    ) -> Self {
+    pub fn new(external_scope: impl Serialize, callback_renderer: &'a TemplateEnv<'_>) -> Self {
         let v = serde_json::to_value(&external_scope).unwrap();
         let external_scope: ValuesMap = serde_json::from_value(v).unwrap();
 
@@ -57,7 +54,7 @@ impl<'a> Context<'a> {
     pub fn set_global(&mut self, global_scope: Arc<RwLock<ValuesMap>>) {
         self.global_scope = global_scope;
     }
-    pub fn get_renderer_callback(&self) -> Arc<&'a TemplateEnv<'a>> {
-        self.callback_renderer.clone()
+    pub fn get_renderer_callback(&self) -> &'a TemplateEnv<'a> {
+        self.callback_renderer
     }
 }

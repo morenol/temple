@@ -13,7 +13,7 @@ use std::sync::{Arc, RwLock};
 
 pub struct TemplateParser<'a> {
     template_body: &'a str,
-    env: RwLock<Arc<&'a TemplateEnv<'a>>>,
+    env: RwLock<&'a TemplateEnv<'a>>,
     rough_tokenizer: Regex,
     text_blocks: RwLock<Vec<TextBlockInfo>>,
     current_block_info: RwLock<TextBlockInfo>,
@@ -22,7 +22,7 @@ pub struct TemplateParser<'a> {
 }
 
 impl<'a> TemplateParser<'a> {
-    pub fn new(body: &'a str, env: Arc<&'a TemplateEnv<'_>>) -> Result<Self> {
+    pub fn new(body: &'a str, env: &'a TemplateEnv<'_>) -> Result<Self> {
         let rough_tokenizer = Regex::new(&ROUGH_TOKENIZER[..ROUGH_TOKENIZER.len() - 1]).unwrap();
 
         Ok(Self {
@@ -119,7 +119,7 @@ impl<'a> TemplateParser<'a> {
     }
 
     fn rough_parsing(&mut self) -> Result<()> {
-        let match_begin = self.rough_tokenizer.captures_iter(&self.template_body);
+        let match_begin = self.rough_tokenizer.captures_iter(self.template_body);
 
         for capture in match_begin {
             // This does not seem idiomatic to rust

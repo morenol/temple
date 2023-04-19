@@ -13,33 +13,24 @@ pub struct StatementParser;
 use std::sync::Arc;
 
 impl StatementParser {
-    pub fn parse<'a>(
-        text: &'a str,
-        mut statementinfo_list: &mut StatementInfoList<'a>,
-    ) -> Result<()> {
+    pub fn parse<'a>(text: &'a str, statementinfo_list: &mut StatementInfoList<'a>) -> Result<()> {
         let lexer: Lexer<'_, Token<'a>> = Token::lexer(text);
         let mut lexer = PeekableLexer::new(lexer);
         let tok = lexer.next();
 
         match tok {
-            Some(Token::If) => StatementParser::parse_if(&mut lexer, &mut statementinfo_list),
+            Some(Token::If) => StatementParser::parse_if(&mut lexer, statementinfo_list),
             Some(Token::Else) => {
-                StatementParser::parse_else(&mut statementinfo_list);
+                StatementParser::parse_else(statementinfo_list);
                 Ok(())
             }
-            Some(Token::EndIf) => StatementParser::parse_endif(&mut lexer, &mut statementinfo_list),
-            Some(Token::ElIf) => StatementParser::parse_elif(&mut lexer, &mut statementinfo_list),
-            Some(Token::For) => StatementParser::parse_for(&mut lexer, &mut statementinfo_list),
-            Some(Token::EndFor) => {
-                StatementParser::parse_endfor(&mut lexer, &mut statementinfo_list)
-            }
-            Some(Token::With) => StatementParser::parse_with(&mut lexer, &mut statementinfo_list),
-            Some(Token::EndWith) => {
-                StatementParser::parse_endwith(&mut lexer, &mut statementinfo_list)
-            }
-            Some(Token::Include) => {
-                StatementParser::parse_include(&mut lexer, &mut statementinfo_list)
-            }
+            Some(Token::EndIf) => StatementParser::parse_endif(&mut lexer, statementinfo_list),
+            Some(Token::ElIf) => StatementParser::parse_elif(&mut lexer, statementinfo_list),
+            Some(Token::For) => StatementParser::parse_for(&mut lexer, statementinfo_list),
+            Some(Token::EndFor) => StatementParser::parse_endfor(&mut lexer, statementinfo_list),
+            Some(Token::With) => StatementParser::parse_with(&mut lexer, statementinfo_list),
+            Some(Token::EndWith) => StatementParser::parse_endwith(&mut lexer, statementinfo_list),
+            Some(Token::Include) => StatementParser::parse_include(&mut lexer, statementinfo_list),
             Some(_) => {
                 let range = lexer.span();
                 Err(Error::from(ParseError::new(

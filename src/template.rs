@@ -6,17 +6,16 @@ use crate::template_parser::TemplateParser;
 use serde::Serialize;
 use std::borrow::Cow;
 use std::io::Write;
-use std::sync::Arc;
 
 pub struct Template<'a> {
     body: Cow<'a, str>,
-    template_env: Arc<&'a TemplateEnv<'a>>,
+    template_env: &'a TemplateEnv<'a>,
     renderer: Option<ComposedRenderer<'a>>,
     template_name: Option<String>,
 }
 
 impl<'a> Template<'a> {
-    pub fn new(template_env: Arc<&'a TemplateEnv<'_>>) -> Result<Self> {
+    pub fn new(template_env: &'a TemplateEnv<'_>) -> Result<Self> {
         Ok(Self {
             template_env,
             renderer: None,
@@ -25,7 +24,7 @@ impl<'a> Template<'a> {
         })
     }
     pub fn new_with_filename(
-        template_env: Arc<&'a TemplateEnv<'_>>,
+        template_env: &'a TemplateEnv<'_>,
         template_name: String,
     ) -> Result<Self> {
         Ok(Self {
@@ -38,14 +37,12 @@ impl<'a> Template<'a> {
 
     pub fn parse(&self) -> Result<ComposedRenderer<'a>> {
         let mut parser = match &self.body {
-            Cow::Borrowed(template_body) => {
-                TemplateParser::new(template_body, self.template_env.clone())?
-            }
+            Cow::Borrowed(template_body) => TemplateParser::new(template_body, self.template_env)?,
             Cow::Owned(_template_body_owned) => {
                 // This allows the parser to have references to the template body.
                 // This is safe as long as `body` field is never mutated or dropped.
                 let unsafe_source: &'a str = unsafe { &*(&*self.body as *const str) };
-                TemplateParser::new(unsafe_source, self.template_env.clone())?
+                TemplateParser::new(unsafe_source, self.template_env)?
             }
         };
         parser.parse()
@@ -63,7 +60,7 @@ impl<'a> Template<'a> {
 
     pub fn render_as_string(&self, params: impl Serialize) -> Result<String> {
         let mut b: Vec<u8> = Vec::new();
-        let mut context = Context::new(params, self.template_env.clone());
+        let mut context = Context::new(params, self.template_env);
         context.set_global(self.template_env.globals());
 
         self.render(&mut b, context)?;

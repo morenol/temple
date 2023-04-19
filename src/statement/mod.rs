@@ -209,7 +209,7 @@ impl<'a> Render for IncludeStatement<'a> {
         if self.with_context {
             template.render(out, params)
         } else {
-            let mut context = Context::new(ValuesMap::default(), template_env.clone());
+            let mut context = Context::new(ValuesMap::default(), template_env);
             context.set_global(template_env.globals());
             template.render(out, context)
         }

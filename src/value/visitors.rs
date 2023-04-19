@@ -40,7 +40,7 @@ impl Subscription {
             (Value::String(st), Value::Integer(idx)) => {
                 Value::String(st.chars().nth(idx as usize).unwrap().to_string())
             }
-            (Value::ValuesList(tuple), Value::Integer(idx)) => (&tuple[idx as usize]).clone(),
+            (Value::ValuesList(tuple), Value::Integer(idx)) => tuple[idx as usize].clone(),
             (Value::ValuesMap(dict), Value::String(key)) => dict.get(&key).unwrap().clone(),
             _ => todo!(),
         }

@@ -4,15 +4,11 @@ use crate::FileSystemHandler;
 use crate::Template;
 use std::sync::{Arc, RwLock};
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Default)]
 enum Jinja2CompatMode {
+    #[default]
     None,
     // Version2_10, // Fix in jinja2cpp
-}
-impl Default for Jinja2CompatMode {
-    fn default() -> Jinja2CompatMode {
-        Jinja2CompatMode::None
-    }
 }
 
 /// Global template environment settings
@@ -49,16 +45,10 @@ impl Default for Settings {
 }
 
 /// Extensions set which should be supported
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Default)]
 struct Extensions {
     /// Enable use of `do` statement
     do_ext: bool,
-}
-
-impl Default for Extensions {
-    fn default() -> Extensions {
-        Extensions { do_ext: false }
-    }
 }
 
 pub struct TemplateEnv<'a> {
@@ -101,7 +91,7 @@ impl<'a> TemplateEnv<'a> {
         Ok(())
     }
     pub fn load_template(&self, filename: &str) -> Result<Template<'_>> {
-        let mut template = Template::new_with_filename(Arc::new(self), filename.to_string())?;
+        let mut template = Template::new_with_filename(self, filename.to_string())?;
         let mut not_found = true;
         for handler in &self.filesystem_handlers {
             let stream = handler.open_stream(filename);

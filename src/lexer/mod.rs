@@ -217,7 +217,7 @@ where
 
 #[test]
 fn lex_numbers() {
-    let tokens: Vec<_> = Token::lexer("1 42 -100 3.14 -77.77").collect();
+    let tokens: Vec<_> = Token::lexer("1 42 -100 3.18 -77.77").collect();
     assert_eq!(
         tokens,
         &[
@@ -225,7 +225,7 @@ fn lex_numbers() {
             Token::IntegerNum(42),
             Token::Minus,
             Token::IntegerNum(100),
-            Token::FloatNum(3.14),
+            Token::FloatNum(3.18),
             Token::Minus,
             Token::FloatNum(77.77),
         ]
