@@ -1,4 +1,3 @@
-use std::sync::Arc;
 use temple::error::Result;
 use temple::value::{Value, ValuesMap};
 use temple::{Template, TemplateEnv};
@@ -7,8 +6,7 @@ use temple::{Template, TemplateEnv};
 fn test_global_variable() -> Result<()> {
     let mut temp_env = TemplateEnv::default();
     temp_env.add_global("GLOBAL_VAR".to_string(), "Global");
-    let template_env = Arc::new(&temp_env);
-    let mut template = Template::new(template_env)?;
+    let mut template = Template::new(&temp_env)?;
     template.load("{{ GLOBAL_VAR }}")?;
     let context = ValuesMap::default();
     let result = template.render_as_string(context)?;
@@ -20,8 +18,7 @@ fn test_global_variable() -> Result<()> {
 fn test_both_global_and_external_variables() -> Result<()> {
     let mut temp_env = TemplateEnv::default();
     temp_env.add_global("GLOBAL_VAR".to_string(), "Global");
-    let template_env = Arc::new(&temp_env);
-    let mut template = Template::new(template_env)?;
+    let mut template = Template::new(&temp_env)?;
     template.load(
         "global: {{ GLOBAL_VAR }}
 external: {{external_variable}}",
@@ -46,8 +43,7 @@ fn test_override_value() -> Result<()> {
     let mut temp_env = TemplateEnv::default();
 
     temp_env.add_global("key".to_string(), "Global value");
-    let template_env = Arc::new(&temp_env);
-    let mut template = Template::new(template_env)?;
+    let mut template = Template::new(&temp_env)?;
     template.load("{{ key }}")?;
     let mut context = ValuesMap::default();
     context.insert(

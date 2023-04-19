@@ -55,10 +55,10 @@ impl Filter {
             ))),
         }
     }
-    pub fn filter<'a>(
+    pub fn filter(
         &self,
         base_value: Value,
-        params: &Option<CallParams<'a>>,
+        params: &Option<CallParams<'_>>,
         context: Context<'_>,
     ) -> Result<Value> {
         match &self {

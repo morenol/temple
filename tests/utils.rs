@@ -1,4 +1,3 @@
-use std::sync::Arc;
 use temple::error::Result;
 use temple::value::ValuesMap;
 use temple::{Template, TemplateEnv};
@@ -8,9 +7,8 @@ pub fn assert_render_template_eq(
     expected: &str,
     params: Option<ValuesMap>,
 ) -> Result<()> {
-    let temp_env = TemplateEnv::default();
-    let template_env = Arc::new(&temp_env);
-    let mut template = Template::new(template_env)?;
+    let temp_env: TemplateEnv = TemplateEnv::default();
+    let mut template = Template::new(&temp_env)?;
     template.load(input)?;
     let default_context = ValuesMap::default();
     let context = params.unwrap_or(default_context);
