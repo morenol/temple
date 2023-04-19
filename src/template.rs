@@ -7,7 +7,6 @@ use serde::Serialize;
 use std::borrow::Cow;
 use std::io::Write;
 
-
 pub struct Template<'a> {
     body: Cow<'a, str>,
     template_env: &'a TemplateEnv<'a>,
