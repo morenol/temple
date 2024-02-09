@@ -46,7 +46,7 @@ impl ExpressionParser {
         if let Some(Ok(Token::LogicalOr)) = lexer.peek() {
             lexer.next();
             let right = ExpressionParser::parse_logical_or(lexer)?;
-            return Ok(Expression::BinaryExpression(
+            return Ok(Expression::Binary(
                 BinaryOperation::LogicalOr,
                 Box::new(left),
                 Box::new(right),
@@ -60,7 +60,7 @@ impl ExpressionParser {
         if let Some(Ok(Token::LogicalAnd)) = lexer.peek() {
             lexer.next();
             let right = ExpressionParser::parse_logical_and(lexer)?;
-            return Ok(Expression::BinaryExpression(
+            return Ok(Expression::Binary(
                 BinaryOperation::LogicalAnd,
                 Box::new(left),
                 Box::new(right),
@@ -87,7 +87,7 @@ impl ExpressionParser {
         lexer.next();
         let right = ExpressionParser::parse_string_concat(lexer)?;
 
-        Ok(Expression::BinaryExpression(
+        Ok(Expression::Binary(
             binary_op,
             Box::new(left),
             Box::new(right),
@@ -99,7 +99,7 @@ impl ExpressionParser {
         if let Some(Ok(Token::Tilde)) = lexer.peek() {
             lexer.next();
             let right = ExpressionParser::parse_logical_and(lexer)?;
-            return Ok(Expression::BinaryExpression(
+            return Ok(Expression::Binary(
                 BinaryOperation::StringConcat,
                 Box::new(left),
                 Box::new(right),
@@ -113,7 +113,7 @@ impl ExpressionParser {
         if let Some(Ok(Token::MulMul)) = lexer.peek() {
             lexer.next();
             let right = ExpressionParser::parse_math_pow(lexer)?;
-            return Ok(Expression::BinaryExpression(
+            return Ok(Expression::Binary(
                 BinaryOperation::Pow,
                 Box::new(left),
                 Box::new(right),
@@ -133,7 +133,7 @@ impl ExpressionParser {
         };
         lexer.next();
         let right = ExpressionParser::parse_math_plus_minus(lexer)?;
-        Ok(Expression::BinaryExpression(
+        Ok(Expression::Binary(
             binary_op,
             Box::new(left),
             Box::new(right),
@@ -152,7 +152,7 @@ impl ExpressionParser {
         lexer.next();
         let right = ExpressionParser::parse_math_mul_div(lexer)?;
 
-        Ok(Expression::BinaryExpression(
+        Ok(Expression::Binary(
             binary_op,
             Box::new(left),
             Box::new(right),
@@ -175,14 +175,14 @@ impl ExpressionParser {
         let sub_expr = ExpressionParser::parse_value_expression(lexer)?;
 
         let result = match unary_op {
-            Some(op) => Expression::UnaryExpression(op, Box::new(sub_expr)),
+            Some(op) => Expression::Unary(op, Box::new(sub_expr)),
             None => sub_expr,
         };
 
         if let Some(Ok(Token::Pipe)) = lexer.peek() {
             lexer.next();
             let filter_expression = ExpressionParser::parse_filter_expression(lexer)?;
-            Ok(Expression::FilteredExpression(FilteredExpression::new(
+            Ok(Expression::Filtered(FilteredExpression::new(
                 Box::new(result),
                 filter_expression,
             )))
@@ -398,7 +398,7 @@ impl ExpressionParser {
             };
         }
 
-        Ok(Expression::SubscriptExpression(subscript))
+        Ok(Expression::Subscript(subscript))
     }
     fn parse_tuple<'a>(lexer: &mut PeekableLexer<'a, Token<'a>>) -> Result<Expression<'a>> {
         let mut tuple = TupleExpression::default();

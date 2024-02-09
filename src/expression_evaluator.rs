@@ -105,11 +105,11 @@ impl<'a> Evaluate for FilteredExpression<'a> {
 
 pub enum Expression<'a> {
     Constant(Value),
-    BinaryExpression(BinaryOperation, Box<Expression<'a>>, Box<Expression<'a>>),
-    UnaryExpression(UnaryOperation, Box<Expression<'a>>),
-    SubscriptExpression(SubscriptExpression<'a>),
+    Binary(BinaryOperation, Box<Expression<'a>>, Box<Expression<'a>>),
+    Unary(UnaryOperation, Box<Expression<'a>>),
+    Subscript(SubscriptExpression<'a>),
     ValueRef(ValueRefExpression),
-    FilteredExpression(FilteredExpression<'a>),
+    Filtered(FilteredExpression<'a>),
     Tuple(TupleExpression<'a>),
     Dict(DictionaryExpression<'a>),
 }
@@ -151,12 +151,12 @@ impl<'a> Evaluate for Expression<'a> {
     fn evaluate(&self, values: Context<'_>) -> Result<Value> {
         let result = match &self {
             Expression::Constant(value) => value.clone(),
-            Expression::BinaryExpression(op, left, right) => {
+            Expression::Binary(op, left, right) => {
                 let left_val = left.evaluate(values.clone())?;
                 let right_val = right.evaluate(values)?;
                 visitors::BinaryMathOperation::apply(op, left_val, right_val)
             }
-            Expression::UnaryExpression(op, expr) => {
+            Expression::Unary(op, expr) => {
                 let expression = expr.evaluate(values)?;
                 match op {
                     UnaryOperation::Plus => expression,
@@ -164,11 +164,11 @@ impl<'a> Evaluate for Expression<'a> {
                     UnaryOperation::LogicalNot => !expression,
                 }
             }
-            Expression::SubscriptExpression(sub) => sub.evaluate(values)?,
+            Expression::Subscript(sub) => sub.evaluate(values)?,
             Expression::ValueRef(identifier) => identifier.evaluate(values)?,
             Expression::Tuple(tuple) => tuple.evaluate(values)?,
             Expression::Dict(dict) => dict.evaluate(values)?,
-            Expression::FilteredExpression(filter) => filter.evaluate(values)?,
+            Expression::Filtered(filter) => filter.evaluate(values)?,
         };
         Ok(result)
     }

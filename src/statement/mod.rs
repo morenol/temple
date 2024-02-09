@@ -1,3 +1,6 @@
+use std::io::Write;
+use std::rc::Rc;
+
 use crate::context::Context;
 use crate::error::Result;
 use crate::expression_evaluator::Evaluate;
@@ -5,12 +8,11 @@ use crate::lexer::Token;
 use crate::renderer::ComposedRenderer;
 use crate::renderer::Render;
 use crate::value::{Value, ValuesList, ValuesMap};
-use std::io::Write;
-use std::sync::Arc;
+
 pub mod parser;
 pub struct IfStatement<'a> {
     expression: Box<dyn Evaluate + 'a>,
-    body: Option<Arc<ComposedRenderer<'a>>>,
+    body: Option<Rc<ComposedRenderer<'a>>>,
     else_branches: Vec<Statement<'a>>,
 }
 impl<'a> IfStatement<'a> {
@@ -21,7 +23,7 @@ impl<'a> IfStatement<'a> {
             else_branches: vec![],
         }
     }
-    fn set_main_body(&mut self, body: Arc<ComposedRenderer<'a>>) {
+    fn set_main_body(&mut self, body: Rc<ComposedRenderer<'a>>) {
         let if_body = body.clone();
         self.body = Some(if_body);
     }
@@ -52,7 +54,7 @@ impl<'a> Render for IfStatement<'a> {
 
 pub struct ElseStatement<'a> {
     expression: Option<Box<dyn Evaluate + 'a>>,
-    body: Option<Arc<ComposedRenderer<'a>>>,
+    body: Option<Rc<ComposedRenderer<'a>>>,
 }
 
 impl<'a> ElseStatement<'a> {
@@ -62,7 +64,7 @@ impl<'a> ElseStatement<'a> {
             body: None,
         }
     }
-    fn set_main_body(&mut self, body: Arc<ComposedRenderer<'a>>) {
+    fn set_main_body(&mut self, body: Rc<ComposedRenderer<'a>>) {
         let else_body = body.clone();
         self.body = Some(else_body);
     }
@@ -82,7 +84,7 @@ impl<'a> Render for ElseStatement<'a> {
 }
 pub struct WithStatement<'a> {
     scope_vars: Vec<(String, Box<dyn Evaluate + 'a>)>,
-    body: Option<Arc<ComposedRenderer<'a>>>,
+    body: Option<Rc<ComposedRenderer<'a>>>,
 }
 impl<'a> WithStatement<'a> {
     pub fn new(scope_vars: Vec<(String, Box<dyn Evaluate + 'a>)>) -> Self {
@@ -91,7 +93,7 @@ impl<'a> WithStatement<'a> {
             body: None,
         }
     }
-    fn set_main_body(&mut self, body: Arc<ComposedRenderer<'a>>) {
+    fn set_main_body(&mut self, body: Rc<ComposedRenderer<'a>>) {
         let with_body = body.clone();
         self.body = Some(with_body);
     }
@@ -111,7 +113,7 @@ impl<'a> Render for WithStatement<'a> {
 pub struct ForStatement<'a> {
     vars: Vec<String>,
     value: Box<dyn Evaluate + 'a>,
-    body: Option<Arc<ComposedRenderer<'a>>>,
+    body: Option<Rc<ComposedRenderer<'a>>>,
 }
 
 impl<'a> ForStatement<'a> {
@@ -122,7 +124,7 @@ impl<'a> ForStatement<'a> {
             body: None,
         }
     }
-    fn set_main_body(&mut self, body: Arc<ComposedRenderer<'a>>) {
+    fn set_main_body(&mut self, body: Rc<ComposedRenderer<'a>>) {
         let for_body = body.clone();
         self.body = Some(for_body);
     }
@@ -224,7 +226,7 @@ pub enum Statement<'a> {
     Include(IncludeStatement<'a>),
 }
 impl<'a> Statement<'a> {
-    pub fn set_main_body(&mut self, body: Arc<ComposedRenderer<'a>>) {
+    pub fn set_main_body(&mut self, body: Rc<ComposedRenderer<'a>>) {
         match self {
             Statement::If(statement) => statement.set_main_body(body),
             Statement::Else(statement) => statement.set_main_body(body),
@@ -255,8 +257,8 @@ impl<'a> Render for Statement<'a> {
 
 pub struct StatementInfo<'a> {
     mode: StatementInfoType,
-    pub current_composition: Arc<ComposedRenderer<'a>>,
-    compositions: Vec<Arc<ComposedRenderer<'a>>>,
+    pub current_composition: Rc<ComposedRenderer<'a>>,
+    compositions: Vec<Rc<ComposedRenderer<'a>>>,
     _token: Option<Token<'a>>,
     renderer: Option<Statement<'a>>,
 }
@@ -273,7 +275,7 @@ impl<'a> StatementInfo<'a> {
     pub fn new(
         mode: StatementInfoType,
         _token: Option<Token<'a>>,
-        renderers: Arc<ComposedRenderer<'a>>,
+        renderers: Rc<ComposedRenderer<'a>>,
     ) -> Self {
         let current_composition = renderers.clone();
         let compositions = vec![renderers];

@@ -1,16 +1,20 @@
-use super::{
-    ElseStatement, ForStatement, IfStatement, IncludeStatement, Statement, StatementInfo,
-    StatementInfoList, StatementInfoType, WithStatement,
-};
+use std::rc::Rc;
+
+use logos::{Lexer, Logos};
+
 use crate::error::{Error, ParseError, ParseErrorKind, Result};
 use crate::expression_parser::ExpressionParser;
 use crate::lexer::{PeekableLexer, Token};
 use crate::renderer::ComposedRenderer;
 use crate::source::SourceLocationInfo;
 use crate::statement::Evaluate;
-use logos::{Lexer, Logos};
+
+use super::{
+    ElseStatement, ForStatement, IfStatement, IncludeStatement, Statement, StatementInfo,
+    StatementInfoList, StatementInfoType, WithStatement,
+};
+
 pub struct StatementParser;
-use std::sync::Arc;
 
 impl StatementParser {
     pub fn parse<'a>(text: &'a str, statementinfo_list: &mut StatementInfoList<'a>) -> Result<()> {
@@ -52,7 +56,7 @@ impl StatementParser {
         statementinfo_list: &mut StatementInfoList<'a>,
     ) -> Result<()> {
         let value = ExpressionParser::full_expresion_parser(lexer)?;
-        let composed_renderer = Arc::new(ComposedRenderer::new());
+        let composed_renderer = Rc::new(ComposedRenderer::new());
         let renderer = Statement::If(IfStatement::new(Box::new(value)));
         let mut statement_info = StatementInfo::new(
             StatementInfoType::IfStatement,
@@ -69,7 +73,7 @@ impl StatementParser {
         statementinfo_list: &mut StatementInfoList<'a>,
     ) -> Result<()> {
         let value = ExpressionParser::full_expresion_parser(lexer)?;
-        let composed_renderer = Arc::new(ComposedRenderer::new());
+        let composed_renderer = Rc::new(ComposedRenderer::new());
         let renderer = Statement::Else(ElseStatement::new(Some(Box::new(value))));
         let mut statement_info = StatementInfo::new(
             StatementInfoType::ElseIfStatement,
@@ -82,7 +86,7 @@ impl StatementParser {
     }
 
     fn parse_else(statementinfo_list: &mut StatementInfoList<'_>) {
-        let composed_renderer = Arc::new(ComposedRenderer::new());
+        let composed_renderer = Rc::new(ComposedRenderer::new());
         let renderer = Statement::Else(ElseStatement::new(None));
         let mut statement_info = StatementInfo::new(
             StatementInfoType::ElseIfStatement,
@@ -161,7 +165,7 @@ impl StatementParser {
                     Some(SourceLocationInfo::new_with_range(range.start, range.end)),
                 )))
             } else {
-                let composed_renderer = Arc::new(ComposedRenderer::new());
+                let composed_renderer = Rc::new(ComposedRenderer::new());
                 let renderer = Statement::For(ForStatement::new(vars, Box::new(expression)));
                 let mut statement_info = StatementInfo::new(
                     StatementInfoType::ForStatement,
@@ -244,7 +248,7 @@ impl StatementParser {
                 Some(SourceLocationInfo::new_with_range(range.start, range.end)),
             )));
         }
-        let composed_renderer = Arc::new(ComposedRenderer::new());
+        let composed_renderer = Rc::new(ComposedRenderer::new());
         let renderer = Statement::With(WithStatement::new(vars));
         let mut statement_info = StatementInfo::new(
             StatementInfoType::WithStatement,
