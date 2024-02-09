@@ -139,13 +139,7 @@ impl Value {
 }
 impl PartialOrd for Value {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        match (self, other) {
-            (Value::Integer(left), Value::Integer(right)) => left.partial_cmp(right),
-            (Value::Integer(left), Value::Double(right)) => (*left as f64).partial_cmp(right),
-            (Value::Double(left), Value::Integer(right)) => left.partial_cmp(&(*right as f64)),
-            (Value::Double(left), Value::Double(right)) => left.partial_cmp(right),
-            _ => todo!(),
-        }
+        Some(self.cmp(other))
     }
 }
 

@@ -1,3 +1,6 @@
+use std::rc::Rc;
+use std::sync::RwLock;
+
 use crate::error::{Error, ParseError, ParseErrorKind, Result};
 use crate::expression_parser::ExpressionParser;
 use crate::keyword::{RegexEnum, ROUGH_TOKENIZER};
@@ -8,7 +11,6 @@ use crate::statement::parser::StatementParser;
 use crate::statement::{StatementInfo, StatementInfoList, StatementInfoType};
 use crate::template_env::TemplateEnv;
 use regex::Regex;
-use std::sync::{Arc, RwLock};
 
 pub struct TemplateParser<'a> {
     template_body: &'a str,
@@ -70,7 +72,7 @@ impl<'a> TemplateParser<'a> {
             statement
         }
     }
-    fn fine_parsing(&self, renderer: Arc<ComposedRenderer<'a>>) -> Result<()> {
+    fn fine_parsing(&self, renderer: Rc<ComposedRenderer<'a>>) -> Result<()> {
         let mut statements_stack: StatementInfoList<'_> = vec![];
         let root = StatementInfo::new(StatementInfoType::TemplateRoot, None, renderer);
         statements_stack.push(root);
@@ -109,9 +111,9 @@ impl<'a> TemplateParser<'a> {
     pub fn parse(&mut self) -> Result<ComposedRenderer<'a>> {
         match self.rough_parsing() {
             Ok(_) => {
-                let renderer = Arc::new(ComposedRenderer::new());
+                let renderer = Rc::new(ComposedRenderer::new());
                 self.fine_parsing(renderer.clone())?;
-                Ok(Arc::try_unwrap(renderer).unwrap())
+                Ok(Rc::try_unwrap(renderer).unwrap())
             }
             Err(error) => Err(error),
         }
