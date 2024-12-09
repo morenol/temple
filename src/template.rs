@@ -68,7 +68,7 @@ impl<'a> Template<'a> {
     }
 }
 
-impl<'a> Render for Template<'a> {
+impl Render for Template<'_> {
     fn render(&self, out: &mut dyn Write, params: Context<'_>) -> Result<()> {
         if let Some(ref renderer) = self.renderer {
             let result = renderer.render(out, params);

@@ -31,7 +31,7 @@ impl<'a> IfStatement<'a> {
         self.else_branches.push(branch);
     }
 }
-impl<'a> Render for IfStatement<'a> {
+impl Render for IfStatement<'_> {
     fn render(&self, out: &mut dyn Write, params: Context<'_>) -> Result<()> {
         let value = self.expression.evaluate(params.clone())?;
         if let Value::Boolean(true) = value {
@@ -77,7 +77,7 @@ impl<'a> ElseStatement<'a> {
             }
     }
 }
-impl<'a> Render for ElseStatement<'a> {
+impl Render for ElseStatement<'_> {
     fn render(&self, out: &mut dyn Write, params: Context<'_>) -> Result<()> {
         self.body.as_ref().unwrap().render(out, params)
     }
@@ -98,7 +98,7 @@ impl<'a> WithStatement<'a> {
         self.body = Some(with_body);
     }
 }
-impl<'a> Render for WithStatement<'a> {
+impl Render for WithStatement<'_> {
     fn render(&self, out: &mut dyn Write, params: Context<'_>) -> Result<()> {
         let mut inner_values = params.clone();
         let scope = inner_values.enter_scope();
@@ -166,7 +166,7 @@ impl<'a> ForStatement<'a> {
         Ok(())
     }
 }
-impl<'a> Render for ForStatement<'a> {
+impl Render for ForStatement<'_> {
     fn render(&self, out: &mut dyn Write, params: Context<'_>) -> Result<()> {
         let loop_value = self.value.evaluate(params.clone())?;
         self.render_loop(loop_value, out, params, 0)?;
@@ -192,7 +192,7 @@ impl<'a> IncludeStatement<'a> {
         }
     }
 }
-impl<'a> Render for IncludeStatement<'a> {
+impl Render for IncludeStatement<'_> {
     fn render(&self, out: &mut dyn Write, params: Context<'_>) -> Result<()> {
         let template_env = params.get_renderer_callback();
         let name = self.expr_name.evaluate(params.clone())?.to_string();
@@ -243,7 +243,7 @@ impl<'a> Statement<'a> {
         }
     }
 }
-impl<'a> Render for Statement<'a> {
+impl Render for Statement<'_> {
     fn render(&self, out: &mut dyn Write, params: Context<'_>) -> Result<()> {
         match self {
             Statement::If(statement) => statement.render(out, params),

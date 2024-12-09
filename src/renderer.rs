@@ -24,13 +24,13 @@ impl<'a> ComposedRenderer<'a> {
     }
 }
 
-impl<'a> Default for ComposedRenderer<'a> {
+impl Default for ComposedRenderer<'_> {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl<'a> Render for ComposedRenderer<'a> {
+impl Render for ComposedRenderer<'_> {
     fn render(&self, out: &mut dyn Write, params: Context<'_>) -> Result<()> {
         for r in self.renderers.read().unwrap().iter() {
             r.render(out, params.clone())?;
@@ -39,7 +39,7 @@ impl<'a> Render for ComposedRenderer<'a> {
     }
 }
 
-impl<'a> fmt::Debug for ComposedRenderer<'a> {
+impl fmt::Debug for ComposedRenderer<'_> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "ComposedRenderer")
     }
@@ -61,7 +61,7 @@ impl<'a> RawTextRenderer<'a> {
     }
 }
 
-impl<'a> Render for RawTextRenderer<'a> {
+impl Render for RawTextRenderer<'_> {
     fn render(&self, out: &mut dyn Write, _params: Context<'_>) -> Result<()> {
         if let Err(err) = out.write(self.content.as_bytes()) {
             Err(Error::Io(err))
@@ -75,7 +75,7 @@ pub struct ExpressionRenderer<'a> {
     expression: FullExpressionEvaluator<'a>,
 }
 
-impl<'a> Render for ExpressionRenderer<'a> {
+impl Render for ExpressionRenderer<'_> {
     fn render(&self, out: &mut dyn Write, params: Context<'_>) -> Result<()> {
         self.expression.render(out, params)
     }

@@ -15,7 +15,7 @@ use logos::{Lexer, Logos};
 pub struct ExpressionParser {}
 
 impl ExpressionParser {
-    pub fn parse<'a>(text: &'a str) -> Result<ExpressionRenderer<'_>> {
+    pub fn parse<'a>(text: &'a str) -> Result<ExpressionRenderer<'a>> {
         let lexer: Lexer<'_, Token<'a>> = Token::lexer(text);
         let mut lexer = PeekableLexer::new(lexer);
 

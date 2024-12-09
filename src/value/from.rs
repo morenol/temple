@@ -80,7 +80,7 @@ impl From<String> for Value {
     }
 }
 
-impl<'a> From<&'a str> for Value {
+impl From<&str> for Value {
     fn from(f: &str) -> Self {
         Value::String(f.to_string())
     }

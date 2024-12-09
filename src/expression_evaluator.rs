@@ -49,7 +49,7 @@ impl<'a> TupleExpression<'a> {
         self.expressions.push(expression)
     }
 }
-impl<'a> Evaluate for TupleExpression<'a> {
+impl Evaluate for TupleExpression<'_> {
     fn evaluate(&self, values: Context<'_>) -> Result<Value> {
         let tuple: ValuesList = self
             .expressions
@@ -72,7 +72,7 @@ impl<'a> DictionaryExpression<'a> {
         self.elems.insert(key, value);
     }
 }
-impl<'a> Evaluate for DictionaryExpression<'a> {
+impl Evaluate for DictionaryExpression<'_> {
     fn evaluate(&self, values: Context<'_>) -> Result<Value> {
         let mut dict = ValuesMap::new();
         for (key, expression) in self.elems.iter() {
@@ -92,7 +92,7 @@ impl<'a> FilteredExpression<'a> {
     }
 }
 
-impl<'a> Evaluate for FilteredExpression<'a> {
+impl Evaluate for FilteredExpression<'_> {
     fn evaluate(&self, values: Context<'_>) -> Result<Value> {
         let result = self.expression.evaluate(values.clone());
         let base_value = match result {
@@ -136,7 +136,7 @@ impl<'a> SubscriptExpression<'a> {
         self.subscript_expression.push(subscript);
     }
 }
-impl<'a> Evaluate for SubscriptExpression<'a> {
+impl Evaluate for SubscriptExpression<'_> {
     fn evaluate(&self, values: Context<'_>) -> Result<Value> {
         let mut cur = self.expression.evaluate(values.clone())?;
         for idx in &self.subscript_expression {
@@ -147,7 +147,7 @@ impl<'a> Evaluate for SubscriptExpression<'a> {
         Ok(cur)
     }
 }
-impl<'a> Evaluate for Expression<'a> {
+impl Evaluate for Expression<'_> {
     fn evaluate(&self, values: Context<'_>) -> Result<Value> {
         let result = match &self {
             Expression::Constant(value) => value.clone(),
@@ -179,7 +179,7 @@ pub struct FullExpressionEvaluator<'a> {
     expression: Option<Expression<'a>>,
 }
 
-impl<'a> Render for FullExpressionEvaluator<'a> {
+impl Render for FullExpressionEvaluator<'_> {
     fn render(&self, out: &mut dyn Write, params: Context<'_>) -> Result<()> {
         let value = self.evaluate(params)?;
         if let Err(err) = out.write(value.to_string().as_bytes()) {
@@ -196,7 +196,7 @@ impl<'a> FullExpressionEvaluator<'a> {
     }
 }
 
-impl<'a> Evaluate for FullExpressionEvaluator<'a> {
+impl Evaluate for FullExpressionEvaluator<'_> {
     fn evaluate(&self, values: Context<'_>) -> Result<Value> {
         let result = match &self.expression {
             Some(expression) => expression.evaluate(values)?,
@@ -212,7 +212,7 @@ pub struct CallParams<'a> {
     pub pos_params: Vec<FullExpressionEvaluator<'a>>,
 }
 
-impl<'a> CallParams<'a> {
+impl CallParams<'_> {
     pub fn parse<'b>(
         &self,
         param_names: Vec<&'b str>,
